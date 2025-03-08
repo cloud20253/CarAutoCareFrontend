@@ -1,35 +1,41 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { ArrowLeft, Save, X, Trash2, Upload } from "lucide-react"; 
-import { motion, AnimatePresence } from "framer-motion"; 
+import { ArrowLeft, Save, X, Trash2, Upload } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SparePartGetByID } from "Services/SparePartService";
 
-const API_URL = "https://carauto01-production-8b0b.up.railway.app"
+const API_URL = "https://carauto01-production-8b0b.up.railway.app";
 
 function EditSparePart() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [sparePart, setSparePart] = useState({
     partName: "",
     description: "",
     manufacturer: "",
     price: 0,
     partNumber: 0,
-    photo: [], 
+    photo: [] as string[],
   });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedImages, setSelectedImages] =  useState<File[]>([]);
+
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false); 
+
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteType, setDeleteType] = useState<string | null>(null);
-  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);; 
-  const [imageToDelete, setImageToDelete] = useState<string | null>(null); 
-  const [showMessage, setShowMessage] = useState(false); 
-  const [message, setMessage] = useState(""); 
-  const [messageType, setMessageType] = useState(""); 
-  const [isBreaking, setIsBreaking] = useState(false); 
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
+  const [imageToDelete, setImageToDelete] = useState<string | null>(null);
+
+  const [showMessage, setShowMessage] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
+
+  const [isBreaking, setIsBreaking] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -37,7 +43,7 @@ function EditSparePart() {
       setLoading(false);
       return;
     }
-  
+
     const fetchSparePart = async () => {
       try {
         setLoading(true);
@@ -50,60 +56,60 @@ function EditSparePart() {
         setLoading(false);
       }
     };
-  
+
     fetchSparePart();
   }, [id]);
-  
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    const invalidFiles = files.filter((file) => !file.type.startsWith("image/"));
 
-    const invalidFiles = files.filter(
-      (file) => !file.type.startsWith("image/")
-    );
     if (invalidFiles.length > 0) {
       setMessage("Please select only image files.");
       setMessageType("error");
       setShowMessage(true);
-      setTimeout(() => setShowMessage(false), 3000); 
+      setTimeout(() => setShowMessage(false), 3000);
       return;
     }
 
-    const newImages = files.map((file) => URL.createObjectURL(file)); 
-    setSelectedImages([...selectedImages, ...files]); 
-    setImagePreviews([...imagePreviews, ...newImages]); 
+    const newImages = files.map((file) => URL.createObjectURL(file));
+    setSelectedImages([...selectedImages, ...files]);
+    setImagePreviews([...imagePreviews, ...newImages]);
   };
 
-  const handleRemoveNewImage = (index : number) => {
+  const handleRemoveNewImage = (index: number) => {
     const updatedImages = selectedImages.filter((_, i) => i !== index);
     const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
     setSelectedImages(updatedImages);
     setImagePreviews(updatedPreviews);
   };
 
-  const handleRemoveExistingImage = async (index : number) => {
+  const handleRemoveExistingImage = async (index: number) => {
     setDeleteType("image");
     setDeleteIndex(index);
-    setImageToDelete(`data:image/jpeg;base64,${sparePart.photo[index]}`); 
-    setShowDeleteConfirmation(true); 
+    setImageToDelete(`data:image/jpeg;base64,${sparePart.photo[index]}`);
+    setShowDeleteConfirmation(true);
   };
+
 
   const handleDeleteSparePart = () => {
     setDeleteType("sparePart");
-    setShowDeleteConfirmation(true); 
+    setShowDeleteConfirmation(true);
   };
 
   const confirmDelete = async () => {
     if (deleteType === "image") {
+   
       setIsBreaking(true);
-
       setTimeout(async () => {
         try {
-          const response = await axios.delete(`${API_URL}/sparePartManagement/delete/${id}?photoIndex=${deleteIndex}`, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
+          await axios.delete(
+       
+            `${API_URL}/sparePartManagement/delete/${id}?photoIndex=${deleteIndex}`,
+            {
+              headers: { "Content-Type": "application/json" },
+            }
+          );
 
           const updatedPhotos = sparePart.photo.filter((_, i) => i !== deleteIndex);
           setSparePart({ ...sparePart, photo: updatedPhotos });
@@ -114,33 +120,34 @@ function EditSparePart() {
           setMessage("Image deleted successfully.");
           setMessageType("success");
           setShowMessage(true);
-          setTimeout(() => setShowMessage(false), 2000); 
+          setTimeout(() => setShowMessage(false), 2000);
         } catch (err) {
           console.error("Error deleting:", err);
           setMessage("Failed to delete image.");
           setMessageType("error");
           setShowMessage(true);
-          setTimeout(() => setShowMessage(false), 3000); 
+          setTimeout(() => setShowMessage(false), 3000);
         }
-      }, 1000); 
+      }, 1000);
     } else if (deleteType === "sparePart") {
+   
       try {
-    
-        await axios.delete(`${API_URL}delete/${id}`);
-        setShowDeleteConfirmation(false); 
+        
+        await axios.delete(`${API_URL}/sparePartManagement/delete/${id}`);
+        setShowDeleteConfirmation(false);
         setMessage("Spare part deleted successfully.");
         setMessageType("success");
         setShowMessage(true);
         setTimeout(() => {
           setShowMessage(false);
-          navigate("/spare-parts"); 
-        }, 2000); 
+          navigate("/spare-parts");
+        }, 2000);
       } catch (err) {
         console.error("Error deleting spare part:", err);
         setMessage("Failed to delete spare part.");
         setMessageType("error");
         setShowMessage(true);
-        setTimeout(() => setShowMessage(false), 3000); 
+        setTimeout(() => setShowMessage(false), 3000);
       }
     }
   };
@@ -158,17 +165,14 @@ function EditSparePart() {
         formData.append("photos", file);
       });
 
-      const response = await axios.patch(`${API_URL}/sparePartManagement/update/${id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      await axios.patch(`${API_URL}/sparePartManagement/update/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      
 
       setMessage("Spare part updated successfully.");
       setMessageType("success");
       setShowMessage(true);
-      setTimeout(() => setShowMessage(false), 2000); 
+      setTimeout(() => setShowMessage(false), 2000);
 
       navigate(`/spare-part/${id}`);
     } catch (err) {
@@ -176,39 +180,37 @@ function EditSparePart() {
       setMessage("Failed to update spare part.");
       setMessageType("error");
       setShowMessage(true);
-      setTimeout(() => setShowMessage(false), 3000); 
+      setTimeout(() => setShowMessage(false), 3000);
     }
   };
 
   const handleUpdate = async () => {
-    if (selectedImages.length === 0) {
-      setMessage("Please select at least one image to update.");
-      setMessageType("warning");
-      setShowMessage(true);
-      setTimeout(() => setShowMessage(false), 3000); 
-      return;
-    }
-
+  
     await handleSave();
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setSparePart({ ...sparePart, [name]: value });
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
       </div>
     );
-  if (error)
+  }
+
+  if (error) {
     return (
       <p className="text-center text-red-500 py-4 bg-white p-6 rounded-lg shadow-md">
         {error}
       </p>
     );
+  }
 
   return (
     <motion.div
@@ -217,6 +219,7 @@ function EditSparePart() {
       transition={{ duration: 0.5 }}
       className="min-h-screen bg-gray-100 p-4 md:p-6"
     >
+    
       <button
         className="flex items-center gap-2 text-gray-700 hover:text-black mb-6 transition duration-300"
         onClick={() => navigate(-1)}
@@ -226,9 +229,11 @@ function EditSparePart() {
       </button>
 
       <div className="flex flex-col md:flex-row gap-8 max-w-6xl mx-auto">
-
+   
         <div className="bg-white p-6 md:p-8 shadow-lg rounded-lg border border-gray-100 flex-1">
-          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Photos</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
+            Photos
+          </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
             {sparePart.photo.map((photo, index) => (
@@ -236,21 +241,23 @@ function EditSparePart() {
                 key={index}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }} 
+                exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.3 }}
                 className="relative"
               >
-                <img
-                  src={`data:image/jpeg;base64,${photo}`}
-                  alt={`Existing Photo ${index}`}
-                  className="w-full h-48 object-cover rounded-lg shadow-md hover:shadow-lg transition duration-300"
-                />
-                <button
-                  className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-300"
-                  onClick={() => handleRemoveExistingImage(index)}
-                >
-                  <Trash2 size={16} /> 
-                </button>
+                <div className="relative w-full bg-gray-200 rounded-lg shadow-md overflow-hidden transition duration-300">
+                  <img
+                    src={`data:image/jpeg;base64,${photo}`}
+                    alt={`Existing Photo ${index}`}
+                    className="w-full h-auto object-contain"
+                  />
+                  <button
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-300"
+                    onClick={() => handleRemoveExistingImage(index)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -262,35 +269,42 @@ function EditSparePart() {
           </div>
 
           <div>
-            <label className="block text-gray-700 font-medium mb-2">Preview</label>
+            <label className="block text-gray-700 font-medium mb-2">
+              Preview
+            </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {imagePreviews.map((preview, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }} 
+                  exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.3 }}
                   className="relative"
                 >
-                  <img
-                    src={preview}
-                    alt={`Preview ${index}`}
-                    className="w-full h-48 object-cover rounded-lg shadow-md hover:shadow-lg transition duration-300"
-                  />
-                  <button
-                    className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-300"
-                    onClick={() => handleRemoveNewImage(index)}
-                  >
-                    <X size={16} />
-                  </button>
+                  <div className="relative w-full bg-gray-200 rounded-lg shadow-md overflow-hidden transition duration-300">
+                    <img
+                      src={preview}
+                      alt={`Preview ${index}`}
+                      className="w-full h-auto object-contain"
+                    />
+                    <button
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-300"
+                      onClick={() => handleRemoveNewImage(index)}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
                 </motion.div>
               ))}
             </div>
           </div>
 
+          {/* File Input & Update Button */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2">Upload More Images</label>
+            <label className="block text-gray-700 font-medium mb-2">
+              Upload More Images
+            </label>
             <div className="flex flex-col md:flex-row items-center gap-4">
               <input
                 type="file"
@@ -312,10 +326,14 @@ function EditSparePart() {
         </div>
 
         <div className="bg-white p-6 md:p-8 shadow-lg rounded-lg border border-gray-100 flex-1">
-          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">Edit Spare Part</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
+            Edit Spare Part
+          </h2>
           <div className="space-y-6">
             <div>
-              <label className="block text-gray-700 font-medium mb-2">Part Name</label>
+              <label className="block text-gray-700 font-medium mb-2">
+                Part Name
+              </label>
               <input
                 type="text"
                 name="partName"
@@ -326,7 +344,9 @@ function EditSparePart() {
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">Description</label>
+              <label className="block text-gray-700 font-medium mb-2">
+                Description
+              </label>
               <input
                 type="text"
                 name="description"
@@ -337,7 +357,9 @@ function EditSparePart() {
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">Manufacturer</label>
+              <label className="block text-gray-700 font-medium mb-2">
+                Manufacturer
+              </label>
               <input
                 type="text"
                 name="manufacturer"
@@ -348,7 +370,9 @@ function EditSparePart() {
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">Price</label>
+              <label className="block text-gray-700 font-medium mb-2">
+                Price
+              </label>
               <input
                 type="number"
                 name="price"
@@ -359,7 +383,9 @@ function EditSparePart() {
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">Part Number</label>
+              <label className="block text-gray-700 font-medium mb-2">
+                Part Number
+              </label>
               <input
                 type="number"
                 name="partNumber"
@@ -380,6 +406,7 @@ function EditSparePart() {
               <Save size={20} />
               <span className="text-lg font-medium">Save Changes</span>
             </motion.button>
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -393,7 +420,6 @@ function EditSparePart() {
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <AnimatePresence>
         {showDeleteConfirmation && (
           <motion.div
@@ -409,13 +435,17 @@ function EditSparePart() {
               transition={{ duration: 0.5 }}
               className="bg-white p-6 rounded-lg shadow-lg text-gray-800"
             >
-              <h2 className="text-xl font-bold mb-4">Are you sure you want to delete this?</h2>
+              <h2 className="text-xl font-bold mb-4">
+                Are you sure you want to delete this?
+              </h2>
               {deleteType === "image" && imageToDelete && (
-                <img
-                  src={imageToDelete}
-                  alt="Image to delete"
-                  className="w-full h-48 object-cover rounded-lg shadow-md mb-4"
-                />
+                <div className="relative w-full bg-gray-200 rounded-lg shadow-md overflow-hidden mb-4">
+                  <img
+                    src={imageToDelete}
+                    alt="Image to delete"
+                    className="w-full h-auto object-contain"
+                  />
+                </div>
               )}
               <p className="mb-6">This action cannot be undone.</p>
               <div className="flex gap-4">

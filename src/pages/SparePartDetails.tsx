@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import apiClient from "Services/apiService";
-
 import {
   ArrowLeft,
   ShoppingCart,
@@ -12,7 +11,6 @@ import {
   Edit,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
 
 type SparePartType = {
   id: string;
@@ -32,19 +30,30 @@ function SparePartDetails() {
   const [sparePart, setSparePart] = useState<SparePartType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [showPincodePopup, setShowPincodePopup] = useState(true);
   const [pincode, setPincode] = useState("");
   const [deliveryMessage, setDeliveryMessage] = useState("");
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  let userRole = '' ;
-  
 
+  let userRole = "";
   const storedDecodedToken = localStorage.getItem("userData");
   if (storedDecodedToken) {
     const parsedToken = JSON.parse(storedDecodedToken);
     userRole = parsedToken.authorities[0];
   }
+
+  // Check if pincode is stored locally
+  useEffect(() => {
+    const storedPincode = localStorage.getItem("pincode");
+    if (storedPincode) {
+      setPincode(storedPincode);
+      setDeliveryMessage(`Delivering to ${storedPincode}`);
+      setShowPincodePopup(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -68,6 +77,7 @@ function SparePartDetails() {
 
   const handlePincodeSubmit = () => {
     if (pincode) {
+      localStorage.setItem("pincode", pincode);
       setDeliveryMessage(`Delivering to ${pincode}`);
       setShowPincodePopup(false);
     }
@@ -101,7 +111,7 @@ function SparePartDetails() {
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 1 }}
           className="rounded-full h-32 w-32 border-4 border-blue-500 border-t-transparent"
-        ></motion.div>
+        />
       </div>
     );
 
@@ -133,18 +143,17 @@ function SparePartDetails() {
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 lg:gap-8">
         <div className="w-full lg:w-1/2 flex flex-col gap-4">
           <div className="flex flex-col lg:flex-row gap-4">
-            
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex lg:flex-col gap-2 overflow-hidden"
+              className="flex lg:flex-col gap-2"
             >
               {sparePart?.photo &&
                 sparePart.photo.map((photo, index) => (
                   <motion.div
                     key={index}
                     whileHover={{ scale: 1.1 }}
-                    className={`w-20 h-20 lg:w-24 lg:h-24 border-2 rounded-lg overflow-hidden cursor-pointer transition-transform duration-300 ${
+                    className={`w-20 h-20 lg:w-24 lg:h-24 border-2 rounded-lg overflow-hidden cursor-pointer transition-transform duration-300 flex items-center justify-center ${
                       index === currentImageIndex
                         ? "border-blue-500"
                         : "border-gray-200"
@@ -154,7 +163,7 @@ function SparePartDetails() {
                     <img
                       src={`data:image/jpeg;base64,${photo}`}
                       alt={`Thumbnail ${index}`}
-                      className="w-full h-full object-cover"
+                      className="object-contain w-full h-full"
                     />
                   </motion.div>
                 ))}
@@ -163,13 +172,13 @@ function SparePartDetails() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex-1 h-[300px] lg:h-[400px] border-2 border-gray-200 rounded-lg shadow-lg overflow-hidden relative bg-white flex items-center justify-center"
+              className="flex-1 border-2 border-gray-200 rounded-lg shadow-lg overflow-hidden relative bg-white flex items-center justify-center"
             >
               {sparePart && sparePart.photo?.length > 0 ? (
                 <motion.img
                   src={`data:image/jpeg;base64,${sparePart.photo[currentImageIndex]}`}
                   alt={sparePart.partName || "Spare Part"}
-                  className="w-full h-full object-cover cursor-pointer"
+                  className="w-full h-auto object-contain cursor-pointer"
                   onClick={handleFullScreen}
                   whileHover={{ scale: 1.02 }}
                 />
@@ -177,7 +186,7 @@ function SparePartDetails() {
                 <img
                   src="/placeholder.jpg"
                   alt="Placeholder"
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto object-contain"
                 />
               )}
 
@@ -191,6 +200,7 @@ function SparePartDetails() {
             </motion.div>
           </div>
 
+          {/* Delivery Message with option to change pincode */}
           {deliveryMessage && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -199,6 +209,12 @@ function SparePartDetails() {
             >
               <Truck size={20} />
               <span>{deliveryMessage}</span>
+              <button
+                onClick={() => setShowPincodePopup(true)}
+                className="text-blue-500 underline ml-2"
+              >
+                Change
+              </button>
             </motion.div>
           )}
         </div>
@@ -210,7 +226,7 @@ function SparePartDetails() {
               animate={{ opacity: 1 }}
               className="text-2xl lg:text-3xl font-bold text-gray-800"
             >
-              {sparePart!.partName}
+              {sparePart?.partName}
             </motion.h1>
             <motion.button
               whileHover={{ scale: 1.1 }}
@@ -230,7 +246,7 @@ function SparePartDetails() {
               Free Delivery
             </span>
             <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-              Fulfilled by {sparePart!.seller || "AutoCarCare"}
+              Fulfilled by {sparePart?.seller || "AutoCarCare"}
             </span>
             <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
               Best Offer
@@ -243,7 +259,7 @@ function SparePartDetails() {
             className="mb-4"
           >
             <p className="text-4xl font-mono font-bold text-gray-800">
-              ₹{sparePart!.price}
+              ₹{sparePart?.price}
             </p>
             <p className="text-gray-600 text-sm">Incl. of all taxes</p>
           </motion.div>
@@ -260,7 +276,8 @@ function SparePartDetails() {
               <strong>Origin:</strong> {sparePart?.manufacturer ?? "N/A"}
             </p>
             <p className="text-gray-700 text-lg">
-              <strong>Replacement Price:</strong> ₹{sparePart?.replacementPrice}
+              <strong>Replacement Price:</strong> ₹
+              {sparePart?.replacementPrice}
             </p>
           </motion.div>
 
@@ -280,26 +297,26 @@ function SparePartDetails() {
             animate={{ opacity: 1 }}
             className="flex flex-col lg:flex-row gap-4"
           >
-            {userRole === 'USER' ? (
+            {userRole === "USER" && (
               <>
-              <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center justify-center gap-2 bg-green-500 text-white px-8 py-3 rounded-lg transition duration-300 shadow-md"
-              >
-              <ShoppingCart size={20} />
-              <span className="text-lg">Add to Cart</span>
-            </motion.button>
-            <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center justify-center gap-2 bg-blue-500 text-white px-8 py-3 rounded-lg transition duration-300 shadow-md"
-            >
-              <CreditCard size={20} />
-              <span className="text-lg">Buy Now</span>
-            </motion.button>
-            </>
-            ) : <></>}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center justify-center gap-2 bg-green-500 text-white px-8 py-3 rounded-lg transition duration-300 shadow-md"
+                >
+                  <ShoppingCart size={20} />
+                  <span className="text-lg">Add to Cart</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center justify-center gap-2 bg-blue-500 text-white px-8 py-3 rounded-lg transition duration-300 shadow-md"
+                >
+                  <CreditCard size={20} />
+                  <span className="text-lg">Buy Now</span>
+                </motion.button>
+              </>
+            )}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -329,7 +346,7 @@ function SparePartDetails() {
                     : "/placeholder.jpg"
                 }
                 alt={sparePart?.partNumber ?? "N/A"}
-                className="max-w-full max-h-full"
+                className="max-w-full max-h-full object-contain"
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.8 }}

@@ -1,4 +1,4 @@
-// src/pages/ManageRepairPage.tsx
+
 import React from 'react';
 import {
   Box,
@@ -25,7 +25,7 @@ const cardItems = [
   { title: 'Vehicle Status', icon: <BuildIcon fontSize="large" />, link: '/admin/service-queue' },
   { title: 'Vehicle Appointment', icon: <HistoryIcon fontSize="large" />, link: '/admin/service-history' },
   { title: 'Counter Sale', icon: <PointOfSaleIcon fontSize="large" />, link: '/admin/counter-sale' },
-  { title: 'Quotation', icon: <DescriptionIcon fontSize="large" />, link: '/admin/quotation' },
+  { title: 'NewStock', icon: <HistoryIcon fontSize="large" />, link: '/admin/transaction' },
   { title: 'Insurance', icon: <PolicyIcon fontSize="large" />, link: '/admin/insurance' },
 ];
 
@@ -40,12 +40,11 @@ export default function ManageRepairPage() {
         p: 3,
       }}
     >
-      {/* Header */}
+    
       <Typography variant="h4" align="center" gutterBottom>
         AUTO CAR CARE POINT
       </Typography>
 
-      {/* Cards Grid */}
       <Grid container spacing={3} justifyContent="center">
         {cardItems.map((item, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
@@ -71,7 +70,6 @@ export default function ManageRepairPage() {
         ))}
       </Grid>
 
-      {/* Footer */}
       <Box sx={{ mt: 4 }}>
         <Typography variant="body2" align="center">
           Copyright © Sitemark 2025.
