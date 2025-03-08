@@ -41,7 +41,7 @@ export default function ManageUsers() {
       </Typography> */}
       <Grid container spacing={2} columns={12}>
         <Grid size={{ xs: 12, lg: 12 }}>
-          <CustomizedDataGrid />
+          {/* <CustomizedDataGrid /> */}
         </Grid>
         {/* <Grid size={{ xs: 12, lg: 3 }}>
           <Stack gap={2} direction={{ xs: 'column', sm: 'row', lg: 'column' }}>
