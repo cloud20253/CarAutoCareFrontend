@@ -1,8 +1,13 @@
 import * as React from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { columns, rows } from '.././internals/data/gridData';
+import {  GridColDef, GridRowsProp } from '@mui/x-data-grid';
 
-export default function CustomizedDataGrid() {
+interface CustomizedDataGridProps {
+  columns: GridColDef[]; // Columns type
+  rows: GridRowsProp; // Rows type
+}
+
+export default function CustomizedDataGrid({columns ,rows} : CustomizedDataGridProps) {
   return (
     <DataGrid
       checkboxSelection

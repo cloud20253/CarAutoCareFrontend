@@ -16,44 +16,46 @@ const data: StatCardProps[] = [
     // title: '',
     value: 'Purchase          ',
     icon: <AddShoppingCartIcon />,
-    
+    url : "/admin/vehicle"
   },
   {
     // title: 'Conversions',
     value: 'Vehicle Registration',
     icon: <ArticleIcon />,
+    url : "/admin/vehicle"
     
   },
   {
     // title: 'Event count',
     value: 'Booking',
     icon: <GarageIcon />,
-    
+    url : "/admin/vehicle"
   },
   {
     // title: 'Event count',
     value: 'Service Queue',
     icon: <GarageIcon />,
-    
+    url : "/admin/vehicle"
   },{
     // title: 'Event count',
     value: 'Service History',
     icon: <FormatListBulletedIcon />,
-    
+    url : "/admin/vehicle"
   },{
     // title: 'Event count',
     value: 'Counter Sale',
     icon: <GarageIcon />,
-    
+    url : "/admin/vehicle"
   },{
     // title: 'Event count',
     value: 'Quatation',
     icon: <GarageIcon />,
-    
+    url : "/admin/vehicle"
   },
   {
     value : 'Insurance',
     icon :<GarageIcon />,
+    url : "/admin/vehicle"
   }
 ];
 
