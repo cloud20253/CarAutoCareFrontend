@@ -22,6 +22,7 @@ import VehicleByAppointmentId from 'pages/VehicleByAppointmentId';
 import ManageRepairPage from "components/RepairsComponent/ManageRepairPage";
 import VehicleList from "components/vehicle/VehicleList";
 import AddVehicle from "components/vehicle/AddVehicle";
+import TransactionAdd from "pages/TransactionManagement/TransactionAdd";
 const AppRoutes = () => {
     return(
         <>
@@ -48,6 +49,7 @@ const AppRoutes = () => {
             </Route>
             <Route path="/admin/*" element={<AdminHeader />}>
                 <Route path="dashboard" element={<Dashboard />} />
+                <Route path="transaction" element={<TransactionAdd />} /> 
                 <Route path="manage-repair" element={<ManageRepairPage />} />
                 <Route path="users" element={<ManageUsers />} />
                 <Route path="vehicle" element={<VehicleList />} />
