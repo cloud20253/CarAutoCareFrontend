@@ -1,4 +1,3 @@
-import * as React from 'react';
 import Stack from '@mui/material/Stack';
 import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
 import CustomDatePicker from './CustomDatePicker';
@@ -11,7 +10,6 @@ import { useLocation } from 'react-router-dom';
 export default function Header() {
   const location = useLocation();
 
-  // Define breadcrumb paths dynamically
   const breadcrumbMap: Record<string, string[]> = {
     '/admin/dashboard': ['Dashboard', 'Home'],
     '/admin/users': ['Dashboard', 'Users'],
@@ -19,7 +17,6 @@ export default function Header() {
     '/master/manage-repair': ['Master', 'Manage Repair'],
   };
 
-  // Get breadcrumbs based on the current pathname
   const breadcrumbs = breadcrumbMap[location.pathname] || ['Dashboard'];
 
   return (
