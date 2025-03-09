@@ -21,6 +21,8 @@ import {
   InputAdornment,
   styled,
   Stack,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { SelectChangeEvent } from '@mui/material/Select';
 import { useNavigate } from 'react-router-dom';
@@ -39,16 +41,23 @@ interface CreateTransaction {
   billNo?: string;
 }
 
-const TransactionAdd: React.FC = () => {
-  const [createData, setCreateData] = useState<CreateTransaction>({
-    transactionType: "CREDIT",
-    userId: undefined,
-    vehicleRegId: undefined,
-    partNumber: "",
-    quantity: 1,
-    billNo: "",
-  });
+interface Feedback {
+  message: string;
+  severity: "success" | "error";
+}
 
+const initialCreateData: CreateTransaction = {
+  transactionType: "CREDIT",
+  userId: undefined,
+  vehicleRegId: undefined,
+  partNumber: "",
+  quantity: 1,
+  billNo: "",
+};
+
+const TransactionAdd: React.FC = () => {
+  const [createData, setCreateData] = useState<CreateTransaction>(initialCreateData);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
   const navigate = useNavigate();
 
   const handleCreateChange = (
@@ -69,10 +78,22 @@ const TransactionAdd: React.FC = () => {
     e.preventDefault();
     try {
       const response = await apiClient.post("/sparePartTransactions/add", createData);
-      alert(response.data.message || "Transaction created successfully");
+      setFeedback({
+        message: response.data.message || "Transaction created successfully",
+        severity: "success",
+      });
+      // Reset the form state after a successful submission
+      setCreateData(initialCreateData);
     } catch (error: any) {
-      alert(error.response?.data?.message || "Failed to create transaction");
+      setFeedback({
+        message: error.response?.data?.message || "Failed to create transaction",
+        severity: "error",
+      });
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setFeedback(null);
   };
 
   return (
@@ -209,6 +230,19 @@ const TransactionAdd: React.FC = () => {
           </FormGrid>
         </Grid>
       </form>
+
+      <Snackbar 
+  open={!!feedback} 
+  autoHideDuration={6000} 
+  onClose={handleCloseSnackbar}
+  anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+>
+  {feedback ? (
+    <Alert onClose={handleCloseSnackbar} severity={feedback.severity} sx={{ width: '100%' }}>
+      {feedback.message}
+    </Alert>
+  ) : undefined}
+</Snackbar>
     </Box>
   );
 };
