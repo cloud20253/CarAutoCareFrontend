@@ -27,7 +27,7 @@ const mainListItems = [
     text: "Master",
     icon: <PeopleIcon />,
     subMenu: [
-      { text: "Manage Service", icon: <BuildIcon />, link: "/admin/manage-service" },
+      { text: "Manage Service", icon: <BuildIcon />, link: "/admin/spare-part/transaction/list" },
       { text: "Manage Repair", icon: <RepairIcon />, link: "/admin/manage-repair" },
       { text: "Manage Spares", icon: <RepairIcon />, link: "/admin/manage-spares" },
       { text: "Manage Supplier", icon: <RepairIcon />, link: "/admin/manage-supllier" },

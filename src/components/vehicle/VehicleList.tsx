@@ -3,22 +3,24 @@ import Grid from '@mui/material/Grid2';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-// import Copyright from '../internals/components/Copyright';
-import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-import ArticleIcon from '@mui/icons-material/Article';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import GarageIcon from '@mui/icons-material/Garage';
 import CustomizedDataGrid from 'components/CustomizedDataGrid';
 import Copyright from 'internals/components/Copyright';
-import { Button, IconButton } from '@mui/material';
+import { Button, FormControl, IconButton,  InputLabel,  MenuItem,  OutlinedInput, Select } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {  GridCellParams, GridRowsProp, GridColDef } from '@mui/x-data-grid';
-import Chip from '@mui/material/Chip';
 import { VehicleListData } from 'Services/vehicleService';
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VehicleDeleteModal from './VehicleDeleteModal';
-
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import InputAdornment from '@mui/material/InputAdornment';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs, { Dayjs } from 'dayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
+import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+import { SingleInputDateRangeField } from '@mui/x-date-pickers-pro/SingleInputDateRangeField';
 
 interface Vehicle {
     vehicleRegId: string;
@@ -35,45 +37,40 @@ interface Vehicle {
     date: string;
 }
 
-
-
 export default function VehicleList() {
     const navigate = useNavigate();
     const [rows, setRows] = React.useState<GridRowsProp>([]);
-     const [open, setOpen] = React.useState<boolean>(false);
-     const [selectedId, setSelectedId]  = React.useState<number>();
+    const [open, setOpen] = React.useState<boolean>(false);
+    const [selectedId, setSelectedId]  = React.useState<number>();
+    const [dateValue ,setDateValue] =  React.useState<[Dayjs | null, Dayjs | null]>([null, null]);
+    const [selectedType, setSelectedType] = React.useState<string>("");
+    const [textInput, setTextInput] = React.useState<string>("");
+    const [selectedStatus, setSelectedStatus] = React.useState<string>("");
 
-    function renderStatus(status: 'Online' | 'Offline') {
-      const colors: { [index: string]: 'success' | 'default' } = {
-        Online: 'success',
-        Offline: 'default',
-      };
-    
-      return <Chip label={status} color={colors[status]} size="small" />;
-    }
-
-    function renderSparklineCell(params: GridCellParams<any>) {
-    //   const data = getDaysInMonth(4, 2024);
-    
-      const { value, colDef } = params;
-    
-      if (!value ) {
-        return null;
-      }
-    }
-
-    // Function to handle Edit Click
-const handleEdit = (id: number) => {
-    console.log("Edit Clicked for ID:", id);
-    // Navigate to edit page or open a modal
-  };
-  
   // Function to handle Delete Click
   const handleDelete = (id: number) => {
-    console.log("Delete Clicked for ID:", id);
-    // Perform delete operation
     setSelectedId(id);
     setOpen(true);
+  };
+
+  const handleSearch = async () => {
+    let requestData = {};
+
+    if (selectedType === "Vehicle ID" || selectedType === "Appointment Number") {
+      requestData = { type: selectedType, value: textInput };
+    } else if (selectedType === "Date Range") {
+      requestData = { type: selectedType, startDate: dateValue[0]?.format("YYYY-MM-DD"), endDate: dateValue[1]?.format("YYYY-MM-DD") };
+    } else if (selectedType === "Status") {
+      requestData = { type: selectedType, value: selectedStatus };
+    }
+
+    try {
+      // const response = await axios.post("https://your-api-endpoint.com/search", requestData);
+      const response = '';
+      // console.log("API Response:", response);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
   };
   
   // Function to render Edit & Delete buttons in the "Action" column
@@ -91,13 +88,6 @@ const handleEdit = (id: number) => {
   }
     const columns: GridColDef[] = [
       { field: 'vehicleRegId', headerName: 'Vehicle Reg ID', flex: 1, minWidth: 100 },
-    //   {
-    //     field: 'status',
-    //     headerName: 'Status',
-    //     flex: 0.5,
-    //     minWidth: 80,
-    //     renderCell: (params) => renderStatus(params.value as any),
-    //   },
       {
         field: 'appointmentId',
         headerName: 'Appointment ID',
@@ -241,31 +231,75 @@ const handleEdit = (id: number) => {
         columns={12}
         sx={{ mb: (theme) => theme.spacing(2) }}
       >
-       
-        {/* <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-          <HighlightedCard />
-        </Grid> */}
-        {/* <Grid size={{ xs: 12, md: 6 }}>
-          <SessionsChart />
+        <Grid size={{ xs: 12, sm: 12, md:12, lg: 12 }} container spacing={2} sx={{ display: 'flex', gap: 2 }}  >
+        <FormControl sx={{ width: { xs: "100%", md: "25ch" } }}>
+        <InputLabel>Select Type</InputLabel>
+        <Select value={selectedType} onChange={(e) => setSelectedType(e.target.value)} size="medium">
+          <MenuItem value="Vehicle ID">Vehicle ID</MenuItem>
+          <MenuItem value="Date Range">Date Range</MenuItem>
+          <MenuItem value="Status">Status</MenuItem>
+          <MenuItem value="Appointment Number">Appointment Number</MenuItem>
+        </Select>
+      </FormControl>
+
+      {/* Input Field for Vehicle ID or Appointment Number */}
+      {selectedType === "Vehicle ID" || selectedType === "Appointment Number" ? (
+        <FormControl sx={{ width: { xs: "100%", md: "25ch" } }} variant="outlined">
+          <OutlinedInput
+            size="small"
+            id="search"
+            placeholder="Enter text..."
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            startAdornment={
+              <InputAdornment position="start" sx={{ color: "text.primary" }}>
+                <SearchRoundedIcon fontSize="small" />
+              </InputAdornment>
+            }
+          />
+        </FormControl>
+      ) : null}
+
+      {/* Date Range Picker */}
+      {selectedType === "Date Range" && (
+        <LocalizationProvider dateAdapter={AdapterDayjs} >
+          <DemoContainer components={["SingleInputDateRangeField"]}>
+            <DateRangePicker
+              slots={{ field: SingleInputDateRangeField }}
+              name="allowedRange"
+              value={dateValue}
+              onChange={(newValue) => setDateValue(newValue)}
+              format="DD/MM/YYYY"
+            />
+          </DemoContainer>
+        </LocalizationProvider>
+      )}
+
+      {/* Select Status */}
+      {selectedType === "Status" && (
+        <FormControl sx={{ width: { xs: "100%", md: "25ch" } }}>
+          <InputLabel>Select Status</InputLabel>
+          <Select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)} size="medium">
+            <MenuItem value="In Progress">In Progress</MenuItem>
+            <MenuItem value="Waiting">Waiting</MenuItem>
+            <MenuItem value="Completed">Completed</MenuItem>
+          </Select>
+        </FormControl>
+      )}
+
+      {/* Search Button */}
+      <Button variant="contained" color="primary" sx={{ alignSelf: "start" }} onClick={handleSearch}>
+        Search
+      </Button>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <PageViewsBarChart />
-        </Grid> */}
+       
           <VehicleDeleteModal open={open} onClose={() => setOpen(false)} deleteItemId={selectedId} />
       </Grid>
-      {/* <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-        Details
-      </Typography> */}
+      
       <Grid container spacing={2} columns={12}>
         <Grid size={{ xs: 12, lg: 12 }}>
           <CustomizedDataGrid columns ={columns} rows={rows}/>
         </Grid>
-        {/* <Grid size={{ xs: 12, lg: 3 }}>
-          <Stack gap={2} direction={{ xs: 'column', sm: 'row', lg: 'column' }}>
-            <CustomizedTreeView />
-            <ChartUserByCountry />
-          </Stack>
-        </Grid> */}
       </Grid>
       <Copyright sx={{ my: 4 }} />
     </Box>
