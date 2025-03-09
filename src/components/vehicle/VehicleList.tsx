@@ -11,6 +11,7 @@ import {  GridCellParams, GridRowsProp, GridColDef } from '@mui/x-data-grid';
 import { VehicleListData } from 'Services/vehicleService';
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import BuildIcon from "@mui/icons-material/Build"
 import VehicleDeleteModal from './VehicleDeleteModal';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -21,6 +22,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { SingleInputDateRangeField } from '@mui/x-date-pickers-pro/SingleInputDateRangeField';
+import PreviewIcon from "@mui/icons-material/Preview";
 
 interface Vehicle {
     vehicleRegId: string;
@@ -83,97 +85,104 @@ export default function VehicleList() {
         <IconButton color="secondary" onClick={() => handleDelete(params.row.vehicleRegId as number)}>
           <DeleteIcon />
         </IconButton>
+        <IconButton color="secondary" onClick={() => navigate(`/admin/vehicle/add/servicepart/${params.row.vehicleRegId}`)}>
+          <BuildIcon />
+        </IconButton>
+        <IconButton color="secondary" onClick={() => navigate(`/admin/vehicle/edit/${params.row.vehicleRegId}`)}>
+          <PreviewIcon />
+        </IconButton>
+        
       </>
     );
   }
     const columns: GridColDef[] = [
-      { field: 'vehicleRegId', headerName: 'Vehicle Reg ID', flex: 1, minWidth: 100 },
+      { field: 'vehicleRegId', headerName: 'Vehicle Reg ID', flex: 1, minWidth: 120 },
       {
         field: 'appointmentId',
         headerName: 'Appointment ID',
-        headerAlign: 'right',
-        align: 'right',
+        // headerAlign: 'right',
+        // align: 'right',
         flex: 1,
-        minWidth: 100,
+        minWidth: 120,
       },
       {
         field: 'chasisNumber',
         headerName: 'Chasis Number',
-        headerAlign: 'right',
-        align: 'right',
+        headerAlign: 'left',
+        align: 'left',
         flex: 1,
-        minWidth: 100,
+        minWidth: 150,
       },
       {
         field: 'customerAddress',
         headerName: 'Customer Address',
-        headerAlign: 'right',
-        align: 'right',
+        headerAlign: 'left',
+        align: 'left',
         flex: 1,
         minWidth: 120,
       },
       {
         field: 'customerAadharNo',
         headerName: 'Customer Aadhar No',
-        headerAlign: 'right',
-        align: 'right',
+        headerAlign: 'left',
+        align: 'left',
         flex: 1,
-        minWidth: 100,
+        minWidth: 150,
       },
       {
         field: 'customerGstin',
         headerName: 'Customer GSTIN',
-        headerAlign: 'right',
-        align: 'right',
+        headerAlign: 'left',
+        align: 'left',
         flex: 1,
-        minWidth: 100,
+        minWidth: 150,
       },{
         field: 'superwiser',
         headerName: 'Superwiser',
-        headerAlign: 'right',
-        align: 'right',
+        headerAlign: 'left',
+        align: 'left',
         flex: 1,
         minWidth: 100,
       },{
         field: 'technician',
         headerName: 'Technician',
-        headerAlign: 'right',
-        align: 'right',
+        headerAlign: 'left',
+        align: 'left',
         flex: 1,
         minWidth: 100,
       },{
         field: 'worker',
         headerName: 'worker',
-        headerAlign: 'right',
-        align: 'right',
+        headerAlign: 'left',
+        align: 'left',
         flex: 1,
         minWidth: 100,
       },{
         field: 'userId',
         headerName: 'User ID',
-        headerAlign: 'right',
-        align: 'right',
+        headerAlign: 'left',
+        align: 'left',
         flex: 1,
         minWidth: 100,
       },{
         field: 'Status',
         headerName: 'Status',
-        headerAlign: 'right',
-        align: 'right',
+        headerAlign: 'left',
+        align: 'left',
         flex: 1,
         minWidth: 100,
       },{
         field: 'date',
         headerName: 'Date',
-        headerAlign: 'right',
-        align: 'right',
+        headerAlign: 'left',
+        align: 'left',
         flex: 1,
         minWidth: 100,
       },{
         field: "Action",
         headerName: "Action",
         flex: 1,
-        minWidth: 100,
+        minWidth: 200,
         renderCell: (params) => renderActionButtons(params),
       },
       
