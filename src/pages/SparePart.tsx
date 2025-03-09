@@ -15,27 +15,24 @@ function SparePart() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
   let userRole: string = "";
+
   const storedDecodedToken = localStorage.getItem("userData");
   if (storedDecodedToken) {
     const parsedToken = JSON.parse(storedDecodedToken);
     userRole = parsedToken.authorities[0];
   }
 
-  // Fetch all spare parts or filtered results based on searchQuery
   const fetchSpareParts = async () => {
     try {
       setLoading(true);
       setError(null);
-      let url = "";
 
-      if (searchQuery.trim() !== "") {
-        url = `/Filter/searchBarFilter?searchBarInput=${encodeURIComponent(searchQuery)}`;
-      } else {
-        url = "/sparePartManagement/getAll";
-      }
+      let url = searchQuery.trim()
+        ? `/Filter/searchBarFilter?searchBarInput=${encodeURIComponent(searchQuery)}`
+        : "/sparePartManagement/getAll";
 
       const response = await apiClient.get(url);
       console.log("API Response:", response.data);
@@ -63,24 +60,33 @@ function SparePart() {
     }
   };
 
-  // Initial fetch when component mounts
   useEffect(() => {
     fetchSpareParts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Automatically reset the page when search box is cleared
   useEffect(() => {
     if (searchQuery.trim() === "") {
       fetchSpareParts();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
-  // Handle search button click
   const handleSearch = () => {
     fetchSpareParts();
   };
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
+        <p className="text-red-500 text-lg mb-4">{error}</p>
+        <button
+          onClick={fetchSpareParts}
+          className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-gray-50 p-4">
@@ -88,15 +94,14 @@ function SparePart() {
         Spare Parts
       </h1>
 
-      {/* Filter Input Section with wider input, highlighting effect, and Enter key trigger */}
+      {/* Search Bar */}
       <div className="flex justify-center mb-8">
-        <div className="flex focus-within:ring-2 focus-within:ring-red-300 rounded-lg">
+        <div className="flex focus-within:ring-2 focus-within:ring-blue-300 rounded-lg">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {
-              console.log("Key pressed:", e.key, e.keyCode);
               if (e.key === "Enter" || e.keyCode === 13) {
                 handleSearch();
               }
@@ -106,31 +111,20 @@ function SparePart() {
           />
           <button
             onClick={handleSearch}
-            className="bg-gradient-to-r from-red-500 to-black text-white px-4 py-2 rounded-r-lg hover:opacity-90 transition"
+            className="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:opacity-90 transition"
           >
             Search
           </button>
         </div>
       </div>
 
-      {error && (
-        <div className="flex flex-col items-center justify-center">
-          <p className="text-red-500 text-lg mb-4">{error}</p>
-          <button
-            onClick={fetchSpareParts}
-            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition"
-          >
-            Retry
-          </button>
-        </div>
-      )}
-
+      {/* Content */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, index) => (
             <div
               key={index}
-              className="bg-white shadow-md rounded-lg overflow-hidden animate-pulse"
+              className="bg-white rounded-lg overflow-hidden animate-pulse"
             >
               <div className="h-48 bg-gray-200"></div>
               <div className="p-4">
@@ -146,22 +140,22 @@ function SparePart() {
             spareParts.map((sparePart, index) => (
               <div
                 key={sparePart.sparePartId || `spare-part-${index}`}
-                className="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 hover:shadow-xl transition transform hover:scale-105 cursor-pointer"
+                className="bg-white rounded-lg border border-gray-300 overflow-hidden transition-transform hover:-translate-y-2 hover:scale-105 cursor-pointer shadow-lg"
                 onClick={() => {
                   if (sparePart.sparePartId && userRole) {
-                    console.log("Navigating to:", sparePart.sparePartId);
                     navigate(`/spare-part/${sparePart.sparePartId}`);
                   } else {
                     navigate("/signIn");
                   }
                 }}
               >
-                <div className="h-48 bg-gray-100 flex justify-center items-center relative">
+                {/* Image container with padding */}
+                <div className="relative w-full aspect-video bg-gray-100 p-3">
                   {sparePart.photo && sparePart.photo.length > 0 ? (
                     <img
                       src={`data:image/jpeg;base64,${sparePart.photo[0]}`}
                       alt={sparePart.partName}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                       onError={(e) => {
                         console.error("Image Load Error:", e);
                         (e.target as HTMLImageElement).src = "/placeholder.jpg";
@@ -171,16 +165,17 @@ function SparePart() {
                     <img
                       src="/placeholder.jpg"
                       alt="Placeholder"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   )}
                 </div>
 
-                <div className="p-4">
+                {/* Centered Text Content */}
+                <div className="p-4 text-center">
                   <h2 className="text-xl font-semibold text-gray-800 mb-2">
                     {sparePart.partName}
                   </h2>
-                  <p className="text-gray-600 text-sm">
+                  <p className="text-gray-600 text-sm mb-1">
                     Manufacturer: {sparePart.manufacturer}
                   </p>
                   <p className="text-gray-600 text-sm">
