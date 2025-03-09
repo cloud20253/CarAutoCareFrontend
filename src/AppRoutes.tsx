@@ -52,6 +52,7 @@ const AppRoutes = () => {
                 <Route path="users" element={<ManageUsers />} />
                 <Route path="vehicle" element={<VehicleList />} />
                 <Route path="vehicle/add" element={<AddVehicle/>} />
+                <Route path="vehicle/edit/:id" element={<AddVehicle/>} />
             </Route>
         </Routes>
         </>

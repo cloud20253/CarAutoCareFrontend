@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import axios from 'axios';
+import VehicleDeleteModal from 'components/vehicle/VehicleDeleteModal';
 
 interface Vehicle {
   vehicleRegId: number;

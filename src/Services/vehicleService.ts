@@ -1,5 +1,4 @@
 import apiClient from "./apiService";
-import { SparePartData } from "../types/SparePart";
 import { VehicleFormData } from "types/Vahicle";
 
 export const VehicleListData = async () => {
@@ -22,19 +21,29 @@ export const VehicleListData = async () => {
     }
   };
 
-  export const SparePartGetByID = async (SPID : string | number) => {
+  export const VehicleDataByID = async (VID : string | number) => {
     try {
-      const response = await apiClient.get(`/sparePartManagement/getPartById/${SPID}` );
-      return response.data;
+      const response = await apiClient.get(`vehicle-reg/getById?vehicleRegId=${VID}` );
+      return response.data.data;
     } catch (error) {
       console.error("Error fetching spare parts:", error);
       throw new Error("Failed to fetch spare parts");
     }
   };
   
-  export const SparePartUpdate = async ( SPData : SparePartData) => {
+  export const VehicleUpdate = async ( vData : VehicleFormData) => {
     try{
-      const response = await apiClient.post(`sparePartTransactions/update?transactionId=${SPData.id}` , SPData);
+      const response = await apiClient.put(`vehicle-reg/update?vehicleRegId=${vData.vehicleRegId}` , vData);
+      return response.data;
+    }catch(error) { 
+      console.error("Error fetching spare parts:", error);
+      throw new Error("Failed to fetch spare parts");
+    }
+  }
+
+  export const VehicleDelete = async ( vehicleRegId : number | number) => {
+    try{
+      const response = await apiClient.put(`vehicle-reg/delete?vehicleRegId=${vehicleRegId}`);
       return response.data;
     }catch(error) { 
       console.error("Error fetching spare parts:", error);

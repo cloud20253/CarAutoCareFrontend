@@ -14,8 +14,8 @@ import {
   InputLabel,
   Button,
 } from "@mui/material";
-import { useNavigate } from 'react-router-dom';
-import { VehicleAdd } from 'Services/vehicleService';
+import { useNavigate, useParams } from 'react-router-dom';
+import { VehicleAdd, VehicleDataByID, VehicleUpdate } from 'Services/vehicleService';
 
 const FormGrid = styled(Grid)(() => ({
   display: "flex",
@@ -24,12 +24,13 @@ const FormGrid = styled(Grid)(() => ({
 
 // Define TypeScript Interface for form data
 interface VehicleFormData {
+  vehicleRegId?: string;
   appointmentId: string;
   chasisNumber: string;
   customerAddress: string;
-  customerAadhar: string;
+  customerAadharNo: string;
   customerGstin: string;
-  supervisor: string;
+  superwiser: string;
   technician: string;
   worker: string;
   status: "In Progress" | "Complete" | "Waiting";
@@ -37,13 +38,16 @@ interface VehicleFormData {
 }
 
 export default function AddVehicle() {
+  const {id} = useParams();
+  console.log("Check my id:",id);
   const [formData, setFormData] = React.useState<VehicleFormData>({
+    vehicleRegId : "",
     appointmentId: "",
     chasisNumber: "",
     customerAddress: "",
-    customerAadhar: "",
+    customerAadharNo: "",
     customerGstin: "",
-    supervisor: "",
+    superwiser: "",
     technician: "",
     worker: "",
     status: "In Progress",
@@ -68,14 +72,47 @@ export default function AddVehicle() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      const response = await VehicleAdd(formData);
-      console.log("Vehicle added successfully:", response.data);
+      let response = '';
+      if(id){
+        response = await VehicleUpdate(formData);
+      }else{
+        response = await VehicleAdd(formData);
+      }
+      console.log("Vehicle added successfully:", response);
       alert("Vehicle added successfully!");
     } catch (error) {
       console.error("Error adding vehicle:", error);
       alert("Failed to add vehicle!");
     }
   };
+
+  React.useEffect(()=>{
+    if(id){
+      const getVehicleData = async () => {
+        try{
+          const response = await VehicleDataByID(id);
+          console.log("shubha",response)
+          setFormData({
+              vehicleRegId: response.vehicleRegId,
+              appointmentId: response.appointmentId,
+              chasisNumber: response.chasisNumber,
+              customerAddress: response.customerAddress,
+              customerAadharNo: response.customerAadharNo,
+              customerGstin: response.customerGstin,
+              superwiser: response.superwiser,
+              technician: response.technician,
+              worker: response.worker,
+              status: response.status,
+              date: response.date
+          })
+        }catch(error){
+          console.log(error);
+        }
+      }
+      getVehicleData();
+    }
+
+  },[id])
 
   return (
     <Box sx={{
@@ -91,7 +128,7 @@ export default function AddVehicle() {
    <Stack direction="row" alignItems="center" justifyContent="space-between" >
         {/* Left Side: Title */}
         <Typography component="h2" variant="h6">
-            Vehicle Registration
+            {id ? 'Update ' : ''}Vehicle Registration
         </Typography>
 
         {/* Right Side: Add Vehicle Button */}
@@ -153,7 +190,7 @@ export default function AddVehicle() {
           <OutlinedInput
             id="customerAadhar"
             name="customerAadhar"
-            value={formData.customerAadhar}
+            value={formData.customerAadharNo}
             onChange={handleChange}
             placeholder="Enter Aadhar Number"
             required
@@ -179,7 +216,7 @@ export default function AddVehicle() {
           <OutlinedInput
             id="supervisor"
             name="supervisor"
-            value={formData.supervisor}
+            value={formData.superwiser}
             onChange={handleChange}
             placeholder="Enter Supervisor Name"
             required

@@ -17,6 +17,7 @@ import Chip from '@mui/material/Chip';
 import { VehicleListData } from 'Services/vehicleService';
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import VehicleDeleteModal from './VehicleDeleteModal';
 
 
 interface Vehicle {
@@ -39,6 +40,8 @@ interface Vehicle {
 export default function VehicleList() {
     const navigate = useNavigate();
     const [rows, setRows] = React.useState<GridRowsProp>([]);
+     const [open, setOpen] = React.useState<boolean>(false);
+     const [selectedId, setSelectedId]  = React.useState<number>();
 
     function renderStatus(status: 'Online' | 'Offline') {
       const colors: { [index: string]: 'success' | 'default' } = {
@@ -69,16 +72,18 @@ const handleEdit = (id: number) => {
   const handleDelete = (id: number) => {
     console.log("Delete Clicked for ID:", id);
     // Perform delete operation
+    setSelectedId(id);
+    setOpen(true);
   };
   
   // Function to render Edit & Delete buttons in the "Action" column
-  function renderActionButtons(params: GridCellParams<any>) {
+  function renderActionButtons(params: GridCellParams) {
     return (
       <>
-        <IconButton color="primary" onClick={() => handleEdit(params.id as number)}>
+        <IconButton color="primary" onClick={() => navigate(`/admin/vehicle/edit/${params.row.vehicleRegId}`)}>
           <EditIcon />
         </IconButton>
-        <IconButton color="secondary" onClick={() => handleDelete(params.id as number)}>
+        <IconButton color="secondary" onClick={() => handleDelete(params.row.vehicleRegId as number)}>
           <DeleteIcon />
         </IconButton>
       </>
@@ -175,14 +180,13 @@ const handleEdit = (id: number) => {
         flex: 1,
         minWidth: 100,
       },{
-        field: 'Action',
-        headerName: 'Action',
-        // headerAlign: 'right',
-        // align: 'right',
+        field: "Action",
+        headerName: "Action",
         flex: 1,
         minWidth: 100,
-        renderCell: (params) => renderActionButtons(params.value as any),
+        renderCell: (params) => renderActionButtons(params),
       },
+      
     ];
 
     React.useEffect(() => {
@@ -247,6 +251,7 @@ const handleEdit = (id: number) => {
         <Grid size={{ xs: 12, md: 6 }}>
           <PageViewsBarChart />
         </Grid> */}
+          <VehicleDeleteModal open={open} onClose={() => setOpen(false)} deleteItemId={selectedId} />
       </Grid>
       {/* <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
         Details
