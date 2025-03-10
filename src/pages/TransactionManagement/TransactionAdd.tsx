@@ -2,11 +2,11 @@ import * as React from 'react';
 import { useState, ChangeEvent, FormEvent } from "react";
 import apiClient from "Services/apiService";
 import {
-  FaExchangeAlt,  
-  FaUser,         
-  FaCar,          
-  FaBarcode,      
-  FaRegListAlt,   
+  FaExchangeAlt,
+  FaUser,
+  FaCar,
+  FaBarcode,
+  FaRegListAlt,
   FaMoneyBillWave,
 } from "react-icons/fa";
 import {
@@ -48,7 +48,7 @@ interface Feedback {
 
 const initialCreateData: CreateTransaction = {
   transactionType: "CREDIT",
-  userId: undefined,
+  userId: 10006,
   vehicleRegId: undefined,
   partNumber: "",
   quantity: 1,
@@ -70,9 +70,9 @@ const TransactionAdd: React.FC = () => {
     }));
   };
 
-  const handleSelectChange = (event: SelectChangeEvent<"CREDIT" | "DEBIT">) => {
-    setCreateData({ ...createData, transactionType: event.target.value as "CREDIT" | "DEBIT" });
-  };
+  // const handleSelectChange = (event: SelectChangeEvent<"CREDIT" | "DEBIT">) => {
+  //   setCreateData({ ...createData, transactionType: event.target.value as "CREDIT" | "DEBIT" });
+  // };
 
   const handleCreateSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -82,7 +82,7 @@ const TransactionAdd: React.FC = () => {
         message: response.data.message || "Transaction created successfully",
         severity: "success",
       });
-      // Reset the form state after a successful submission
+
       setCreateData(initialCreateData);
     } catch (error: any) {
       setFeedback({
@@ -117,57 +117,6 @@ const TransactionAdd: React.FC = () => {
 
       <form onSubmit={handleCreateSubmit}>
         <Grid container spacing={3}>
- 
-          <FormGrid item xs={12} md={6}>
-            <FormLabel htmlFor="transactionType">
-              <FaExchangeAlt style={{ marginRight: 8, verticalAlign: 'middle' }} />
-              Transaction Type
-            </FormLabel>
-            <Select
-              name="transactionType"
-              value={createData.transactionType}
-              onChange={handleSelectChange}
-              size="small"
-              required
-            >
-              <MenuItem value="CREDIT">CREDIT</MenuItem>
-              <MenuItem value="DEBIT">DEBIT</MenuItem>
-            </Select>
-          </FormGrid>
-
-          <FormGrid item xs={12} md={6}>
-            <FormLabel htmlFor="userId">
-              <FaUser style={{ marginRight: 8, verticalAlign: 'middle' }} />
-              User ID
-            </FormLabel>
-            <OutlinedInput
-              name="userId"
-              value={createData.userId || ""}
-              onChange={handleCreateChange}
-              placeholder="Enter User ID"
-              type="number"
-              size="small"
-              startAdornment={<InputAdornment position="start">#</InputAdornment>}
-            />
-          </FormGrid>
-
-          {createData.transactionType === "DEBIT" && (
-            <FormGrid item xs={12} md={6}>
-              <FormLabel htmlFor="vehicleRegId">
-                <FaCar style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                Vehicle Reg ID
-              </FormLabel>
-              <OutlinedInput
-                name="vehicleRegId"
-                value={createData.vehicleRegId || ""}
-                onChange={handleCreateChange}
-                placeholder="Enter Vehicle Reg ID"
-                type="number"
-                size="small"
-                startAdornment={<InputAdornment position="start">#</InputAdornment>}
-              />
-            </FormGrid>
-          )}
 
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="partNumber">
@@ -200,24 +149,21 @@ const TransactionAdd: React.FC = () => {
             />
           </FormGrid>
 
-          {createData.transactionType === "CREDIT" && (
-            <FormGrid item xs={12} md={6}>
-              <FormLabel htmlFor="billNo">
-                <FaMoneyBillWave style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                Bill Number
-              </FormLabel>
-              <OutlinedInput
-                name="billNo"
-                value={createData.billNo}
-                onChange={handleCreateChange}
-                placeholder="Enter Bill Number"
-                size="small"
-                required
-              />
-            </FormGrid>
-          )}
+          <FormGrid item xs={12} md={6}>
+            <FormLabel htmlFor="billNo">
+              <FaMoneyBillWave style={{ marginRight: 8, verticalAlign: 'middle' }} />
+              Bill Number
+            </FormLabel>
+            <OutlinedInput
+              name="billNo"
+              value={createData.billNo}
+              onChange={handleCreateChange}
+              placeholder="Enter Bill Number"
+              size="small"
+              required
+            />
+          </FormGrid>
 
-          {/* Submit Button */}
           <FormGrid item xs={12}>
             <Button 
               type="submit" 
@@ -232,17 +178,17 @@ const TransactionAdd: React.FC = () => {
       </form>
 
       <Snackbar 
-  open={!!feedback} 
-  autoHideDuration={6000} 
-  onClose={handleCloseSnackbar}
-  anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
->
-  {feedback ? (
-    <Alert onClose={handleCloseSnackbar} severity={feedback.severity} sx={{ width: '100%' }}>
-      {feedback.message}
-    </Alert>
-  ) : undefined}
-</Snackbar>
+        open={!!feedback} 
+        autoHideDuration={6000} 
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        {feedback ? (
+          <Alert onClose={handleCloseSnackbar} severity={feedback.severity} sx={{ width: '100%' }}>
+            {feedback.message}
+          </Alert>
+        ) : undefined}
+      </Snackbar>
     </Box>
   );
 };

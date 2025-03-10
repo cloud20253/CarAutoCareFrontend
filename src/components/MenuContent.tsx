@@ -32,7 +32,7 @@ const mainListItems = [
       { text: "Manage Spares", icon: <RepairIcon />, link: "/admin/manage-spares" },
       { text: "Manage Supplier", icon: <RepairIcon />, link: "/admin/manage-supllier" },
       { text: "Manage Customer", icon: <RepairIcon />, link: "/admin/manage-customer" },
-      { text: "Manage Notes", icon: <RepairIcon />, link: "/admin/manage-note" },
+      { text: "Manage Stock", icon: <RepairIcon />, link: "/admin/manage-stock" },
       { text: "Manage Terms & Conditions", icon: <RepairIcon />, link: "/admin/manage-condition" },
       { text: "Spare Sale Stock", icon: <RepairIcon />, link: "/admin/manage-stock" },
     ],

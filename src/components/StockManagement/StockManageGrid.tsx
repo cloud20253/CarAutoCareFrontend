@@ -1,5 +1,4 @@
 
-import React from 'react';
 import {
   Box,
   Card,
@@ -15,22 +14,19 @@ import BookOnlineIcon from '@mui/icons-material/BookOnline';
 import BuildIcon from '@mui/icons-material/Build';
 import HistoryIcon from '@mui/icons-material/History';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
-import DescriptionIcon from '@mui/icons-material/Description';
-import PolicyIcon from '@mui/icons-material/Policy';
+
 
 const cardItems = [
-  { title: 'Vehicle Registration', icon: <ShoppingCartIcon fontSize="large" />, link: '/admin/purchase' },
-  { title: 'Vehicle ID', icon: <DirectionsCarIcon fontSize="large" />, link: '/admin/vehicle-registration' },
-  { title: 'Vehicle Date Range', icon: <BookOnlineIcon fontSize="large" />, link: '/admin/booking' },
-  { title: 'Vehicle Status', icon: <BuildIcon fontSize="large" />, link: '/admin/service-queue' },
-  { title: 'Vehicle Appointment', icon: <HistoryIcon fontSize="large" />, link: '/admin/service-history' },
-  { title: 'Counter Sale', icon: <PointOfSaleIcon fontSize="large" />, link: '/admin/counter-sale' },
-  { title: 'Quotation', icon: <DescriptionIcon fontSize="large" />, link: '/admin/quotation' },
-  { title: 'Insurance', icon: <PolicyIcon fontSize="large" />, link: '/admin/insurance' },
+  { title: 'Add New Stock', icon: <ShoppingCartIcon fontSize="large" />, link: '/admin/transaction' },
+  { title: 'View All Stock', icon: <DirectionsCarIcon fontSize="large" />, link: '/admin/transaction-list' },
+  { title: 'View by Partname', icon: <BookOnlineIcon fontSize="large" />, link: '/admin/booking' },
+  { title: 'Manage Stock', icon: <BuildIcon fontSize="large" />, link: '/admin/service-queue' },
+  { title: 'Stock By Date', icon: <HistoryIcon fontSize="large" />, link: '/admin/service-history' },
+  { title: 'Counter Sale', icon: <PointOfSaleIcon fontSize="large" />, link: '/admin/counter-sale' }
 ];
 
 
-export default function ManageRepairPage() {
+export default function StockManageGrid() {
   return (
     <Box
       sx={{
