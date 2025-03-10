@@ -33,7 +33,7 @@ interface CreateTransaction {
   amount: number;
   total: number;
   transactionType : string;
-
+  billNo:number;
 }
 
 interface Feedback {
@@ -58,7 +58,8 @@ const initialCreateData: CreateTransaction = {
   quantity: 1,
   amount: 0,
   total: 0,
-  transactionType:"DEBIT"
+  transactionType:"DEBIT",
+  billNo:1
 };
 
 const AddVehiclePartService: React.FC = () => {
@@ -109,7 +110,8 @@ const AddVehiclePartService: React.FC = () => {
     try {
        const updatedData =  {
         ...createData,
-        vehicleRegId: Number(id), // Ensure conversion to number
+        vehicleRegId: Number(id), 
+        userId : 1,// Ensure conversion to number
     };
       const response = await apiClient.post("/sparePartTransactions/add", updatedData);
       const newTransaction = {
