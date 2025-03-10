@@ -1,4 +1,3 @@
-import React from "react";
 import { Route, Routes } from "react-router-dom";
 import SignIn from "./pages/SignInSide";
 import Home from "./pages/Home";
@@ -24,6 +23,8 @@ import VehicleList from "components/vehicle/VehicleList";
 import AddVehicle from "components/vehicle/AddVehicle";
 import TransactionAdd from "pages/TransactionManagement/TransactionAdd";
 import TransactionAll from "pages/TransactionManagement/TransactionAll";
+import StockManageGrid from "components/StockManagement/StockManageGrid";
+import TransactionList from "components/StockManagement/TransactionList";
 const AppRoutes = () => {
     return(
         <>
@@ -36,7 +37,7 @@ const AppRoutes = () => {
             <Route path="/" element = {<Home/>} />
             <Route path="/add-part" element={<MyAddSparePart />} /> 
             <Route path="/getAll" element={<SparePart />} /> 
-
+             
             <Route path="/spare-part/:id" element={<SparePartDetails />} /> 
             <Route path="/book-service" element={<BookAppointment />} /> 
             <Route path="/edit-spare-part/:id" element={<EditSparePart />} />
@@ -52,7 +53,9 @@ const AppRoutes = () => {
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="transaction" element={<TransactionAdd />} /> 
                 <Route path="manage-repair" element={<ManageRepairPage />} />
+                <Route path="manage-stock" element={<StockManageGrid />} />
                 <Route path="users" element={<ManageUsers />} />
+                <Route path="transaction-list" element={<TransactionList />} /> 
                 <Route path="vehicle" element={<VehicleList />} />
                 <Route path="vehicle/add" element={<AddVehicle/>} />
                 <Route path="vehicle/edit/:id" element={<AddVehicle/>} />

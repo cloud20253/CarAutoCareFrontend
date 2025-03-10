@@ -45,7 +45,6 @@ function SparePartDetails() {
     userRole = parsedToken.authorities[0];
   }
 
-  // Check if pincode is stored locally
   useEffect(() => {
     const storedPincode = localStorage.getItem("pincode");
     if (storedPincode) {
@@ -103,7 +102,7 @@ function SparePartDetails() {
     setIsFullScreen(false);
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <motion.div
@@ -114,8 +113,9 @@ function SparePartDetails() {
         />
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
       <div className="flex justify-center items-center h-screen">
         <motion.p
@@ -127,6 +127,7 @@ function SparePartDetails() {
         </motion.p>
       </div>
     );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 lg:p-6 relative">
@@ -175,10 +176,11 @@ function SparePartDetails() {
               className="flex-1 border-2 border-gray-200 rounded-lg shadow-lg overflow-hidden relative bg-white flex items-center justify-center"
             >
               {sparePart && sparePart.photo?.length > 0 ? (
+           
                 <motion.img
                   src={`data:image/jpeg;base64,${sparePart.photo[currentImageIndex]}`}
                   alt={sparePart.partName || "Spare Part"}
-                  className="w-full h-auto object-contain cursor-pointer"
+                  className="w-full max-h-[500px] object-contain cursor-pointer"
                   onClick={handleFullScreen}
                   whileHover={{ scale: 1.02 }}
                 />
@@ -186,7 +188,7 @@ function SparePartDetails() {
                 <img
                   src="/placeholder.jpg"
                   alt="Placeholder"
-                  className="w-full h-auto object-contain"
+                  className="w-full max-h-[500px] object-contain"
                 />
               )}
 
@@ -200,7 +202,6 @@ function SparePartDetails() {
             </motion.div>
           </div>
 
-          {/* Delivery Message with option to change pincode */}
           {deliveryMessage && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -275,10 +276,10 @@ function SparePartDetails() {
             <p className="text-gray-700 text-lg">
               <strong>Origin:</strong> {sparePart?.manufacturer ?? "N/A"}
             </p>
-            <p className="text-gray-700 text-lg">
+            {/* <p className="text-gray-700 text-lg">
               <strong>Replacement Price:</strong> ₹
               {sparePart?.replacementPrice}
-            </p>
+            </p> */}
           </motion.div>
 
           <motion.div
@@ -286,7 +287,9 @@ function SparePartDetails() {
             animate={{ opacity: 1 }}
             className="mb-6"
           >
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Description</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">
+              Description
+            </h2>
             <p className="text-gray-700 text-lg break-words">
               {sparePart?.description}
             </p>
@@ -339,6 +342,7 @@ function SparePartDetails() {
             className="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50"
           >
             <motion.div className="relative max-w-full max-h-full">
+        
               <motion.img
                 src={
                   sparePart?.photo?.[currentImageIndex]
@@ -346,7 +350,7 @@ function SparePartDetails() {
                     : "/placeholder.jpg"
                 }
                 alt={sparePart?.partNumber ?? "N/A"}
-                className="max-w-full max-h-full object-contain"
+                className="max-w-full max-h-screen object-contain"
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0.8 }}
