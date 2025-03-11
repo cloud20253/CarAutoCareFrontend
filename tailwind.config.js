@@ -4,6 +4,12 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx}", 
     "./public/index.html",
   ],
+  ignoreWarnings:[
+    (warning) =>
+      warning.module &&
+      warning.module.resource &&
+      warning.module.resource.includes('node_modules/react-datepicker'),
+  ],
   theme: {
     extend: {
       animation: {

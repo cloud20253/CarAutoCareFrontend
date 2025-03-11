@@ -26,6 +26,7 @@ import TransactionAll from "pages/TransactionManagement/TransactionAll";
 import AddVehiclePartService from "components/vehicle/AddVehiclePartService";
 import StockManageGrid from "components/StockManagement/StockManageGrid";
 import TransactionList from "components/StockManagement/TransactionList";
+import VehicleDetailsView from "components/vehicle/VehicleDetailsView";
 const AppRoutes = () => {
     return(
         <>
@@ -60,6 +61,7 @@ const AppRoutes = () => {
                 <Route path="vehicle" element={<VehicleList />} />
                 <Route path="vehicle/add" element={<AddVehicle/>} />
                 <Route path="vehicle/edit/:id" element={<AddVehicle/>} />
+                <Route path="vehicle/view/:id" element={<VehicleDetailsView/>} />
                 <Route path="vehicle/add/servicepart/:id" element={<AddVehiclePartService/>} />
                 <Route path="vehicle/details/:id" element={<AddVehicle/>} />
                 <Route path="spare-part/transaction/add" element={<TransactionAdd />} />

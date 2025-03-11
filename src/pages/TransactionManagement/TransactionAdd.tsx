@@ -1,10 +1,7 @@
 import * as React from 'react';
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState,  FormEvent } from "react";
 import apiClient from "Services/apiService";
 import {
-  FaExchangeAlt,
-  FaUser,
-  FaCar,
   FaBarcode,
   FaRegListAlt,
   FaMoneyBillWave,
@@ -16,15 +13,11 @@ import {
   Button,
   OutlinedInput,
   FormLabel,
-  Select,
-  MenuItem,
-  InputAdornment,
   styled,
   Stack,
   Snackbar,
   Alert,
 } from "@mui/material";
-import { SelectChangeEvent } from '@mui/material/Select';
 import { useNavigate } from 'react-router-dom';
 
 const FormGrid = styled(Grid)(() => ({

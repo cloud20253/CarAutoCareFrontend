@@ -5,12 +5,14 @@ import {  GridColDef, GridRowsProp } from '@mui/x-data-grid';
 interface CustomizedDataGridProps {
   columns: GridColDef[]; // Columns type
   rows: GridRowsProp; // Rows type
+  checkboxSelection? : boolean;
+
 }
 
-export default function CustomizedDataGrid({columns ,rows} : CustomizedDataGridProps) {
+export default function CustomizedDataGrid({columns ,rows ,checkboxSelection = true} : CustomizedDataGridProps) {
   return (
     <DataGrid
-      checkboxSelection
+      checkboxSelection ={checkboxSelection}
       rows={rows}
       columns={columns}
       getRowClassName={(params) =>
