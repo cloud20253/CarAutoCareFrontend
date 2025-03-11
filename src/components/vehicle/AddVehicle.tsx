@@ -15,6 +15,7 @@ const FormGrid = styled(Grid)(() => ({
   flexDirection: "column",
 }));
 
+// Updated interface including insurance info
 interface VehicleFormData {
   vehicleRegId?: string;
   appointmentId: string;
@@ -35,14 +36,20 @@ interface VehicleFormData {
   technician: string;
   worker: string;
   vehicleInspection: string; // New field
-  jobcard: string;         // New field
+  jobcard: string;           // New field
   status: "In Progress" | "Complete" | "Waiting";
   userId: string;
   date: string;
+  // New insurance info fields:
+  insuranceStatus: "Insured" | "Expired";
+  insuranceFrom: string;
+  insuranceTo: string;
 }
 
 export default function AddVehicle() {
   const { id } = useParams();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = React.useState<VehicleFormData>({
     vehicleRegId: "",
     appointmentId: "",
@@ -67,18 +74,29 @@ export default function AddVehicle() {
     status: "In Progress",
     userId: "",
     date: "",
+    // Initial insurance values (default status can be set to Expired)
+    insuranceStatus: "Expired",
+    insuranceFrom: "",
+    insuranceTo: "",
   });
 
-  const navigate = useNavigate();
-
+  // General change handler for OutlinedInput fields
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setFormData({ ...formData, [event.target.name]: event.target.value });
   };
 
+  // Handler for select dropdowns (vehicle status)
   const handleSelectChange = (event: SelectChangeEvent<"In Progress" | "Complete" | "Waiting">) => {
     setFormData({ ...formData, status: event.target.value as VehicleFormData["status"] });
+  };
+
+  // New handler for Insurance Status dropdown
+  const handleInsuranceStatusChange = (
+    event: SelectChangeEvent<"Insured" | "Expired">
+  ) => {
+    setFormData({ ...formData, insuranceStatus: event.target.value as "Insured" | "Expired" });
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -126,7 +144,11 @@ export default function AddVehicle() {
             jobcard: response.jobcard,                     // map API response
             status: response.status,
             userId: response.userId,
-            date: response.date
+            date: response.date,
+            // Assuming insurance data is returned from the API as well:
+            insuranceStatus: response.insuranceStatus || "Expired",
+            insuranceFrom: response.insuranceFrom || "",
+            insuranceTo: response.insuranceTo || "",
           });
         } catch (error) {
           console.error("Error fetching vehicle data:", error);
@@ -157,6 +179,7 @@ export default function AddVehicle() {
 
       <form onSubmit={handleSubmit}>
         <Grid container spacing={3}>
+          {/* Existing fields... */}
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="vehicleNumber">Vehicle Number</FormLabel>
             <OutlinedInput
@@ -380,6 +403,54 @@ export default function AddVehicle() {
             />
           </FormGrid>
 
+          {/* New Section: Insurance Information */}
+          <FormGrid item xs={12} md={6}>
+            <FormLabel htmlFor="insuranceStatus">Insurance Status</FormLabel>
+            <FormControl fullWidth size="small">
+              <Select
+                id="insuranceStatus"
+                name="insuranceStatus"
+                value={formData.insuranceStatus}
+                onChange={handleInsuranceStatusChange}
+                required
+              >
+                <MenuItem value="Insured">Insured</MenuItem>
+                <MenuItem value="Expired">Expired</MenuItem>
+              </Select>
+            </FormControl>
+          </FormGrid>
+
+          {/* Conditionally show Insurance Dates if "Insured" */}
+          {formData.insuranceStatus === "Insured" && (
+            <>
+              <FormGrid item xs={12} md={6}>
+                <FormLabel htmlFor="insuranceFrom">Insurance From</FormLabel>
+                <OutlinedInput
+                  id="insuranceFrom"
+                  name="insuranceFrom"
+                  type="date"
+                  value={formData.insuranceFrom}
+                  onChange={handleChange}
+                  required
+                  size="small"
+                />
+              </FormGrid>
+              <FormGrid item xs={12} md={6}>
+                <FormLabel htmlFor="insuranceTo">Insurance To</FormLabel>
+                <OutlinedInput
+                  id="insuranceTo"
+                  name="insuranceTo"
+                  type="date"
+                  value={formData.insuranceTo}
+                  onChange={handleChange}
+                  required
+                  size="small"
+                />
+              </FormGrid>
+            </>
+          )}
+
+          {/* Existing Status field */}
           <FormGrid item xs={12} md={6}>
             <FormControl fullWidth size="small">
               <InputLabel>Status</InputLabel>
