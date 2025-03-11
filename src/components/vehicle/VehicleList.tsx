@@ -15,8 +15,7 @@ import BuildIcon from "@mui/icons-material/Build"
 import VehicleDeleteModal from './VehicleDeleteModal';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import InputAdornment from '@mui/material/InputAdornment';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs, { Dayjs } from 'dayjs';
+import  { Dayjs } from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
@@ -88,7 +87,7 @@ export default function VehicleList() {
         <IconButton color="secondary" onClick={() => navigate(`/admin/vehicle/add/servicepart/${params.row.vehicleRegId}`)}>
           <BuildIcon />
         </IconButton>
-        <IconButton color="secondary" onClick={() => navigate(`/admin/vehicle/edit/${params.row.vehicleRegId}`)}>
+        <IconButton color="secondary" onClick={() => navigate(`/admin/vehicle/view/${params.row.vehicleRegId}`)}>
           <PreviewIcon />
         </IconButton>
         
