@@ -4,30 +4,28 @@ import Grid from '@mui/material/Grid';
 import { styled } from '@mui/material/styles';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import {
-    Box,
-    Button,
-} from "@mui/material";
+import { Box, Button } from "@mui/material";
 import { useNavigate, useParams } from 'react-router-dom';
-import {  VehicleDataByID, } from 'Services/vehicleService';
-import {  GridRowsProp, GridColDef } from '@mui/x-data-grid';
+import { VehicleDataByID } from 'Services/vehicleService';
+import { GridRowsProp, GridColDef } from '@mui/x-data-grid';
 import CustomizedDataGrid from 'components/CustomizedDataGrid';
 import apiClient from 'Services/apiService';
-
 
 const FormGrid = styled(Grid)(() => ({
     display: "flex",
     flexDirection: "row",
     gap: 5,
 }));
+
 const FormGrid2 = styled(Grid)(() => ({
     display: "flex",
     flexDirection: "column",
 }));
 
+// Updated interface with new fields for insurance info, vehicle inspection, and jobcard
 interface VehicleFormData {
     vehicleRegId?: string;
-    appointmentId: string; // Still required by the API type
+    appointmentId: string;
     vehicleNumber: string;
     vehicleBrand: string;
     vehicleModelName: string;
@@ -35,7 +33,7 @@ interface VehicleFormData {
     engineNumber: string;
     chasisNumber: string;
     numberPlateColour: string;
-    customerId: string; // Still required by the API type
+    customerId: string;
     customerName: string;
     customerAddress: string;
     customerMobileNumber: string;
@@ -45,15 +43,21 @@ interface VehicleFormData {
     technician: string;
     worker: string;
     status: "In Progress" | "Complete" | "Waiting";
-    userId: string; // Still required by the API type
+    userId: string;
     date: string;
+    // New fields:
+    insuranceStatus: "Insured" | "Expired";
+    insuranceFrom: string;
+    insuranceTo: string;
+    vehicleInspection: string;
+    jobcard: string;
 }
 
 export default function VehicleDetailsView() {
     const { id } = useParams();
     const [formData, setFormData] = React.useState<VehicleFormData>({
         vehicleRegId: "",
-        appointmentId: "", // Default value provided but not shown in the form
+        appointmentId: "",
         vehicleNumber: "",
         vehicleBrand: "",
         vehicleModelName: "",
@@ -61,7 +65,7 @@ export default function VehicleDetailsView() {
         engineNumber: "",
         chasisNumber: "",
         numberPlateColour: "",
-        customerId: "", // Remains in the state but not rendered in the form
+        customerId: "",
         customerName: "",
         customerAddress: "",
         customerMobileNumber: "",
@@ -71,8 +75,14 @@ export default function VehicleDetailsView() {
         technician: "",
         worker: "",
         status: "In Progress",
-        userId: "", // Default value provided but not shown in the form
+        userId: "",
         date: "",
+        // Default new values
+        insuranceStatus: "Expired",
+        insuranceFrom: "",
+        insuranceTo: "",
+        vehicleInspection: "",
+        jobcard: "",
     });
 
     const navigate = useNavigate();
@@ -99,7 +109,7 @@ export default function VehicleDetailsView() {
             const transactions: any = Array.isArray(responsePart.data)
                 ? responsePart.data
                 : [responsePart.data];
-            console.log(transactions[0].data)
+            console.log(transactions[0].data);
             const transactionsData = transactions[0].data;
             // Transform each transaction
             const newTransactions = transactionsData.map((resData: any, index: number) => ({
@@ -130,7 +140,6 @@ export default function VehicleDetailsView() {
         { field: "total", flex: 1, headerName: "Total", width: 150 },
     ];
 
-
     React.useEffect(() => {
         if (id) {
             const getVehicleData = async () => {
@@ -157,7 +166,13 @@ export default function VehicleDetailsView() {
                         worker: response.worker,
                         status: response.status,
                         userId: response.userId,
-                        date: response.date
+                        date: response.date,
+                        // Map new insurance and inspection fields.
+                        insuranceStatus: response.insuranceStatus || "Expired",
+                        insuranceFrom: response.insuranceFrom || "",
+                        insuranceTo: response.insuranceTo || "",
+                        vehicleInspection: response.vehicleInspection || "",
+                        jobcard: response.jobcard || "",
                     });
                 } catch (error) {
                     console.error("Error fetching vehicle data:", error);
@@ -189,98 +204,126 @@ export default function VehicleDetailsView() {
             <Grid container spacing={3}>
                 {/* Vehicle Details Section */}
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Vehicle Number :   </Typography>
-                    <FormLabel> {formData.vehicleNumber}</FormLabel>
+                    <Typography>Vehicle Number :</Typography>
+                    <FormLabel>{formData.vehicleNumber}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Vehicle Brand :  </Typography>
+                    <Typography>Vehicle Brand :</Typography>
                     <FormLabel>{formData.vehicleBrand}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Model Name :  </Typography>
+                    <Typography>Model Name :</Typography>
                     <FormLabel>{formData.vehicleModelName}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Variant :  </Typography>
+                    <Typography>Variant :</Typography>
                     <FormLabel>{formData.vehicleVariant}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Engine Number :  </Typography>
+                    <Typography>Engine Number :</Typography>
                     <FormLabel>{formData.engineNumber}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Number Plate Color :  </Typography>
+                    <Typography>Number Plate Color :</Typography>
                     <FormLabel>{formData.numberPlateColour}</FormLabel>
                 </FormGrid>
 
                 {/* Customer Details Section */}
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Customer Name :  </Typography>
+                    <Typography>Customer Name :</Typography>
                     <FormLabel>{formData.customerName}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Mobile Number :  </Typography>
+                    <Typography>Mobile Number :</Typography>
                     <FormLabel>{formData.customerMobileNumber}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Chasis Number :  </Typography>
+                    <Typography>Chasis Number :</Typography>
                     <FormLabel>{formData.chasisNumber}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Customer Address :  </Typography>
+                    <Typography>Customer Address :</Typography>
                     <FormLabel>{formData.customerAddress}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Aadhar Number :  </Typography>
+                    <Typography>Aadhar Number :</Typography>
                     <FormLabel>{formData.customerAadharNo}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>GSTIN :  </Typography>
+                    <Typography>GSTIN :</Typography>
                     <FormLabel>{formData.customerGstin}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Supervisor :  </Typography>
+                    <Typography>Supervisor :</Typography>
                     <FormLabel>{formData.superwiser}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Technician :  </Typography>
+                    <Typography>Technician :</Typography>
                     <FormLabel>{formData.technician}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Worker :  </Typography>
+                    <Typography>Worker :</Typography>
                     <FormLabel>{formData.worker}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Status :  </Typography>
+                    <Typography>Status :</Typography>
                     <FormLabel>{formData.status}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
-                    <Typography>Date :  </Typography>
+                    <Typography>Date :</Typography>
                     <FormLabel>{formData.date}</FormLabel>
                 </FormGrid>
+
+                {/* New Insurance Info Section */}
+                <FormGrid item xs={12} md={6}>
+                    <Typography>Insurance Status :</Typography>
+                    <FormLabel>{formData.insuranceStatus}</FormLabel>
+                </FormGrid>
+                {formData.insuranceStatus === "Insured" && (
+                    <>
+                        <FormGrid item xs={12} md={6}>
+                            <Typography>Insurance From :</Typography>
+                            <FormLabel>{formData.insuranceFrom}</FormLabel>
+                        </FormGrid>
+                        <FormGrid item xs={12} md={6}>
+                            <Typography>Insurance To :</Typography>
+                            <FormLabel>{formData.insuranceTo}</FormLabel>
+                        </FormGrid>
+                    </>
+                )}
+
+                {/* New Vehicle Inspection and Jobcard Section */}
+                <FormGrid item xs={12} md={6}>
+                    <Typography>Vehicle Inspection :</Typography>
+                    <FormLabel>{formData.vehicleInspection}</FormLabel>
+                </FormGrid>
+                <FormGrid item xs={12} md={6}>
+                    <Typography>Jobcard :</Typography>
+                    <FormLabel>{formData.jobcard}</FormLabel>
+                </FormGrid>
             </Grid>
-           
+
             <FormGrid2 container spacing={2} columns={12} mt={4}>
                 <Typography component="h2" variant="h6">
                     Service Part Details
                 </Typography>
                 <FormGrid2 mt={2}>
-                    <CustomizedDataGrid columns={columns} rows={rows} checkboxSelection={false}/>
+                    <CustomizedDataGrid columns={columns} rows={rows} checkboxSelection={false} />
                 </FormGrid2>
             </FormGrid2>
         </Box>
