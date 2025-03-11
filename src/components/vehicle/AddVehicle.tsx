@@ -24,7 +24,7 @@ const FormGrid = styled(Grid)(() => ({
 
 interface VehicleFormData {
   vehicleRegId?: string;
-  appointmentId: string; // Still required by the API type
+  appointmentId: string; 
   vehicleNumber: string;
   vehicleBrand: string;
   vehicleModelName: string;
@@ -32,7 +32,7 @@ interface VehicleFormData {
   engineNumber: string;
   chasisNumber: string;
   numberPlateColour: string;
-  customerId: string; // Still required by the API type
+  customerId: string; 
   customerName: string;
   customerAddress: string;
   customerMobileNumber: string;
@@ -42,7 +42,7 @@ interface VehicleFormData {
   technician: string;
   worker: string;
   status: "In Progress" | "Complete" | "Waiting";
-  userId: string; // Still required by the API type
+  userId: string; 
   date: string;
 }
 
@@ -50,7 +50,7 @@ export default function AddVehicle() {
   const { id } = useParams();
   const [formData, setFormData] = React.useState<VehicleFormData>({
     vehicleRegId: "",
-    appointmentId: "", // Default value provided but not shown in the form
+    appointmentId: "", 
     vehicleNumber: "",
     vehicleBrand: "",
     vehicleModelName: "",
@@ -58,7 +58,7 @@ export default function AddVehicle() {
     engineNumber: "",
     chasisNumber: "",
     numberPlateColour: "",
-    customerId: "", // Remains in the state but not rendered in the form
+    customerId: "",
     customerName: "",
     customerAddress: "",
     customerMobileNumber: "",
@@ -68,7 +68,7 @@ export default function AddVehicle() {
     technician: "",
     worker: "",
     status: "In Progress",
-    userId: "", // Default value provided but not shown in the form
+    userId: "", 
     date: "",
   });
 
@@ -158,7 +158,7 @@ export default function AddVehicle() {
 
       <form onSubmit={handleSubmit}>
         <Grid container spacing={3}>
-          {/* Vehicle Details Section */}
+       
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="vehicleNumber">Vehicle Number</FormLabel>
             <OutlinedInput
@@ -237,8 +237,6 @@ export default function AddVehicle() {
             />
           </FormGrid>
 
-          {/* Customer Details Section */}
-          {/* Customer ID field has been removed */}
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="customerName">Customer Name</FormLabel>
             <OutlinedInput
@@ -355,8 +353,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
-          {/* The User ID field has been removed from the form */}
 
           <FormGrid item xs={12} md={6}>
             <FormControl fullWidth size="small">

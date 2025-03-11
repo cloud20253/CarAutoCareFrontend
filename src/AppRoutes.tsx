@@ -26,6 +26,7 @@ import TransactionAll from "pages/TransactionManagement/TransactionAll";
 import AddVehiclePartService from "components/vehicle/AddVehiclePartService";
 import StockManageGrid from "components/StockManagement/StockManageGrid";
 import TransactionList from "components/StockManagement/TransactionList";
+import BillForm from "components/vehicle/BillForm";
 const AppRoutes = () => {
     return(
         <>
@@ -56,6 +57,7 @@ const AppRoutes = () => {
                 <Route path="manage-repair" element={<ManageRepairPage />} />
                 <Route path="manage-stock" element={<StockManageGrid />} />
                 <Route path="users" element={<ManageUsers />} />
+                <Route path="bill" element={<BillForm />} />
                 <Route path="transaction-list" element={<TransactionList />} /> 
                 <Route path="vehicle" element={<VehicleList />} />
                 <Route path="vehicle/add" element={<AddVehicle/>} />

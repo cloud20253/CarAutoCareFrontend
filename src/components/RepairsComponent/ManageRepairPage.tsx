@@ -25,7 +25,7 @@ const cardItems = [
   { title: 'Vehicle Status', icon: <BuildIcon fontSize="large" />, link: '/admin/service-queue' },
   { title: 'Vehicle Appointment', icon: <HistoryIcon fontSize="large" />, link: '/admin/service-history' },
   { title: 'Counter Sale', icon: <PointOfSaleIcon fontSize="large" />, link: '/admin/counter-sale' },
-  { title: 'Quotation', icon: <DescriptionIcon fontSize="large" />, link: '/admin/quotation' },
+  { title: 'Quotation', icon: <DescriptionIcon fontSize="large" />, link: '/admin/bill' },
   { title: 'Insurance', icon: <PolicyIcon fontSize="large" />, link: '/admin/insurance' },
 ];
 
