@@ -50,3 +50,13 @@ export const VehicleListData = async () => {
       throw new Error("Failed to fetch spare parts");
     }
   }
+
+  export const VehicleSperPartDelete = async ( vehicleSparePartId : number | number) => {
+    try{
+      const response = await apiClient.delete(`sparePartTransactions/delete?transactionId=${vehicleSparePartId}`);
+      return response.data;
+    }catch(error) { 
+      console.error("Error fetching spare parts:", error);
+      throw new Error("Failed to fetch spare parts");
+    }
+  }
