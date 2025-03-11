@@ -6,14 +6,7 @@ import { styled } from '@mui/material/styles';
 import { SelectChangeEvent } from "@mui/material";
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import {
-  Box,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Button,
-} from "@mui/material";
+import { Box, MenuItem, Select, FormControl, InputLabel, Button } from "@mui/material";
 import { useNavigate, useParams } from 'react-router-dom';
 import { VehicleAdd, VehicleDataByID, VehicleUpdate } from 'Services/vehicleService';
 
@@ -24,7 +17,7 @@ const FormGrid = styled(Grid)(() => ({
 
 interface VehicleFormData {
   vehicleRegId?: string;
-  appointmentId: string; 
+  appointmentId: string;
   vehicleNumber: string;
   vehicleBrand: string;
   vehicleModelName: string;
@@ -32,7 +25,7 @@ interface VehicleFormData {
   engineNumber: string;
   chasisNumber: string;
   numberPlateColour: string;
-  customerId: string; 
+  customerId: string;
   customerName: string;
   customerAddress: string;
   customerMobileNumber: string;
@@ -41,8 +34,10 @@ interface VehicleFormData {
   superwiser: string;
   technician: string;
   worker: string;
+  vehicleInspection: string; // New field
+  jobcard: string;         // New field
   status: "In Progress" | "Complete" | "Waiting";
-  userId: string; 
+  userId: string;
   date: string;
 }
 
@@ -50,7 +45,7 @@ export default function AddVehicle() {
   const { id } = useParams();
   const [formData, setFormData] = React.useState<VehicleFormData>({
     vehicleRegId: "",
-    appointmentId: "", 
+    appointmentId: "",
     vehicleNumber: "",
     vehicleBrand: "",
     vehicleModelName: "",
@@ -67,8 +62,10 @@ export default function AddVehicle() {
     superwiser: "",
     technician: "",
     worker: "",
+    vehicleInspection: "",
+    jobcard: "",
     status: "In Progress",
-    userId: "", 
+    userId: "",
     date: "",
   });
 
@@ -125,6 +122,8 @@ export default function AddVehicle() {
             superwiser: response.superwiser,
             technician: response.technician,
             worker: response.worker,
+            vehicleInspection: response.vehicleInspection, // map API response
+            jobcard: response.jobcard,                     // map API response
             status: response.status,
             userId: response.userId,
             date: response.date
@@ -158,7 +157,6 @@ export default function AddVehicle() {
 
       <form onSubmit={handleSubmit}>
         <Grid container spacing={3}>
-       
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="vehicleNumber">Vehicle Number</FormLabel>
             <OutlinedInput
@@ -349,6 +347,34 @@ export default function AddVehicle() {
               value={formData.worker}
               onChange={handleChange}
               placeholder="Enter Worker Name"
+              required
+              size="small"
+            />
+          </FormGrid>
+
+          {/* New Field: Vehicle Inspection */}
+          <FormGrid item xs={12} md={6}>
+            <FormLabel htmlFor="vehicleInspection">Vehicle Inspection</FormLabel>
+            <OutlinedInput
+              id="vehicleInspection"
+              name="vehicleInspection"
+              value={formData.vehicleInspection}
+              onChange={handleChange}
+              placeholder="Enter Vehicle Inspection details"
+              required
+              size="small"
+            />
+          </FormGrid>
+
+          {/* New Field: Jobcard */}
+          <FormGrid item xs={12} md={6}>
+            <FormLabel htmlFor="jobcard">Jobcard</FormLabel>
+            <OutlinedInput
+              id="jobcard"
+              name="jobcard"
+              value={formData.jobcard}
+              onChange={handleChange}
+              placeholder="Enter Jobcard details"
               required
               size="small"
             />
