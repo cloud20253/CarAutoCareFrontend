@@ -11,7 +11,7 @@ import {  GridCellParams, GridRowsProp, GridColDef } from '@mui/x-data-grid';
 import { VehicleListData } from 'Services/vehicleService';
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import BuildIcon from "@mui/icons-material/Build"
+import BuildIcon from "@mui/icons-material/Build";
 import VehicleDeleteModal from './VehicleDeleteModal';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -22,6 +22,7 @@ import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { SingleInputDateRangeField } from '@mui/x-date-pickers-pro/SingleInputDateRangeField';
 import PreviewIcon from "@mui/icons-material/Preview";
+import { Print } from '@mui/icons-material';
 
 interface Vehicle {
     vehicleRegId: string;
@@ -90,20 +91,15 @@ export default function VehicleList() {
         <IconButton color="secondary" onClick={() => navigate(`/admin/vehicle/view/${params.row.vehicleRegId}`)}>
           <PreviewIcon />
         </IconButton>
+        <IconButton color="secondary" onClick={() => navigate(`/admin/vehicle/view/${params.row.vehicleRegId}`)}>
+          <Print />
+        </IconButton>
         
       </>
     );
   }
     const columns: GridColDef[] = [
       { field: 'vehicleRegId', headerName: 'Vehicle Reg ID', flex: 1, minWidth: 120 },
-      {
-        field: 'appointmentId',
-        headerName: 'Appointment ID',
-        // headerAlign: 'right',
-        // align: 'right',
-        flex: 1,
-        minWidth: 120,
-      },
       {
         field: 'chasisNumber',
         headerName: 'Chasis Number',
@@ -157,13 +153,6 @@ export default function VehicleList() {
         flex: 1,
         minWidth: 100,
       },{
-        field: 'userId',
-        headerName: 'User ID',
-        headerAlign: 'left',
-        align: 'left',
-        flex: 1,
-        minWidth: 100,
-      },{
         field: 'Status',
         headerName: 'Status',
         headerAlign: 'left',
@@ -181,7 +170,7 @@ export default function VehicleList() {
         field: "Action",
         headerName: "Action",
         flex: 1,
-        minWidth: 200,
+        minWidth: 250,
         renderCell: (params) => renderActionButtons(params),
       },
       
