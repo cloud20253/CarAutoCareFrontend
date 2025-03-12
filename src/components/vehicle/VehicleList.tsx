@@ -259,8 +259,9 @@ export default function VehicleList() {
 
       {/* Date Range Picker */}
       {selectedType === "Date Range" && (
-        <LocalizationProvider dateAdapter={AdapterDayjs} >
-          <DemoContainer components={["SingleInputDateRangeField"]}>
+        <Grid mt={-1}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DemoContainer components={["SingleInputDateRangeField"]} >
             <DateRangePicker
               slots={{ field: SingleInputDateRangeField }}
               name="allowedRange"
@@ -270,6 +271,7 @@ export default function VehicleList() {
             />
           </DemoContainer>
         </LocalizationProvider>
+        </Grid>
       )}
 
       {/* Select Status */}

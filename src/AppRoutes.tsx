@@ -55,7 +55,7 @@ const AppRoutes = () => {
             </Route>
             <Route path="/admin/*" element={<AdminHeader />}>
                 <Route path="dashboard" element={<Dashboard />} />
-                <Route path="billForm" element={<InvoiceForm />} />
+                <Route path="billForm/:id" element={<InvoiceForm />} />
                 <Route path="transaction" element={<TransactionAdd />} /> 
                 <Route path="manage-repair" element={<ManageRepairPage />} />
                 <Route path="manage-stock" element={<StockManageGrid />} />

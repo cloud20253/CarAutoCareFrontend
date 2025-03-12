@@ -196,9 +196,15 @@ export default function VehicleDetailsView() {
                 <Typography component="h2" variant="h6">
                     Vehicle Details
                 </Typography>
+                <div>
+                <Button variant="contained" color="primary" onClick={() => navigate(`/admin/billForm/${id}`)}>
+                    View Bill
+                </Button>&nbsp;
                 <Button variant="contained" color="primary" onClick={() => navigate(-1)}>
                     Back
                 </Button>
+                
+                </div>
             </Stack>
 
             <Grid container spacing={3}>
