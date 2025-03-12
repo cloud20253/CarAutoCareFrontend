@@ -172,14 +172,25 @@ function SparePart() {
 
                 {/* Centered Text Content */}
                 <div className="p-4 text-center">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                  <h2
+                    className="text-xl font-semibold text-gray-800 mb-2"
+                    style={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
                     {sparePart.partName}
                   </h2>
                   <p className="text-gray-600 text-sm mb-1">
                     Manufacturer: {sparePart.manufacturer}
                   </p>
                   <p className="text-gray-600 text-sm">
-                    Price: ₹{sparePart.price}
+                    Price:{" "}
+                    <span className="text-xl font-bold">
+                      ₹{sparePart.price}
+                    </span>
                   </p>
                 </div>
               </div>

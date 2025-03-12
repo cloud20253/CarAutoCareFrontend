@@ -22,7 +22,7 @@ const FormGrid2 = styled(Grid)(() => ({
     flexDirection: "column",
 }));
 
-// Updated interface with new fields for insurance info, vehicle inspection, and jobcard
+// Updated interface with new fields for insurance info, vehicle inspection, and jobCard
 interface VehicleFormData {
     vehicleRegId?: string;
     appointmentId: string;
@@ -45,12 +45,12 @@ interface VehicleFormData {
     status: "In Progress" | "Complete" | "Waiting";
     userId: string;
     date: string;
-    // New fields:
     insuranceStatus: "Insured" | "Expired";
     insuranceFrom: string;
     insuranceTo: string;
     vehicleInspection: string;
-    jobcard: string;
+    jobCard: string;
+    kmsDriven: number;
 }
 
 export default function VehicleDetailsView() {
@@ -77,12 +77,12 @@ export default function VehicleDetailsView() {
         status: "In Progress",
         userId: "",
         date: "",
-        // Default new values
         insuranceStatus: "Expired",
         insuranceFrom: "",
         insuranceTo: "",
         vehicleInspection: "",
-        jobcard: "",
+        jobCard: "",
+        kmsDriven: 0,
     });
 
     const navigate = useNavigate();
@@ -111,9 +111,8 @@ export default function VehicleDetailsView() {
                 : [responsePart.data];
             console.log(transactions[0].data);
             const transactionsData = transactions[0].data;
-            // Transform each transaction
             const newTransactions = transactionsData.map((resData: any, index: number) => ({
-                id: rows.length + index + 1, // Assign a unique ID
+                id: rows.length + index + 1, // Unique ID
                 partNumber: resData.partNumber,
                 partName: resData.partName,
                 quantity: resData.quantity,
@@ -124,7 +123,6 @@ export default function VehicleDetailsView() {
                 sparePartTransactionId: resData.sparePartTransactionId
             }));
 
-            // Append new transactions to the state
             setRows([...newTransactions]);
         } catch (err) {
             console.error("Error fetching transactions:", err);
@@ -172,7 +170,9 @@ export default function VehicleDetailsView() {
                         insuranceFrom: response.insuranceFrom || "",
                         insuranceTo: response.insuranceTo || "",
                         vehicleInspection: response.vehicleInspection || "",
-                        jobcard: response.jobcard || "",
+                        // Check for both jobCard and jobcard, because naming might differ
+                        jobCard: response.jobCard || response.jobcard || "",
+                        kmsDriven: response.kmsDriven || 0,
                     });
                 } catch (error) {
                     console.error("Error fetching vehicle data:", error);
@@ -314,7 +314,13 @@ export default function VehicleDetailsView() {
                 </FormGrid>
                 <FormGrid item xs={12} md={6}>
                     <Typography>Jobcard :</Typography>
-                    <FormLabel>{formData.jobcard}</FormLabel>
+                    <FormLabel>{formData.jobCard}</FormLabel>
+                </FormGrid>
+
+                {/* KMs Driven Field */}
+                <FormGrid item xs={12} md={6}>
+                    <Typography>KMs Driven :</Typography>
+                    <FormLabel>{formData.kmsDriven}</FormLabel>
                 </FormGrid>
             </Grid>
 

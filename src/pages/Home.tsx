@@ -338,8 +338,10 @@ function Home() {
               <h3 className="text-lg font-bold mb-4">Contact Us</h3>
               <ul className="text-sm text-gray-400">
                 <li className="mb-2">Email: autocarcarepoint@gmail.com</li>
-                <li className="mb-2">Phone: 9595054555</li>
-                <li className="mb-2">Address: CTS No 77/2, Kolki, Phaltan - 415523 (Akshat Nagar)</li>
+                <li className="mb-2">Phone: 8600650087,
+                                            9595054555,
+                                            7758817766</li>
+                <li className="mb-2">Address: CTS No 77/2, near HP latkar godown, Ganesh temple, buva saheb nagar, shingnapur road, at, Kolki, tal, phaltan dist, Satara -415523</li>
               </ul>
             </div>
             <div>
