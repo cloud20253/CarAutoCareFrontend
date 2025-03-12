@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import apiClient from 'Services/apiService'; // Ensure this path is correct
+import apiClient from 'Services/apiService'; 
 
 const BillForm = () => {
     const [formData, setFormData] = useState({
@@ -25,19 +25,19 @@ const BillForm = () => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            // Call the API directly using apiClient.post
+         
             const response = await apiClient.post('/pdf/generatePdf', formData, {
-                responseType: 'blob', // Important for handling binary data like PDFs
+                responseType: 'blob', 
             });
 
-            // Create a URL for the PDF blob
+        
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', 'bill.pdf'); // Set the filename for the downloaded file
+            link.setAttribute('download', 'bill.pdf'); 
             document.body.appendChild(link);
-            link.click(); // Trigger the download
-            link.remove(); // Clean up the DOM
+            link.click(); 
+            link.remove(); 
         } catch (error) {
             console.error('Error generating PDF:', error);
         }

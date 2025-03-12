@@ -38,6 +38,7 @@ function SparePartDetails() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
+  // Get user role from local storage token
   let userRole = "";
   const storedDecodedToken = localStorage.getItem("userData");
   if (storedDecodedToken) {
@@ -192,13 +193,16 @@ function SparePartDetails() {
                 />
               )}
 
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition duration-300"
-                onClick={handleEdit}
-              >
-                <Edit size={20} className="text-gray-700" />
-              </motion.button>
+              {/* Edit button visible only for ADMIN */}
+              {userRole === "ADMIN" && (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition duration-300"
+                  onClick={handleEdit}
+                >
+                  <Edit size={20} className="text-gray-700" />
+                </motion.button>
+              )}
             </motion.div>
           </div>
 
@@ -229,13 +233,16 @@ function SparePartDetails() {
             >
               {sparePart?.partName}
             </motion.h1>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition duration-300"
-              onClick={handleEdit}
-            >
-              <Edit size={20} className="text-gray-700" />
-            </motion.button>
+            {/* Edit button visible only for ADMIN */}
+            {userRole === "ADMIN" && (
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition duration-300"
+                onClick={handleEdit}
+              >
+                <Edit size={20} className="text-gray-700" />
+              </motion.button>
+            )}
           </div>
 
           <motion.div
@@ -276,10 +283,6 @@ function SparePartDetails() {
             <p className="text-gray-700 text-lg">
               <strong>Origin:</strong> {sparePart?.manufacturer ?? "N/A"}
             </p>
-            {/* <p className="text-gray-700 text-lg">
-              <strong>Replacement Price:</strong> ₹
-              {sparePart?.replacementPrice}
-            </p> */}
           </motion.div>
 
           <motion.div
@@ -320,15 +323,18 @@ function SparePartDetails() {
                 </motion.button>
               </>
             )}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleDelete}
-              className="flex items-center justify-center gap-2 bg-red-500 text-white px-8 py-3 rounded-lg transition duration-300 shadow-md"
-            >
-              <Trash2 size={20} />
-              <span className="text-lg">Delete</span>
-            </motion.button>
+            {/* Delete button visible only for ADMIN */}
+            {userRole === "ADMIN" && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleDelete}
+                className="flex items-center justify-center gap-2 bg-red-500 text-white px-8 py-3 rounded-lg transition duration-300 shadow-md"
+              >
+                <Trash2 size={20} />
+                <span className="text-lg">Delete</span>
+              </motion.button>
+            )}
           </motion.div>
         </div>
       </div>
@@ -342,7 +348,6 @@ function SparePartDetails() {
             className="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50"
           >
             <motion.div className="relative max-w-full max-h-full">
-        
               <motion.img
                 src={
                   sparePart?.photo?.[currentImageIndex]

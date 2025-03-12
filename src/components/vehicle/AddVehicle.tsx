@@ -6,7 +6,18 @@ import { styled } from '@mui/material/styles';
 import { SelectChangeEvent } from "@mui/material";
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { Box, MenuItem, Select, FormControl, InputLabel, Button } from "@mui/material";
+import { 
+  Box, 
+  MenuItem, 
+  Select, 
+  FormControl, 
+  InputLabel, 
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions 
+} from "@mui/material";
 import { useNavigate, useParams } from 'react-router-dom';
 import { VehicleAdd, VehicleDataByID, VehicleUpdate } from 'Services/vehicleService';
 
@@ -15,7 +26,6 @@ const FormGrid = styled(Grid)(() => ({
   flexDirection: "column",
 }));
 
-// Updated interface including insurance info
 interface VehicleFormData {
   vehicleRegId?: string;
   appointmentId: string;
@@ -35,68 +45,75 @@ interface VehicleFormData {
   superwiser: string;
   technician: string;
   worker: string;
-  vehicleInspection: string; // New field
-  jobcard: string;           // New field
+  vehicleInspection: string; 
+  jobCard: string;           
+  kmsDriven: number;         
   status: "In Progress" | "Complete" | "Waiting";
   userId: string;
   date: string;
-  // New insurance info fields:
   insuranceStatus: "Insured" | "Expired";
   insuranceFrom: string;
   insuranceTo: string;
 }
 
+const initialFormData: VehicleFormData = {
+  vehicleRegId: "",
+  appointmentId: "",
+  vehicleNumber: "",
+  vehicleBrand: "",
+  vehicleModelName: "",
+  vehicleVariant: "",
+  engineNumber: "",
+  chasisNumber: "",
+  numberPlateColour: "",
+  customerId: "",
+  customerName: "",
+  customerAddress: "",
+  customerMobileNumber: "",
+  customerAadharNo: "",
+  customerGstin: "",
+  superwiser: "",
+  technician: "",
+  worker: "",
+  vehicleInspection: "",
+  jobCard: "",
+  kmsDriven: 0,
+  status: "In Progress",
+  userId: "",
+  date: "",
+  insuranceStatus: "Expired",  
+  insuranceFrom: "",
+  insuranceTo: "",
+};
+
 export default function AddVehicle() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = React.useState<VehicleFormData>({
-    vehicleRegId: "",
-    appointmentId: "",
-    vehicleNumber: "",
-    vehicleBrand: "",
-    vehicleModelName: "",
-    vehicleVariant: "",
-    engineNumber: "",
-    chasisNumber: "",
-    numberPlateColour: "",
-    customerId: "",
-    customerName: "",
-    customerAddress: "",
-    customerMobileNumber: "",
-    customerAadharNo: "",
-    customerGstin: "",
-    superwiser: "",
-    technician: "",
-    worker: "",
-    vehicleInspection: "",
-    jobcard: "",
-    status: "In Progress",
-    userId: "",
-    date: "",
-    // Initial insurance values (default status can be set to Expired)
-    insuranceStatus: "Expired",
-    insuranceFrom: "",
-    insuranceTo: "",
-  });
+  const [formData, setFormData] = React.useState<VehicleFormData>(initialFormData);
 
-  // General change handler for OutlinedInput fields
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [dialogTitle, setDialogTitle] = React.useState("");
+  const [dialogMessage, setDialogMessage] = React.useState("");
+
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setFormData({ ...formData, [event.target.name]: event.target.value });
   };
 
-  // Handler for select dropdowns (vehicle status)
   const handleSelectChange = (event: SelectChangeEvent<"In Progress" | "Complete" | "Waiting">) => {
     setFormData({ ...formData, status: event.target.value as VehicleFormData["status"] });
   };
 
-  // New handler for Insurance Status dropdown
   const handleInsuranceStatusChange = (
     event: SelectChangeEvent<"Insured" | "Expired">
   ) => {
     setFormData({ ...formData, insuranceStatus: event.target.value as "Insured" | "Expired" });
+  };
+
+  const resetForm = () => {
+    setFormData(initialFormData);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -109,10 +126,22 @@ export default function AddVehicle() {
         response = await VehicleAdd(formData);
       }
       console.log("Vehicle operation successful:", response);
-      alert(`Vehicle ${id ? 'updated' : 'added'} successfully!`);
-    } catch (error) {
+      setDialogTitle("Success");
+      setDialogMessage(`Vehicle ${id ? 'updated' : 'added'} successfully!`);
+      setDialogOpen(true);
+      
+      if (!id) {
+        resetForm();
+      }
+    } catch (error: any) {
       console.error("Error processing vehicle:", error);
-      alert(`Failed to ${id ? 'update' : 'add'} vehicle!`);
+      let errorMsg = "Failed to process vehicle.";
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMsg = error.response.data.message;
+      }
+      setDialogTitle("Error");
+      setDialogMessage(errorMsg);
+      setDialogOpen(true);
     }
   };
 
@@ -140,12 +169,12 @@ export default function AddVehicle() {
             superwiser: response.superwiser,
             technician: response.technician,
             worker: response.worker,
-            vehicleInspection: response.vehicleInspection, // map API response
-            jobcard: response.jobcard,                     // map API response
+            vehicleInspection: response.vehicleInspection,
+            jobCard: response.jobcard,
+            kmsDriven: response.kmsDriven || "",
             status: response.status,
             userId: response.userId,
             date: response.date,
-            // Assuming insurance data is returned from the API as well:
             insuranceStatus: response.insuranceStatus || "Expired",
             insuranceFrom: response.insuranceFrom || "",
             insuranceTo: response.insuranceTo || "",
@@ -179,7 +208,7 @@ export default function AddVehicle() {
 
       <form onSubmit={handleSubmit}>
         <Grid container spacing={3}>
-          {/* Existing fields... */}
+       
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="vehicleNumber">Vehicle Number</FormLabel>
             <OutlinedInput
@@ -192,7 +221,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="vehicleBrand">Vehicle Brand</FormLabel>
             <OutlinedInput
@@ -205,7 +233,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="vehicleModelName">Model Name</FormLabel>
             <OutlinedInput
@@ -218,7 +245,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="vehicleVariant">Variant</FormLabel>
             <OutlinedInput
@@ -231,7 +257,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="engineNumber">Engine Number</FormLabel>
             <OutlinedInput
@@ -244,7 +269,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="numberPlateColour">Number Plate Color</FormLabel>
             <OutlinedInput
@@ -257,7 +281,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="customerName">Customer Name</FormLabel>
             <OutlinedInput
@@ -270,7 +293,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="customerMobileNumber">Mobile Number</FormLabel>
             <OutlinedInput
@@ -283,7 +305,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="chasisNumber">Chasis Number</FormLabel>
             <OutlinedInput
@@ -296,7 +317,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12}>
             <FormLabel htmlFor="customerAddress">Customer Address</FormLabel>
             <OutlinedInput
@@ -309,7 +329,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="customerAadharNo">Aadhar Number</FormLabel>
             <OutlinedInput
@@ -322,7 +341,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="customerGstin">GSTIN</FormLabel>
             <OutlinedInput
@@ -335,7 +353,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="superwiser">Supervisor</FormLabel>
             <OutlinedInput
@@ -348,7 +365,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="technician">Technician</FormLabel>
             <OutlinedInput
@@ -361,7 +377,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="worker">Worker</FormLabel>
             <OutlinedInput
@@ -374,8 +389,7 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
-          {/* New Field: Vehicle Inspection */}
+       
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="vehicleInspection">Vehicle Inspection</FormLabel>
             <OutlinedInput
@@ -388,22 +402,34 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
-          {/* New Field: Jobcard */}
+ 
           <FormGrid item xs={12} md={6}>
-            <FormLabel htmlFor="jobcard">Jobcard</FormLabel>
+            <FormLabel htmlFor="jobCard">Jobcard</FormLabel>
             <OutlinedInput
-              id="jobcard"
-              name="jobcard"
-              value={formData.jobcard}
+              id="jobCard"
+              name="jobCard"
+              value={formData.jobCard}
               onChange={handleChange}
               placeholder="Enter Jobcard details"
+           
+              required={!id}
+              size="small"
+            />
+          </FormGrid>
+    
+          <FormGrid item xs={12} md={6}>
+            <FormLabel htmlFor="kmsDriven">KMs Driven</FormLabel>
+            <OutlinedInput
+              id="kmsDriven"
+              name="kmsDriven"
+              value={formData.kmsDriven}
+              onChange={handleChange}
+              placeholder="Enter KMs Driven"
               required
               size="small"
             />
           </FormGrid>
-
-          {/* New Section: Insurance Information */}
+      
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="insuranceStatus">Insurance Status</FormLabel>
             <FormControl fullWidth size="small">
@@ -419,8 +445,6 @@ export default function AddVehicle() {
               </Select>
             </FormControl>
           </FormGrid>
-
-          {/* Conditionally show Insurance Dates if "Insured" */}
           {formData.insuranceStatus === "Insured" && (
             <>
               <FormGrid item xs={12} md={6}>
@@ -431,7 +455,8 @@ export default function AddVehicle() {
                   type="date"
                   value={formData.insuranceFrom}
                   onChange={handleChange}
-                  required
+       
+                  required={!id}
                   size="small"
                 />
               </FormGrid>
@@ -443,14 +468,14 @@ export default function AddVehicle() {
                   type="date"
                   value={formData.insuranceTo}
                   onChange={handleChange}
-                  required
+              
+                  required={!id}
                   size="small"
                 />
               </FormGrid>
             </>
           )}
-
-          {/* Existing Status field */}
+      
           <FormGrid item xs={12} md={6}>
             <FormControl fullWidth size="small">
               <InputLabel>Status</InputLabel>
@@ -460,13 +485,12 @@ export default function AddVehicle() {
                 onChange={handleSelectChange}
                 required
               >
-                <MenuItem value="In Progress">In Progress</MenuItem>
-                <MenuItem value="Complete">Completed</MenuItem>
-                <MenuItem value="Waiting">Pending</MenuItem>
+                <MenuItem value="In Progress">Pending</MenuItem>
+                <MenuItem value="Complete">In Progress</MenuItem>
+                <MenuItem value="Waiting">Completed</MenuItem>
               </Select>
             </FormControl>
           </FormGrid>
-
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="date">Date</FormLabel>
             <OutlinedInput
@@ -479,7 +503,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-
           <FormGrid item xs={12}>
             <Button type="submit" variant="contained" color="primary" fullWidth>
               {id ? 'Update Vehicle' : 'Add Vehicle'}
@@ -487,6 +510,24 @@ export default function AddVehicle() {
           </FormGrid>
         </Grid>
       </form>
+
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        aria-labelledby="dialog-title"
+        aria-describedby="dialog-description"
+        PaperProps={{
+          style: { padding: 20, textAlign: "center" }
+        }}
+      >
+        <DialogTitle id="dialog-title">{dialogTitle}</DialogTitle>
+        <DialogContent>
+          <Typography id="dialog-description">{dialogMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

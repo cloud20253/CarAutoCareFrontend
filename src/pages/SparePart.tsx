@@ -94,7 +94,6 @@ function SparePart() {
         Spare Parts
       </h1>
 
-      {/* Search Bar */}
       <div className="flex justify-center mb-8">
         <div className="flex focus-within:ring-2 focus-within:ring-blue-300 rounded-lg">
           <input

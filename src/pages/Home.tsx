@@ -338,8 +338,10 @@ function Home() {
               <h3 className="text-lg font-bold mb-4">Contact Us</h3>
               <ul className="text-sm text-gray-400">
                 <li className="mb-2">Email: autocarcarepoint@gmail.com</li>
-                <li className="mb-2">Phone: +1 (123) 456-7890</li>
-                <li className="mb-2">Address: 123 Auto Street, Car City, USA</li>
+                <li className="mb-2">Phone: 8600650087,
+                                            9595054555,
+                                            7758817766</li>
+                <li className="mb-2">Address: CTS No 77/2, near HP latkar godown, Ganesh temple, buva saheb nagar, shingnapur road, at, Kolki, tal, phaltan dist, Satara -415523</li>
               </ul>
             </div>
             <div>
@@ -423,21 +425,22 @@ const testimonials = [
   {
     feedback:
       "AutoCarCarePoint is the best! They fixed my car quickly and at a great price.",
-    name: "John Doe",
+    name: "Akshay Kambale",
     role: "Car Owner",
     avatar: "/avatar1.jpg",
   },
+  
   {
     feedback:
       "Highly recommend their brake repair service. Very professional and reliable.",
-    name: "Jane Smith",
+    name: "Ganesh Nale",
     role: "Car Enthusiast",
     avatar: "/avatar2.jpg",
   },
   {
     feedback:
       "Excellent customer service and quick turnaround time. Will definitely return!",
-    name: "Mike Johnson",
+    name: "Shubham Jadhav",
     role: "Business Owner",
     avatar: "/png3.avif",
   },
