@@ -32,29 +32,29 @@ interface InvoiceFormData {
   date: string;
   regNo: string;
   model: string;
-  kmsDriven: number;
+
+  kmsDriven: string;
   comments: string;
   parts: {
     partName: string;
-    quantity: number | string;
-    unitPrice: number | string;
-    discountPercent: number | string;
-    cgstPercent: number | string;
-    sgstPercent: number | string;
-    igstPercent: number | string;
+    quantity: string; 
+    unitPrice: string;
+    discountPercent: string;
+    cgstPercent: string;
+    sgstPercent: string;
+    igstPercent: string;
   }[];
   labours: {
     description: string;
-    quantity: number | string;
-    unitPrice: number | string;
-    discountPercent: number | string;
-    cgstPercent: number | string;
-    sgstPercent: number | string;
-    igstPercent: number | string;
+    quantity: string;
+    unitPrice: string;
+    discountPercent: string;
+    cgstPercent: string;
+    sgstPercent: string;
+    igstPercent: string;
   }[];
   subTotal: number;
   totalAmount: number;
-  // Keep advanceAmount as a string during editing.
   advanceAmount: string;
   totalInWords: string;
 }
@@ -69,23 +69,23 @@ const defaultInvoiceData: InvoiceFormData = {
   date: '',
   regNo: '',
   model: '',
-  kmsDriven: 0,
+  kmsDriven: '', 
   comments: '',
-  parts: [],
+  parts: [], 
   labours: [
     {
       description: '',
-      quantity: 1,
-      unitPrice: 0,
-      discountPercent: 0,
-      cgstPercent: 0,
-      sgstPercent: 0,
-      igstPercent: 0
+      quantity: "1",
+      unitPrice: "",
+      discountPercent: "",
+      cgstPercent: "",
+      sgstPercent: "",
+      igstPercent: ""
     }
   ],
   subTotal: 0,
   totalAmount: 0,
-  advanceAmount: '', // default as empty so user can clear it
+  advanceAmount: '',
   totalInWords: ''
 };
 
@@ -94,79 +94,69 @@ export default function InvoiceForm() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loadingData, setLoadingData] = useState(false);
   
-  // Dialog for error/success messages
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogTitle, setDialogTitle] = useState("");
   const [dialogMessage, setDialogMessage] = useState("");
 
-  // Generic change handler for text/numeric fields.
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
     if (name === 'advanceAmount') {
       if (value === '' || parseFloat(value) >= 0) {
         setFormData(prev => ({ ...prev, advanceAmount: value }));
       }
-    } else if (['subTotal', 'totalAmount'].includes(name)) {
-      if (value !== '' && parseFloat(value) < 0) return;
-      const newValue = value === '' ? 0 : parseFloat(value);
-      setFormData(prev => ({ ...prev, [name]: newValue }));
+    } else if(name === 'kmsDriven'){
+     
+      setFormData(prev => ({ ...prev, kmsDriven: value }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  // Handler for parts changes.
   const handlePartsChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     index: number,
     field: keyof InvoiceFormData['parts'][number]
   ) => {
     const newParts = [...formData.parts];
-    let fieldValue: string | number = e.target.value;
-    if (['quantity', 'unitPrice', 'discountPercent', 'cgstPercent', 'sgstPercent', 'igstPercent'].includes(field)) {
-      if (e.target.value !== '' && parseFloat(e.target.value) < 0) return;
-      fieldValue = e.target.value === '' ? 0 : parseFloat(e.target.value);
-    }
-    newParts[index] = { ...newParts[index], [field]: fieldValue };
+    const inputVal = e.target.value;
+
+    if (inputVal !== "" && parseFloat(inputVal) < 0) return; 
+    newParts[index] = { ...newParts[index], [field]: inputVal };
     setFormData(prev => ({ ...prev, parts: newParts }));
   };
 
-  // Handler for labours changes.
   const handleLabourChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     index: number,
     field: keyof InvoiceFormData['labours'][number]
   ) => {
     const newLabours = [...formData.labours];
-    let fieldValue: string | number = e.target.value;
-    if (['quantity', 'unitPrice', 'discountPercent', 'cgstPercent', 'sgstPercent', 'igstPercent'].includes(field)) {
-      if (e.target.value !== '' && parseFloat(e.target.value) < 0) return;
-      fieldValue = e.target.value === '' ? 0 : parseFloat(e.target.value);
-    }
-    newLabours[index] = { ...newLabours[index], [field]: fieldValue };
+    const inputVal = e.target.value;
+    if (inputVal !== "" && parseFloat(inputVal) < 0) return;
+    newLabours[index] = { ...newLabours[index], [field]: inputVal };
     setFormData(prev => ({ ...prev, labours: newLabours }));
   };
 
-  // Add new labour row.
   const addLabourRow = () => {
     setFormData(prev => ({
       ...prev,
       labours: [
         ...prev.labours,
-        { description: '', quantity: 1, unitPrice: 0, discountPercent: 0, cgstPercent: 0, sgstPercent: 0, igstPercent: 0 }
+        { description: '', quantity: "1", unitPrice: "", discountPercent: "", cgstPercent: "", sgstPercent: "", igstPercent: "" }
       ]
     }));
   };
 
-  // Compute totals.
   const computeTotals = () => {
     const computeItemTotal = (item: {
-      quantity: number | string;
-      unitPrice: number | string;
-      discountPercent: number | string;
-      cgstPercent: number | string;
-      sgstPercent: number | string;
-      igstPercent: number | string;
+      quantity: string;
+      unitPrice: string;
+      discountPercent: string;
+      cgstPercent: string;
+      sgstPercent: string;
+      igstPercent: string;
     }) => {
       const quantity = Number(item.quantity) || 0;
       const unitPrice = Number(item.unitPrice) || 0;
@@ -182,11 +172,10 @@ export default function InvoiceForm() {
     const partsTotal = formData.parts.reduce((sum, item) => sum + computeItemTotal(item), 0);
     const laboursTotal = formData.labours.reduce((sum, item) => sum + computeItemTotal(item), 0);
     const subTotal = partsTotal + laboursTotal;
-    const totalAmount = subTotal; // Adjust if needed.
+    const totalAmount = subTotal;
     return { subTotal, totalAmount };
   };
 
-  // Fetch vehicle details and parts data.
   const fetchVehicleData = async () => {
     if (!formData.vehicleRegId) return;
     setLoadingData(true);
@@ -205,7 +194,8 @@ export default function InvoiceForm() {
           customerAadharNo: vehicleData.customerAadharNo || '',
           customerGstin: vehicleData.customerGstin || '',
           regNo: vehicleData.vehicleNumber || '',
-          model: `${vehicleData.vehicleBrand || ''} - ${vehicleData.vehicleModelName || ''}`
+          model: `${vehicleData.vehicleBrand || ''} - ${vehicleData.vehicleModelName || ''}`,
+          kmsDriven: vehicleData.kmsDriven ? String(vehicleData.kmsDriven) : ''
         }));
       } else {
         setDialogTitle("Error");
@@ -226,12 +216,12 @@ export default function InvoiceForm() {
       }
       const parts = partsArray.map((p: any) => ({
         partName: p.partName,
-        quantity: p.quantity || 1,
-        unitPrice: p.price || 0,
-        discountPercent: 0,
-        cgstPercent: 0,
-        sgstPercent: 0,
-        igstPercent: 0
+        quantity: p.quantity ? String(p.quantity) : "1",
+        unitPrice: p.price ? String(p.price) : "",
+        discountPercent: "",
+        cgstPercent: "",
+        sgstPercent: "",
+        igstPercent: ""
       }));
       setFormData(prev => ({ ...prev, parts }));
     } catch (error: any) {
@@ -244,7 +234,6 @@ export default function InvoiceForm() {
     }
   };
 
-  // Handle form submission to generate PDF.
   const handleSubmit = async () => {
     const totals = computeTotals();
     const advanceAmount = formData.advanceAmount === '' ? 0 : parseFloat(formData.advanceAmount);
@@ -262,7 +251,8 @@ export default function InvoiceForm() {
       });
       const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(pdfBlob);
-      setPdfUrl(url);
+      
+      window.open(url, '_blank');
       setDialogTitle("Success");
       setDialogMessage("PDF generated successfully!");
       setDialogOpen(true);
@@ -286,7 +276,6 @@ export default function InvoiceForm() {
         Generate Invoice
       </Typography>
 
-      {/* Centralized Dialog for messages */}
       <Dialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
@@ -303,7 +292,6 @@ export default function InvoiceForm() {
         </DialogActions>
       </Dialog>
 
-      {/* Vehicle Reg ID and Fetch Button */}
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12} sm={6} md={4}>
           <TextField
@@ -323,7 +311,7 @@ export default function InvoiceForm() {
       </Grid>
 
       <Grid container spacing={2} mt={2}>
-        {/* CUSTOMER DETAILS */}
+     
         <Grid item xs={12} md={6}>
           <Typography variant="h6" fontWeight="bold">
             CUSTOMER DETAILS
@@ -337,7 +325,6 @@ export default function InvoiceForm() {
           </Box>
         </Grid>
 
-        {/* VEHICLE / INVOICE DETAILS */}
         <Grid item xs={12} md={6}>
           <Typography variant="h6" fontWeight="bold">
             VEHICLE / INVOICE DETAILS
@@ -354,7 +341,14 @@ export default function InvoiceForm() {
             />
             <TextField label="Reg No" name="regNo" size="small" value={formData.regNo} onChange={handleChange} />
             <TextField label="Model" name="model" size="small" value={formData.model} onChange={handleChange} />
-            <TextField label="KMS Driven" name="kmsDriven" size="small" value={formData.kmsDriven} onChange={handleChange} />
+            <TextField 
+              label="KMS Driven" 
+              name="kmsDriven" 
+              size="small" 
+              type="number"
+              value={formData.kmsDriven === "0" ? "" : formData.kmsDriven} 
+              onChange={handleChange} 
+            />
             <TextField
               label="Advance Amount"
               name="advanceAmount"
@@ -494,7 +488,6 @@ export default function InvoiceForm() {
         </TableContainer>
       </Box>
 
-      {/* LABOUR WORK TABLE */}
       <Box sx={{ mt: 3 }}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Typography variant="subtitle1" fontWeight="bold">
@@ -624,7 +617,6 @@ export default function InvoiceForm() {
         </TableContainer>
       </Box>
 
-      {/* Final Amounts */}
       <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1, maxWidth: 300 }}>
         <TextField
           label="Sub Total"
@@ -657,25 +649,6 @@ export default function InvoiceForm() {
         </Button>
       </Box>
 
-      {/* PDF Preview & Download */}
-      {pdfUrl && (
-        <Box mt={4}>
-          <Typography variant="h6" mb={1}>
-            PDF Preview
-          </Typography>
-          <iframe title="Invoice PDF" src={pdfUrl} style={{ width: '100%', height: '600px', border: 'none' }} />
-          <Box textAlign="right" mt={1}>
-            <Button variant="outlined" onClick={() => {
-              const link = document.createElement('a');
-              link.href = pdfUrl;
-              link.download = 'invoice.pdf';
-              link.click();
-            }}>
-              Download PDF
-            </Button>
-          </Box>
-        </Box>
-      )}
     </Box>
   );
 }
