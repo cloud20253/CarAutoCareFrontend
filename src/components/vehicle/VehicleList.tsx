@@ -8,7 +8,7 @@ import Copyright from 'internals/components/Copyright';
 import { Button, FormControl, IconButton,  InputLabel,  MenuItem,  OutlinedInput, Select } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {  GridCellParams, GridRowsProp, GridColDef } from '@mui/x-data-grid';
-import { VehicleListData } from 'Services/vehicleService';
+import { GetVehicleByAppointmentID, GetVehicleByDateRange, GetVehicleByStatus, VehicleDataByID, VehicleListData } from 'Services/vehicleService';
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import BuildIcon from "@mui/icons-material/Build";
@@ -23,6 +23,7 @@ import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { SingleInputDateRangeField } from '@mui/x-date-pickers-pro/SingleInputDateRangeField';
 import PreviewIcon from "@mui/icons-material/Preview";
 import { Print } from '@mui/icons-material';
+import { filter } from 'types/SparePart';
 
 interface Vehicle {
     vehicleRegId: string;
@@ -56,24 +57,78 @@ export default function VehicleList() {
   };
 
   const handleSearch = async () => {
-    let requestData = {};
-
-    if (selectedType === "Vehicle ID" || selectedType === "Appointment Number") {
-      requestData = { type: selectedType, value: textInput };
-    } else if (selectedType === "Date Range") {
-      requestData = { type: selectedType, startDate: dateValue[0]?.format("YYYY-MM-DD"), endDate: dateValue[1]?.format("YYYY-MM-DD") };
-    } else if (selectedType === "Status") {
-      requestData = { type: selectedType, value: selectedStatus };
-    }
+    let requestData: filter = {};
+    let response;
 
     try {
-      // const response = await axios.post("https://your-api-endpoint.com/search", requestData);
-      const response = '';
-      // console.log("API Response:", response);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    if (selectedType === "Vehicle ID") {
+        requestData = { vehicleRegId: textInput };
+        response = await VehicleDataByID(textInput);
+    } else if (selectedType === "Date Range") {
+        requestData = { startDate:String( dateValue[0]?.format("YYYY-MM-DD")), endDate: String( dateValue[1]?.format("YYYY-MM-DD")) };
+        response = await GetVehicleByDateRange(requestData);
+    } else if (selectedType === "Status") {
+        requestData = { status: selectedStatus };
+        const responseData = await GetVehicleByStatus(requestData);
+        response = responseData.data;
+    } else if (selectedType === "Appointment Number") {
+        requestData = { appointmentId: textInput };
+        const responseData  = await GetVehicleByAppointmentID(requestData);
+        response = responseData.data;
     }
-  };
+        console.log("check",response);
+        if (response && Array.isArray(response)) {
+          // If response.data is an array, process it
+          const formattedRows = response.map((vehicle: Vehicle, index: number) => ({
+              id: index + 1, // Unique ID
+              vehicleRegId: vehicle.vehicleRegId,
+              appointmentId: vehicle.appointmentId,
+              chasisNumber: vehicle.chasisNumber,
+              customerAddress: vehicle.customerAddress,
+              customerAadharNo: vehicle.customerAadharNo,
+              customerGstin: vehicle.customerGstin,
+              superwiser: vehicle.superwiser,
+              technician: vehicle.technician,
+              worker: vehicle.worker,
+              userId: vehicle.userId,
+              Status: vehicle.status,
+              date: vehicle.date,
+              Action: 'View',
+          }));
+          setRows(formattedRows);
+      } else if (response && typeof response === "object" && !Array.isArray(response) ) {
+          // If response is a single object (not an array), convert it into an array
+          const formattedRows = [
+              {
+                  id: 1, // Unique ID
+                  vehicleRegId: response.vehicleRegId,
+                  appointmentId: response.appointmentId,
+                  chasisNumber: response.chasisNumber,
+                  customerAddress: response.customerAddress,
+                  customerAadharNo: response.customerAadharNo,
+                  customerGstin: response.customerGstin,
+                  superwiser: response.superwiser,
+                  technician: response.technician,
+                  worker: response.worker,
+                  userId: response.userId,
+                  Status: response.status,
+                  date: response.date,
+                  Action: 'View',
+              },
+          ];
+          setRows(formattedRows);
+      } else {
+          // If response is null or undefined, set empty array
+          setRows([]);
+      }
+      
+
+        console.log("API Response:", response);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+    }
+};
+
   
   // Function to render Edit & Delete buttons in the "Action" column
   function renderActionButtons(params: GridCellParams) {
