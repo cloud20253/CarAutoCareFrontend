@@ -177,6 +177,7 @@ function SparePartDetails() {
               className="flex-1 border-2 border-gray-200 rounded-lg shadow-lg overflow-hidden relative bg-white flex items-center justify-center"
             >
               {sparePart && sparePart.photo?.length > 0 ? (
+           
                 <motion.img
                   src={`data:image/jpeg;base64,${sparePart.photo[currentImageIndex]}`}
                   alt={sparePart.partName || "Spare Part"}

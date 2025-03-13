@@ -117,6 +117,7 @@ function SparePart() {
         </div>
       </div>
 
+      {/* Content */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, index) => (
@@ -147,7 +148,7 @@ function SparePart() {
                   }
                 }}
               >
-  
+                {/* Image container with padding */}
                 <div className="relative w-full aspect-video bg-gray-100 p-3">
                   {sparePart.photo && sparePart.photo.length > 0 ? (
                     <img
@@ -168,26 +169,16 @@ function SparePart() {
                   )}
                 </div>
 
+                {/* Centered Text Content */}
                 <div className="p-4 text-center">
-                  <h2
-                    className="text-xl font-semibold text-gray-800 mb-2"
-                    style={{
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
+                  <h2 className="text-xl font-semibold text-gray-800 mb-2">
                     {sparePart.partName}
                   </h2>
                   <p className="text-gray-600 text-sm mb-1">
                     Manufacturer: {sparePart.manufacturer}
                   </p>
                   <p className="text-gray-600 text-sm">
-                    Price:{" "}
-                    <span className="text-xl font-bold">
-                      ₹{sparePart.price}
-                    </span>
+                    Price: ₹{sparePart.price}
                   </p>
                 </div>
               </div>
