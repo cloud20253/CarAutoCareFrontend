@@ -29,6 +29,7 @@ import TransactionList from "components/StockManagement/TransactionList";
 import VehicleDetailsView from "components/vehicle/VehicleDetailsView";
 import InvoiceForm from "components/vehicle/InvoiceForm";
 import BillForm from "components/vehicle/BillForm";
+import TransactionDetails from "components/StockManagement/TransactionDetails";
 // import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
 
 const AppRoutes = () => {
@@ -65,6 +66,7 @@ const AppRoutes = () => {
                 <Route path="users" element={<ManageUsers />} />
                 <Route path="bill" element={<BillForm />} />
                 <Route path="transaction-list" element={<TransactionList />} /> 
+                <Route path="user-part/view/:id" element={<TransactionDetails />} />
                 <Route path="vehicle" element={<VehicleList />} />
                 <Route path="vehicle/add" element={<AddVehicle/>} />
                 <Route path="vehicle/edit/:id" element={<AddVehicle/>} />
