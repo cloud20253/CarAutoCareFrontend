@@ -45,7 +45,7 @@ const data: StatCardProps[] = [
     // title: 'Event count',
     value: 'Counter Sale',
     icon: <GarageIcon />,
-    url : "/admin/vehicle"
+    url : "/admin/counterSale"
   },{
     // title: 'Event count',
     value: 'Quatation',

@@ -15,7 +15,7 @@ interface ForgotPasswordProps {
 
 export default function ForgotPassword({ open, handleClose }: ForgotPasswordProps) {
   const [email, setEmail] = React.useState('');
-  // Notification state holds the message, severity, and open flag.
+
   const [notification, setNotification] = React.useState<{
     open: boolean;
     message: string;
@@ -35,7 +35,7 @@ export default function ForgotPassword({ open, handleClose }: ForgotPasswordProp
       }
     } catch (error: any) {
       console.log(error);
-      // Try to get a message from the backend response.
+
       const errorMsg =
         error.response?.data?.message ||
         error.response?.data?.exception ||

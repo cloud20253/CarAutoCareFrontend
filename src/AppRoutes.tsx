@@ -30,6 +30,8 @@ import VehicleDetailsView from "components/vehicle/VehicleDetailsView";
 import InvoiceForm from "components/vehicle/InvoiceForm";
 import BillForm from "components/vehicle/BillForm";
 import TransactionDetails from "components/StockManagement/TransactionDetails";
+import CounterSaleForm from "components/StockManagement/CounterSaleForm";
+import CounterBillPDF from "components/StockManagement/CounterBillPDF";
 // import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
 
 const AppRoutes = () => {
@@ -60,6 +62,8 @@ const AppRoutes = () => {
                 <Route path="dashboard" element={<Dashboard />} />
                 {/* <Route path="invoice/:id" element={<InvoiceDetailsWrapper />} /> */}
                 <Route path="billForm/:id" element={<InvoiceForm />} />
+                <Route path="counterbillPdf" element={<CounterBillPDF />} />
+                <Route path="counterSale" element={<CounterSaleForm />} />
                 <Route path="transaction" element={<TransactionAdd />} /> 
                 <Route path="manage-repair" element={<ManageRepairPage />} />
                 <Route path="manage-stock" element={<StockManageGrid />} />
