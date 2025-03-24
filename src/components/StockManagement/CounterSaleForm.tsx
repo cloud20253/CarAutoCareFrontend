@@ -1,36 +1,66 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useState, useEffect, useCallback, useRef } from 'react';
 import { AiOutlineUser, AiOutlineCalendar, AiOutlinePhone } from 'react-icons/ai';
 import { MdLocationOn, MdOutlineDirectionsCar } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 
 interface BillRow {
-  id: number;
+  id?: number; // optional so that backend generates it
   sNo: number;
   spareNo: string;
   spareName: string;
-  qty: number;
+  quantity: number;
   rate: number;
-  discount: number;
+  discountPercent: number;
+  discountAmt: number;
+  cgstPercent: number;
+  cgstAmt: number;
+  sgstPercent: number;
+  sgstAmt: number;
   taxable: number;
-  cgst: number;
-  sgst: number;
   total: number;
+  amount: number; // computed amount for the individual row
   checked?: boolean;
 }
 
 interface SpareRow {
   spareName: string;
+  spareNo?: string;
   rate: number;
-  qty: number;
+  qty: number; // temporary property used for calculation in the form
   discountPercent: number;
   discountAmt: number;
   taxableValue: number;
   total: number;
+  cgstPercent?: number;
+  sgstPercent?: number;
+}
+
+function computeBillRow(row: BillRow): BillRow {
+  // Use the quantity field for backend (which is computed from spareRow.qty)
+  const baseAmount = row.rate * row.quantity;
+  const discountAmt = (baseAmount * row.discountPercent) / 100;
+  const taxable = baseAmount - discountAmt;
+  const cgstAmt = (taxable * row.cgstPercent) / 100;
+  const sgstAmt = (taxable * row.sgstPercent) / 100;
+  // Total is computed without adding GST amounts (adjust if you want to include them)
+  const total = taxable;
+  // Here we set amount for the individual row
+  const amount = total;
+  return {
+    ...row,
+    discountAmt,
+    cgstAmt,
+    sgstAmt,
+    taxable,
+    total,
+    amount,
+  };
 }
 
 const CounterSaleForm: FC = () => {
   const navigate = useNavigate();
 
+  // Invoice details
   const [invoiceNo, setInvoiceNo] = useState('');
   const [invDate, setInvDate] = useState('');
   const [customerName, setCustomerName] = useState('');
@@ -42,69 +72,137 @@ const CounterSaleForm: FC = () => {
 
   const [spareRow, setSpareRow] = useState<SpareRow>({
     spareName: '',
+    spareNo: '',
     rate: 0,
     qty: 1,
     discountPercent: 0,
     discountAmt: 0,
     taxableValue: 0,
     total: 0,
+    cgstPercent: 0,
+    sgstPercent: 0,
   });
 
-  const [billRows, setBillRows] = useState<BillRow[]>([
-    {
-      id: 1,
-      sNo: 1,
-      spareNo: '',
-      spareName: '',
-      qty: 1,
-      rate: 0,
-      discount: 0,
-      taxable: 0,
-      cgst: 0,
-      sgst: 0,
-      total: 0,
-      checked: false,
-    },
-  ]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [billRows, setBillRows] = useState<BillRow[]>([]);
+  
+  // Ref for detecting clicks outside the dropdown
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const computeRowTotals = (row: SpareRow) => {
+  const computeSpareRowTotals = (row: SpareRow) => {
     const lineAmount = row.rate * row.qty;
     const discountAmt = (lineAmount * row.discountPercent) / 100;
     const newTaxable = lineAmount - discountAmt;
-    return { ...row, discountAmt, taxableValue: newTaxable, total: newTaxable };
+    return {
+      ...row,
+      discountAmt,
+      taxableValue: newTaxable,
+      total: newTaxable,
+    };
   };
 
-  const handleSearch = async () => {
-    try {
-      const partData = await fetchPartDetails(spareRow.spareName);
-      setBillRows((prev) => [
-        ...prev,
-        {
-          id: Date.now(),
-          sNo: prev.length + 1,
-          spareNo: partData.spareNo || '',
-          spareName: spareRow.spareName || '',
-          qty: spareRow.qty,
-          rate: partData.rate || spareRow.rate,
-          discount: spareRow.discountPercent,
-          taxable: spareRow.taxableValue,
-          cgst: partData.cgst || 0,
-          sgst: partData.sgst || 0,
-          total: spareRow.total,
-        },
-      ]);
-      setSpareRow({
-        spareName: '',
-        rate: 0,
-        qty: 1,
-        discountPercent: 0,
-        discountAmt: 0,
-        taxableValue: 0,
-        total: 0,
-      });
-    } catch (error) {
-      console.error('Search failed:', error);
+  const handleSpareRowChange = (key: keyof SpareRow, value: string | number) => {
+    setSpareRow((prev) => {
+      const updatedValue = typeof value === 'number' ? value : value;
+      const newVal = key === 'discountPercent' && Number(updatedValue) < 0 ? 0 : Number(updatedValue);
+      const updatedRow = { ...prev, [key]: key === 'spareName' ? value : newVal };
+      return computeSpareRowTotals(updatedRow);
+    });
+  };
+
+  const fetchPartDetails = useCallback(async (searchQuery: string) => {
+    if (!searchQuery) {
+      setSuggestions([]);
+      return;
     }
+    try {
+      const response = await fetch(`http://localhost:8080/Filter/searchBarFilter?searchBarInput=${searchQuery}`);
+      const data = await response.json();
+      setSuggestions(data.list || []);
+    } catch (error) {
+      console.error('Error fetching part details:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchPartDetails(spareRow.spareName);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [spareRow.spareName, fetchPartDetails]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setSuggestions([]);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSuggestionSelect = (item: any) => {
+    const updatedSpareRow: SpareRow = computeSpareRowTotals({
+      spareName: item.partName,
+      spareNo: item.partNumber,
+      rate: item.price,
+      qty: 1,
+      discountPercent: spareRow.discountPercent,
+      discountAmt: 0,
+      taxableValue: 0,
+      total: 0,
+      cgstPercent: item.cgst,
+      sgstPercent: item.sgst,
+    });
+    setSpareRow(updatedSpareRow);
+    setSuggestions([]);
+
+    const newBillRow: BillRow = computeBillRow({
+      // Do not set the id field so backend generates it
+      sNo: billRows.length + 1,
+      spareNo: updatedSpareRow.spareNo || '',
+      spareName: updatedSpareRow.spareName,
+      // Use the temporary qty value as the final quantity field for backend mapping
+      quantity: updatedSpareRow.qty,
+      rate: updatedSpareRow.rate,
+      discountPercent: updatedSpareRow.discountPercent,
+      discountAmt: 0,
+      cgstPercent: updatedSpareRow.cgstPercent || 0,
+      cgstAmt: 0,
+      sgstPercent: updatedSpareRow.sgstPercent || 0,
+      sgstAmt: 0,
+      taxable: 0,
+      total: 0,
+      amount: 0,
+      checked: false,
+    });
+    setBillRows((prev) => [...prev, newBillRow]);
+
+    // Reset spareRow (keep discount for subsequent entries)
+    setSpareRow((prev) => ({
+      ...prev,
+      spareName: '',
+      spareNo: '',
+      rate: 0,
+      qty: 1,
+      discountAmt: 0,
+      taxableValue: 0,
+      total: 0,
+      cgstPercent: 0,
+      sgstPercent: 0,
+    }));
+  };
+
+  const updateBillRow = (rowId: number, updatedFields: Partial<BillRow>) => {
+    setBillRows((prevRows) =>
+      prevRows.map((r) => {
+        if (r.id === rowId) {
+          const merged = { ...r, ...updatedFields };
+          return computeBillRow(merged);
+        }
+        return r;
+      })
+    );
   };
 
   const handleRemove = () => {
@@ -112,38 +210,49 @@ const CounterSaleForm: FC = () => {
   };
 
   const handleSave = () => {
-    navigate('/admin/counterbillPdf', {
-      state: {
-        invoiceNo,
-        invDate,
-        customerName,
-        customerAddress,
-        customerMobile,
-        adharNo,
-        gstin,
-        vehicleNo,
-        billRows,
-      },
-    });
-  };
+    // First, update each bill row with computed values
+    const updatedBillRows = billRows.map((row) => computeBillRow(row));
+    // Compute grand total (sum of each row's amount)
+    const totalAmount = updatedBillRows.reduce((acc, curr) => acc + curr.amount, 0);
 
-  async function fetchPartDetails(spareName: string) {
-    return {
-      spareNo: 'PN-123',
-      spareName: 'Air Filter',
-      rate: 590,
-      cgst: 9,
-      sgst: 9,
+    // Prepare payload according to backend's Invoice entity.
+    const payload = {
+      invDate,
+      customerName,
+      customerAddress,
+      customerMobile,
+      adharNo,
+      gstin,
+      vehicleNo,
+      discount: 0, // set invoice-level discount if needed
+      totalAmount, // grand total for the invoice
+      items: updatedBillRows, // each item now has an "amount" field
     };
-  }
 
-  const handleSpareRowChange = (key: keyof SpareRow, value: string | number) => {
-    setSpareRow((prev) => {
-      const updated = { ...prev, [key]: typeof value === 'number' ? value : parseFloat(value || '0') };
-      return computeRowTotals(updated);
-    });
+    fetch('http://localhost:8080/api/invoices/AddInvoice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        // Navigate to PDF view with the returned data
+        navigate('/admin/counterbillPdf', { state: data });
+      })
+      .catch((error) => console.error('Error saving invoice:', error));
   };
 
+  useEffect(() => {
+    if (billRows.length > 0) {
+      setBillRows((prev) =>
+        prev.map((row) =>
+          computeBillRow({ ...row, discountPercent: spareRow.discountPercent })
+        )
+      );
+    }
+  }, [spareRow.discountPercent]);
+
+  // ------------------ Styles ------------------
   const containerStyle: React.CSSProperties = {
     width: '90%',
     margin: 'auto',
@@ -200,6 +309,8 @@ const CounterSaleForm: FC = () => {
   const tableCellStyle: React.CSSProperties = {
     border: '1px solid #ccc',
     padding: '0.5rem',
+    textAlign: 'center',
+    verticalAlign: 'middle',
   };
 
   const tableHeaderStyle: React.CSSProperties = {
@@ -237,7 +348,9 @@ const CounterSaleForm: FC = () => {
             <span>Invoice Details</span>
           </div>
           <div style={fieldGroup}>
-            <label htmlFor="invoiceNo" style={labelStyle}>Invoice No.</label>
+            <label htmlFor="invoiceNo" style={labelStyle}>
+              Invoice No.
+            </label>
             <input
               id="invoiceNo"
               type="text"
@@ -248,7 +361,9 @@ const CounterSaleForm: FC = () => {
             />
           </div>
           <div style={fieldGroup}>
-            <label htmlFor="invDate" style={labelStyle}>Inv. Date</label>
+            <label htmlFor="invDate" style={labelStyle}>
+              Inv. Date
+            </label>
             <input
               id="invDate"
               type="date"
@@ -264,7 +379,9 @@ const CounterSaleForm: FC = () => {
             <span>Customer Details</span>
           </div>
           <div style={fieldGroup}>
-            <label htmlFor="customerName" style={labelStyle}>Name</label>
+            <label htmlFor="customerName" style={labelStyle}>
+              Name
+            </label>
             <input
               id="customerName"
               type="text"
@@ -275,7 +392,9 @@ const CounterSaleForm: FC = () => {
             />
           </div>
           <div style={fieldGroup}>
-            <label htmlFor="customerAddress" style={labelStyle}>Address</label>
+            <label htmlFor="customerAddress" style={labelStyle}>
+              Address
+            </label>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <MdLocationOn style={{ marginRight: '0.5rem' }} />
               <input
@@ -289,7 +408,9 @@ const CounterSaleForm: FC = () => {
             </div>
           </div>
           <div style={fieldGroup}>
-            <label htmlFor="customerMobile" style={labelStyle}>Mobile No</label>
+            <label htmlFor="customerMobile" style={labelStyle}>
+              Mobile No
+            </label>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <AiOutlinePhone style={{ marginRight: '0.5rem' }} />
               <input
@@ -303,7 +424,9 @@ const CounterSaleForm: FC = () => {
             </div>
           </div>
           <div style={fieldGroup}>
-            <label htmlFor="adharNo" style={labelStyle}>Adhar No</label>
+            <label htmlFor="adharNo" style={labelStyle}>
+              Adhar No
+            </label>
             <input
               id="adharNo"
               type="text"
@@ -314,7 +437,9 @@ const CounterSaleForm: FC = () => {
             />
           </div>
           <div style={fieldGroup}>
-            <label htmlFor="gstin" style={labelStyle}>GSTIN</label>
+            <label htmlFor="gstin" style={labelStyle}>
+              GSTIN
+            </label>
             <input
               id="gstin"
               type="text"
@@ -325,7 +450,9 @@ const CounterSaleForm: FC = () => {
             />
           </div>
           <div style={fieldGroup}>
-            <label htmlFor="vehicleNo" style={labelStyle}>Vehicle No</label>
+            <label htmlFor="vehicleNo" style={labelStyle}>
+              Vehicle No
+            </label>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <MdOutlineDirectionsCar style={{ marginRight: '0.5rem' }} />
               <input
@@ -340,37 +467,49 @@ const CounterSaleForm: FC = () => {
           </div>
         </div>
       </div>
+      {/* Spare details input */}
       <table style={tableStyle}>
         <thead style={tableHeaderStyle}>
           <tr>
             <th style={tableCellStyle}>Spare Name</th>
             <th style={tableCellStyle}>Rate</th>
             <th style={tableCellStyle}>Qty</th>
-            <th style={tableCellStyle} colSpan={2}>Discount</th>
-            <th style={tableCellStyle}>Taxable Value</th>
-            <th style={tableCellStyle}>Total</th>
-            <th style={tableCellStyle}>Action</th>
-          </tr>
-          <tr>
-            <th style={{ display: 'none' }}></th>
-            <th style={{ display: 'none' }}></th>
-            <th style={{ display: 'none' }}></th>
-            <th style={tableCellStyle}>%</th>
-            <th style={tableCellStyle}>Amt</th>
-            <th style={{ display: 'none' }}></th>
-            <th style={{ display: 'none' }}></th>
-            <th style={{ display: 'none' }}></th>
+            <th style={tableCellStyle}>Discount (%)</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style={tableCellStyle}>
-              <input
-                type="text"
-                style={inputStyle}
-                value={spareRow.spareName}
-                onChange={(e) => handleSpareRowChange('spareName', e.target.value)}
-              />
+            <td style={{ ...tableCellStyle, position: 'relative' }}>
+              <div ref={dropdownRef}>
+                <input
+                  type="text"
+                  style={inputStyle}
+                  value={spareRow.spareName}
+                  onChange={(e) => handleSpareRowChange('spareName', e.target.value)}
+                  placeholder="Search spare parts..."
+                />
+                {suggestions.length > 0 && (
+                  <div
+                    style={{
+                      background: '#fff',
+                      border: '1px solid #ccc',
+                      position: 'absolute',
+                      width: '100%',
+                      zIndex: 1,
+                    }}
+                  >
+                    {suggestions.map((item, idx) => (
+                      <div
+                        key={idx}
+                        style={{ padding: '0.5rem', cursor: 'pointer' }}
+                        onClick={() => handleSuggestionSelect(item)}
+                      >
+                        {`${item.manufacturer} - ${item.partNumber} - ${item.description}`}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </td>
             <td style={tableCellStyle}>
               <input
@@ -396,69 +535,51 @@ const CounterSaleForm: FC = () => {
                 onChange={(e) => handleSpareRowChange('discountPercent', e.target.value)}
               />
             </td>
-            <td style={tableCellStyle}>
-              {spareRow.discountAmt.toFixed(2)}
-            </td>
-            <td style={tableCellStyle}>
-              {spareRow.taxableValue.toFixed(2)}
-            </td>
-            <td style={tableCellStyle}>
-              {spareRow.total.toFixed(2)}
-            </td>
-            <td style={tableCellStyle}>
-              <button style={buttonStyle} onClick={handleSearch}>
-                Search
-              </button>
-            </td>
           </tr>
         </tbody>
       </table>
+      {/* Bill rows table */}
       <table style={tableStyle}>
-        <thead style={tableHeaderStyle}>
-          <tr>
-            <th style={tableCellStyle}>#</th>
-            <th style={tableCellStyle}>S.No</th>
-            <th style={tableCellStyle}>Spare No</th>
-            <th style={tableCellStyle}>Spare Name</th>
-            <th style={tableCellStyle}>Qty</th>
-            <th style={tableCellStyle}>Rate</th>
-            <th style={tableCellStyle}>Discount</th>
-            <th style={tableCellStyle}>Taxable</th>
-            <th style={tableCellStyle}>CGST</th>
-            <th style={tableCellStyle}>SGST</th>
-            <th style={tableCellStyle}>Total</th>
+        <thead>
+          <tr style={tableHeaderStyle}>
+            <th style={tableCellStyle} rowSpan={2}>#</th>
+            <th style={tableCellStyle} rowSpan={2}>S.No</th>
+            <th style={tableCellStyle} rowSpan={2}>Spare No</th>
+            <th style={tableCellStyle} rowSpan={2}>Spare Name</th>
+            <th style={tableCellStyle} rowSpan={2}>Qty</th>
+            <th style={tableCellStyle} rowSpan={2}>Rate</th>
+            <th style={tableCellStyle} colSpan={2}>Discount</th>
+            <th style={tableCellStyle} colSpan={2}>CGST</th>
+            <th style={tableCellStyle} colSpan={2}>SGST</th>
+            <th style={tableCellStyle} rowSpan={2}>Taxable</th>
+            <th style={tableCellStyle} rowSpan={2}>Total</th>
+          </tr>
+          <tr style={tableHeaderStyle}>
+            <th style={tableCellStyle}>%</th>
+            <th style={tableCellStyle}>Amt</th>
+            <th style={tableCellStyle}>%</th>
+            <th style={tableCellStyle}>Amt</th>
+            <th style={tableCellStyle}>%</th>
+            <th style={tableCellStyle}>Amt</th>
           </tr>
         </thead>
         <tbody>
           {billRows.map((row, index) => (
-            <tr key={row.id}>
-              <td style={tableCellStyle}>{index + 1}</td>
+            <tr key={index}>
               <td style={tableCellStyle}>
                 <input
-                  type="number"
-                  style={inputStyle}
-                  value={row.sNo}
-                  onChange={(e) =>
-                    setBillRows((prev) =>
-                      prev.map((r) =>
-                        r.id === row.id ? { ...r, sNo: parseInt(e.target.value || '1') } : r
-                      )
-                    )
-                  }
+                  type="checkbox"
+                  checked={!!row.checked}
+                  onChange={(e) => updateBillRow(row.id!, { checked: e.target.checked })}
                 />
               </td>
+              <td style={tableCellStyle}>{index + 1}</td>
               <td style={tableCellStyle}>
                 <input
                   type="text"
                   style={inputStyle}
                   value={row.spareNo}
-                  onChange={(e) =>
-                    setBillRows((prev) =>
-                      prev.map((r) =>
-                        r.id === row.id ? { ...r, spareNo: e.target.value } : r
-                      )
-                    )
-                  }
+                  onChange={(e) => updateBillRow(row.id!, { spareNo: e.target.value })}
                 />
               </td>
               <td style={tableCellStyle}>
@@ -466,26 +587,16 @@ const CounterSaleForm: FC = () => {
                   type="text"
                   style={inputStyle}
                   value={row.spareName}
-                  onChange={(e) =>
-                    setBillRows((prev) =>
-                      prev.map((r) =>
-                        r.id === row.id ? { ...r, spareName: e.target.value } : r
-                      )
-                    )
-                  }
+                  onChange={(e) => updateBillRow(row.id!, { spareName: e.target.value })}
                 />
               </td>
               <td style={tableCellStyle}>
                 <input
                   type="number"
                   style={inputStyle}
-                  value={row.qty}
+                  value={row.quantity}
                   onChange={(e) =>
-                    setBillRows((prev) =>
-                      prev.map((r) =>
-                        r.id === row.id ? { ...r, qty: parseInt(e.target.value || '1') } : r
-                      )
-                    )
+                    updateBillRow(row.id!, { quantity: parseInt(e.target.value || '1', 10) })
                   }
                 />
               </td>
@@ -495,11 +606,7 @@ const CounterSaleForm: FC = () => {
                   style={inputStyle}
                   value={row.rate}
                   onChange={(e) =>
-                    setBillRows((prev) =>
-                      prev.map((r) =>
-                        r.id === row.id ? { ...r, rate: parseFloat(e.target.value || '0') } : r
-                      )
-                    )
+                    updateBillRow(row.id!, { rate: parseFloat(e.target.value || '0') })
                   }
                 />
               </td>
@@ -507,77 +614,34 @@ const CounterSaleForm: FC = () => {
                 <input
                   type="number"
                   style={inputStyle}
-                  value={row.discount}
+                  value={row.discountPercent}
                   onChange={(e) =>
-                    setBillRows((prev) =>
-                      prev.map((r) =>
-                        r.id === row.id ? { ...r, discount: parseFloat(e.target.value || '0') } : r
-                      )
-                    )
+                    updateBillRow(row.id!, { discountPercent: parseFloat(e.target.value || '0') })
                   }
                 />
               </td>
-              <td style={tableCellStyle}>
-                <input
-                  type="number"
-                  style={inputStyle}
-                  value={row.taxable}
-                  onChange={(e) =>
-                    setBillRows((prev) =>
-                      prev.map((r) =>
-                        r.id === row.id ? { ...r, taxable: parseFloat(e.target.value || '0') } : r
-                      )
-                    )
-                  }
-                />
-              </td>
-              <td style={tableCellStyle}>
-                <input
-                  type="number"
-                  style={inputStyle}
-                  value={row.cgst}
-                  onChange={(e) =>
-                    setBillRows((prev) =>
-                      prev.map((r) =>
-                        r.id === row.id ? { ...r, cgst: parseFloat(e.target.value || '0') } : r
-                      )
-                    )
-                  }
-                />
-              </td>
-              <td style={tableCellStyle}>
-                <input
-                  type="number"
-                  style={inputStyle}
-                  value={row.sgst}
-                  onChange={(e) =>
-                    setBillRows((prev) =>
-                      prev.map((r) =>
-                        r.id === row.id ? { ...r, sgst: parseFloat(e.target.value || '0') } : r
-                      )
-                    )
-                  }
-                />
-              </td>
-              <td style={tableCellStyle}>
-                <input
-                  type="number"
-                  style={inputStyle}
-                  value={row.total}
-                  onChange={(e) =>
-                    setBillRows((prev) =>
-                      prev.map((r) =>
-                        r.id === row.id ? { ...r, total: parseFloat(e.target.value || '0') } : r
-                      )
-                    )
-                  }
-                />
-              </td>
+              <td style={tableCellStyle}>{row.discountAmt.toFixed(2)}</td>
+              {/* Non-editable GST fields */}
+              <td style={tableCellStyle}>{row.cgstPercent.toFixed(2)}</td>
+              <td style={tableCellStyle}>{row.cgstAmt.toFixed(2)}</td>
+              <td style={tableCellStyle}>{row.sgstPercent.toFixed(2)}</td>
+              <td style={tableCellStyle}>{row.sgstAmt.toFixed(2)}</td>
+              <td style={tableCellStyle}>{row.taxable.toFixed(2)}</td>
+              <td style={tableCellStyle}>{row.total.toFixed(2)}</td>
             </tr>
           ))}
+          <tr>
+            <td style={{ ...tableCellStyle, textAlign: 'right' }} colSpan={13}>
+              <strong>Grand Total</strong>
+            </td>
+            <td style={tableCellStyle}>
+              <strong>
+                {billRows.reduce((acc, curr) => acc + (curr.amount || 0), 0).toFixed(2)}
+              </strong>
+            </td>
+          </tr>
         </tbody>
       </table>
-
       <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
         <button style={buttonStyle} onClick={handleSave}>
           Save
@@ -591,51 +655,3 @@ const CounterSaleForm: FC = () => {
 };
 
 export default CounterSaleForm;
-
-const cellStyle: React.CSSProperties = {
-  border: '1px solid #000',
-  padding: '6px',
-  verticalAlign: 'top',
-};
-
-const tableHeaderCell: React.CSSProperties = {
-  border: '1px solid #000',
-  padding: '6px',
-  textAlign: 'center',
-  verticalAlign: 'middle',
-};
-
-const tableBodyCell: React.CSSProperties = {
-  border: '1px solid #000',
-  padding: '6px',
-  textAlign: 'center',
-  verticalAlign: 'middle',
-};
-
-const tableCellStyle: React.CSSProperties = {
-  border: '1px solid #ccc',
-  padding: '0.5rem',
-};
-
-const tableHeaderStyle: React.CSSProperties = {
-  backgroundColor: '#f5f5f5',
-  textAlign: 'left',
-};
-
-const buttonStyle: React.CSSProperties = {
-  backgroundColor: '#007bff',
-  color: '#fff',
-  padding: '0.6rem 1.2rem',
-  border: 'none',
-  borderRadius: '4px',
-  cursor: 'pointer',
-};
-
-const removeBtnStyle: React.CSSProperties = {
-  backgroundColor: 'red',
-  color: '#fff',
-  padding: '0.6rem 1.2rem',
-  border: 'none',
-  borderRadius: '4px',
-  cursor: 'pointer',
-};

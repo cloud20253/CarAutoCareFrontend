@@ -3,25 +3,22 @@ import { useLocation } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 
 interface BillRow {
-  id: number;
+  id?: number;
   sNo: number;
-  itemName?: string;    
-  spareName?: string;
+  spareNo: string;
+  spareName: string;
   qty?: number;
-  unitPrice?: number;   
-  rate?: number;
-  discount?: number;
-  taxable?: number;   
-  cgstRate?: number;
-  cgstAmt?: number;
-  cgst?: number;      
-  sgstRate?: number;
-  sgstAmt?: number;
-  sgst?: number;        
-  igstRate?: number;
-  igstAmt?: number;
-  amount?: number;      
+  rate: number;
+  discountPercent: number;
+  discountAmt: number;
+  cgstPercent: number;
+  cgstAmt: number;
+  sgstPercent: number;
+  sgstAmt: number;
+  taxable?: number;
   total?: number;
+  quantity?: number;
+  amount?: number; // <-- The final per-item amount we want to display
 }
 
 interface LocationState {
@@ -33,7 +30,8 @@ interface LocationState {
   adharNo: string;
   gstin: string;
   vehicleNo: string;
-  billRows: BillRow[];
+  items?: BillRow[];
+  billRows?: BillRow[];
 }
 
 const CounterBillPDF: FC = () => {
@@ -41,20 +39,17 @@ const CounterBillPDF: FC = () => {
   const location = useLocation();
   const state = location.state as LocationState;
 
-  const {
-    invoiceNo = '',
-    invDate = '',
-    customerName = '',
-    customerAddress = '',
-    customerMobile = '',
-    adharNo = '',
-    gstin = '',
-    vehicleNo = '',
-    billRows = [],
-  } = state || {};
+  // Gather invoice items from either "items" or "billRows"
+  const invoiceItems = state.items || state.billRows || [];
 
-  const grandTotal = billRows
-    .reduce((acc, row) => acc + (row.amount ?? row.total ?? 0), 0)
+  // Calculate grand total from item.amount (fallback to row.total or row.rate * row.qty if needed)
+  const grandTotal = invoiceItems
+    .reduce((acc, row) => {
+      const qty = row.qty ?? row.quantity ?? 0;
+      // Default to item.amount; fallback to item.total; fallback to row.rate * qty
+      const amt = row.amount ?? row.total ?? (row.rate * qty);
+      return acc + amt;
+    }, 0)
     .toFixed(2);
 
   return (
@@ -72,7 +67,15 @@ const CounterBillPDF: FC = () => {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <tbody>
           <tr>
-            <td style={{ ...cellStyle, width: '70%', textAlign: 'center', verticalAlign: 'top' }}>
+            <td
+              style={{
+                border: '1px solid #000',
+                padding: '6px',
+                textAlign: 'center',
+                verticalAlign: 'top',
+                width: '70%',
+              }}
+            >
               <h2 style={{ margin: 0 }}>AUTO CAR CARE POINT</h2>
               <p style={{ margin: 0 }}>
                 Burnasheeb Nagar, Shivnagar Road, Katol, (445201), Dist Satara
@@ -82,42 +85,80 @@ const CounterBillPDF: FC = () => {
               </p>
               <p style={{ margin: 0 }}>GSTIN: 29CLJPS9999C1ZV</p>
             </td>
-            <td style={{ ...cellStyle, width: '30%', textAlign: 'center', verticalAlign: 'middle' }}>
+            <td
+              style={{
+                border: '1px solid #000',
+                padding: '6px',
+                textAlign: 'center',
+                verticalAlign: 'middle',
+                width: '30%',
+              }}
+            >
               <strong style={{ fontSize: '1.2rem' }}>TAX INVOICE</strong>
             </td>
           </tr>
           <tr>
-            <td style={{ ...cellStyle, width: '50%', fontWeight: 'bold', verticalAlign: 'top' }}>
+            <td
+              style={{
+                border: '1px solid #000',
+                padding: '6px',
+                fontWeight: 'bold',
+                verticalAlign: 'top',
+                width: '50%',
+              }}
+            >
               CUSTOMER DETAILS
             </td>
             <td
               style={{
-                ...cellStyle,
-                width: '50%',
+                border: '1px solid #000',
+                padding: '6px',
                 fontWeight: 'bold',
                 textAlign: 'right',
                 verticalAlign: 'top',
+                width: '50%',
               }}
             >
               INVOICE DETAILS
             </td>
           </tr>
           <tr>
-            <td style={{ ...cellStyle, width: '50%', verticalAlign: 'top' }}>
-              <p style={{ margin: 0 }}>Name: {customerName}</p>
-              <p style={{ margin: 0 }}>Address: {customerAddress}</p>
-              <p style={{ margin: 0 }}>Mobile: {customerMobile}</p>
-              <p style={{ margin: 0 }}>Vehicle No: {vehicleNo}</p>
-              {adharNo && <p style={{ margin: 0 }}>Aadhaar No: {adharNo}</p>}
-              {gstin && <p style={{ margin: 0 }}>GSTIN: {gstin}</p>}
+            <td
+              style={{
+                border: '1px solid #000',
+                padding: '6px',
+                verticalAlign: 'top',
+                width: '50%',
+              }}
+            >
+              <p style={{ margin: 0 }}>Name: {state.customerName}</p>
+              <p style={{ margin: 0 }}>Address: {state.customerAddress}</p>
+              <p style={{ margin: 0 }}>Mobile: {state.customerMobile}</p>
+              <p style={{ margin: 0 }}>Vehicle No: {state.vehicleNo}</p>
+              {state.adharNo && <p style={{ margin: 0 }}>Aadhaar No: {state.adharNo}</p>}
+              {state.gstin && <p style={{ margin: 0 }}>GSTIN: {state.gstin}</p>}
             </td>
-            <td style={{ ...cellStyle, width: '50%', verticalAlign: 'top' }}>
-              <p style={{ margin: 0, textAlign: 'right' }}>Invoice No: {invoiceNo}</p>
-              <p style={{ margin: 0, textAlign: 'right' }}>Invoice Date: {invDate}</p>
+            <td
+              style={{
+                border: '1px solid #000',
+                padding: '6px',
+                verticalAlign: 'top',
+                width: '50%',
+              }}
+            >
+              <p style={{ margin: 0, textAlign: 'right' }}>
+                Invoice No: {state.invoiceNo}
+              </p>
+              <p style={{ margin: 0, textAlign: 'right' }}>
+                Invoice Date: {state.invDate}
+              </p>
             </td>
           </tr>
           <tr>
-            <td colSpan={2} style={{ ...cellStyle, textAlign: 'center' }}>
+            <td
+              colSpan={2}
+              style={{ border: '1px solid #000', padding: '6px', textAlign: 'center' }}
+            >
               <strong>SPARES / ITEMS</strong>
             </td>
           </tr>
@@ -127,7 +168,8 @@ const CounterBillPDF: FC = () => {
                 <thead>
                   <tr
                     style={{
-                      backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
+                      backgroundColor:
+                        theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
                       color: theme.palette.mode === 'dark' ? '#fff' : '#000',
                     }}
                   >
@@ -144,7 +186,7 @@ const CounterBillPDF: FC = () => {
                       Unit Price
                     </th>
                     <th rowSpan={2} style={tableHeaderCell}>
-                      Discount
+                      Discount (%)
                     </th>
                     <th rowSpan={2} style={tableHeaderCell}>
                       Taxable Amt
@@ -155,16 +197,14 @@ const CounterBillPDF: FC = () => {
                     <th colSpan={2} style={tableHeaderCell}>
                       SGST
                     </th>
-                    <th colSpan={2} style={tableHeaderCell}>
-                      IGST
-                    </th>
                     <th rowSpan={2} style={tableHeaderCell}>
                       Amount
                     </th>
                   </tr>
                   <tr
                     style={{
-                      backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
+                      backgroundColor:
+                        theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
                       color: theme.palette.mode === 'dark' ? '#fff' : '#000',
                     }}
                   >
@@ -172,65 +212,52 @@ const CounterBillPDF: FC = () => {
                     <th style={tableHeaderCell}>Amt</th>
                     <th style={tableHeaderCell}>Rate</th>
                     <th style={tableHeaderCell}>Amt</th>
-                    <th style={tableHeaderCell}>Rate</th>
-                    <th style={tableHeaderCell}>Amt</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {billRows.map((row) => (
-                    <tr key={row.id}>
-                      <td style={tableBodyCell}>{row.sNo}</td>
-                      <td style={tableBodyCell}>{row.itemName || row.spareName}</td>
-                      <td style={tableBodyCell}>{row.qty ?? 0}</td>
-                      <td style={tableBodyCell}>
-                        {((row.unitPrice ?? row.rate) || 0).toFixed(2)}
-                      </td>
-                      <td style={tableBodyCell}>{(row.discount ?? 0).toFixed(2)}</td>
-                      <td style={tableBodyCell}>{(row.taxable ?? 0).toFixed(2)}</td>
-                      <td style={tableBodyCell}>
-                        {((row.cgstRate !== undefined ? row.cgstRate : row.cgst) ?? 0).toFixed(2)}%
-                      </td>
-                      <td style={tableBodyCell}>
-                        {(
-                          row.cgstAmt ??
-                          (((row.taxable ?? 0) *
-                            ((row.cgstRate !== undefined ? row.cgstRate : row.cgst) ?? 0)) /
-                            100)
-                        ).toFixed(2)}
-                      </td>
-                      <td style={tableBodyCell}>
-                        {((row.sgstRate !== undefined ? row.sgstRate : row.sgst) ?? 0).toFixed(2)}%
-                      </td>
-                      <td style={tableBodyCell}>
-                        {(
-                          row.sgstAmt ??
-                          (((row.taxable ?? 0) *
-                            ((row.sgstRate !== undefined ? row.sgstRate : row.sgst) ?? 0)) /
-                            100)
-                        ).toFixed(2)}
-                      </td>
-                      <td style={tableBodyCell}>
-                        {(row.igstRate ?? 0).toFixed(2)}%
-                      </td>
-                      <td style={tableBodyCell}>
-                        {(row.igstAmt ?? 0).toFixed(2)}
-                      </td>
-                      <td style={tableBodyCell}>
-                        {((row.amount ?? row.total) || 0).toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
+                  {invoiceItems.map((item: BillRow, idx: number) => {
+                    // Determine quantity from either item.qty or item.quantity
+                    const quantity = item.qty ?? item.quantity ?? 0;
+                    return (
+                      <tr key={idx}>
+                        <td style={tableBodyCell}>{idx + 1}</td>
+                        <td style={tableBodyCell}>{item.spareName}</td>
+                        <td style={tableBodyCell}>{quantity}</td>
+                        <td style={tableBodyCell}>{(item.rate || 0).toFixed(2)}</td>
+                        <td style={tableBodyCell}>
+                          {(item.discountPercent || 0).toFixed(2)}%
+                        </td>
+                        <td style={tableBodyCell}>
+                          {(item.taxable || 0).toFixed(2)}
+                        </td>
+                        <td style={tableBodyCell}>
+                          {(item.cgstPercent || 0).toFixed(2)}%
+                        </td>
+                        <td style={tableBodyCell}>
+                          {(item.cgstAmt || 0).toFixed(2)}
+                        </td>
+                        <td style={tableBodyCell}>
+                          {(item.sgstPercent || 0).toFixed(2)}%
+                        </td>
+                        <td style={tableBodyCell}>
+                          {(item.sgstAmt || 0).toFixed(2)}
+                        </td>
+                        {/* Display item.amount here instead of item.total */}
+                        <td style={tableBodyCell}>
+                          {(item.amount || 0).toFixed(2)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
                 <tfoot>
                   <tr>
                     <td
-                      colSpan={12}
+                      colSpan={10}
                       style={{
                         ...tableBodyCell,
                         textAlign: 'right',
                         fontWeight: 'bold',
-                        borderRight: 'none',
-                        borderBottom: 'none',
                       }}
                     >
                       GRAND TOTAL
@@ -240,11 +267,20 @@ const CounterBillPDF: FC = () => {
                         ...tableBodyCell,
                         textAlign: 'right',
                         fontWeight: 'bold',
-                        borderLeft: '1px solid #000',
-                        borderBottom: 'none',
                       }}
                     >
-                      {grandTotal}
+                      {
+                        // Summation of item.amount or fallback
+                        invoiceItems
+                          .reduce((acc, row) => {
+                            const qty = row.qty ?? row.quantity ?? 0;
+                            // Fallback to row.amount, then row.total, then row.rate * qty
+                            const amt =
+                              row.amount ?? row.total ?? row.rate * qty;
+                            return acc + amt;
+                          }, 0)
+                          .toFixed(2)
+                      }
                     </td>
                   </tr>
                 </tfoot>
@@ -306,12 +342,6 @@ const CounterBillPDF: FC = () => {
 };
 
 export default CounterBillPDF;
-
-const cellStyle: React.CSSProperties = {
-  border: '1px solid #000',
-  padding: '6px',
-  verticalAlign: 'top',
-};
 
 const tableHeaderCell: React.CSSProperties = {
   border: '1px solid #000',
