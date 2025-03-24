@@ -1,11 +1,7 @@
 import * as React from 'react';
 import { useState,  FormEvent } from "react";
 import apiClient from "Services/apiService";
-import {
-  FaBarcode,
-  FaRegListAlt,
-  FaMoneyBillWave,
-} from "react-icons/fa";
+
 import {
   Box,
   Grid,
@@ -113,7 +109,6 @@ const TransactionAdd: React.FC = () => {
 
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="partNumber">
-              <FaBarcode style={{ marginRight: 8, verticalAlign: 'middle' }} />
               Part Number
             </FormLabel>
             <OutlinedInput
@@ -128,7 +123,6 @@ const TransactionAdd: React.FC = () => {
 
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="quantity">
-              <FaRegListAlt style={{ marginRight: 8, verticalAlign: 'middle' }} />
               Quantity
             </FormLabel>
             <OutlinedInput
@@ -144,7 +138,6 @@ const TransactionAdd: React.FC = () => {
 
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="billNo">
-              <FaMoneyBillWave style={{ marginRight: 8, verticalAlign: 'middle' }} />
               Bill Number
             </FormLabel>
             <OutlinedInput

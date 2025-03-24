@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import apiClient from "Services/apiService";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+// import DatePicker from "react-datepicker";
+// import "react-datepicker/dist/react-datepicker.css";
 import { CheckCircle, XCircle } from "lucide-react"; 
 
 function BookAppointment() {
@@ -261,7 +261,7 @@ function BookAppointment() {
               <label className="block text-sm font-medium text-gray-700">
                 Appointment Date
               </label>
-              <DatePicker
+              {/* <DatePicker
                 selected={
                   formData.appointmentDate ? new Date(formData.appointmentDate) : null
                 }
@@ -270,7 +270,7 @@ function BookAppointment() {
                 minDate={new Date()}
                 required
                 className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white text-gray-700"
-              />
+              /> */}
             </div>
 
             <div className="flex justify-center">

@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import apiClient from "Services/apiService";
-import { FaBarcode, FaRegListAlt } from "react-icons/fa";
 import {
     Grid,
     Box,
@@ -256,7 +255,6 @@ const AddVehiclePartService: React.FC = () => {
                 <Grid container spacing={3}>
                     <FormGrid item xs={12} md={6}>
                         <FormLabel htmlFor="partName">
-                            <FaBarcode style={{ marginRight: 8, verticalAlign: "middle" }} />
                             Part Name
                         </FormLabel>
                         <Autocomplete
@@ -271,7 +269,6 @@ const AddVehiclePartService: React.FC = () => {
 
                     <FormGrid item xs={12} md={6}>
                         <FormLabel htmlFor="partNumber">
-                            <FaBarcode style={{ marginRight: 8, verticalAlign: "middle" }} />
                             Part Number
                         </FormLabel>
                         <OutlinedInput
@@ -287,7 +284,6 @@ const AddVehiclePartService: React.FC = () => {
 
                     <FormGrid item xs={12} md={6}>
                         <FormLabel htmlFor="quantity">
-                            <FaRegListAlt style={{ marginRight: 8, verticalAlign: "middle" }} />
                             Quantity
                         </FormLabel>
                         <OutlinedInput

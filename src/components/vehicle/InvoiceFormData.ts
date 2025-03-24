@@ -1,4 +1,4 @@
-interface InvoiceFormData {
+export interface InvoiceFormData {
     // Left side (Customer Details)
     customerName: string;
     customerAddress: string;
