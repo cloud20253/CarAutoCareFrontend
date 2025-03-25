@@ -42,12 +42,12 @@ const CounterBillPDF: FC = () => {
   // Gather invoice items from either "items" or "billRows"
   const invoiceItems = state.items || state.billRows || [];
 
-  // Calculate grand total from item.amount (fallback to row.total or row.rate * row.qty if needed)
+  // Calculate grand total
   const grandTotal = invoiceItems
     .reduce((acc, row) => {
       const qty = row.qty ?? row.quantity ?? 0;
-      // Default to item.amount; fallback to item.total; fallback to row.rate * qty
-      const amt = row.amount ?? row.total ?? (row.rate * qty);
+      // Fallback to row.amount, then row.total, then row.rate * qty
+      const amt = row.amount ?? row.total ?? row.rate * qty;
       return acc + amt;
     }, 0)
     .toFixed(2);
@@ -66,6 +66,7 @@ const CounterBillPDF: FC = () => {
     >
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <tbody>
+          {/* Header rows */}
           <tr>
             <td
               style={{
@@ -154,6 +155,8 @@ const CounterBillPDF: FC = () => {
               </p>
             </td>
           </tr>
+
+          {/* Spares/Items */}
           <tr>
             <td
               colSpan={2}
@@ -216,7 +219,6 @@ const CounterBillPDF: FC = () => {
                 </thead>
                 <tbody>
                   {invoiceItems.map((item: BillRow, idx: number) => {
-                    // Determine quantity from either item.qty or item.quantity
                     const quantity = item.qty ?? item.quantity ?? 0;
                     return (
                       <tr key={idx}>
@@ -242,7 +244,6 @@ const CounterBillPDF: FC = () => {
                         <td style={tableBodyCell}>
                           {(item.sgstAmt || 0).toFixed(2)}
                         </td>
-                        {/* Display item.amount here instead of item.total */}
                         <td style={tableBodyCell}>
                           {(item.amount || 0).toFixed(2)}
                         </td>
@@ -269,70 +270,125 @@ const CounterBillPDF: FC = () => {
                         fontWeight: 'bold',
                       }}
                     >
-                      {
-                        // Summation of item.amount or fallback
-                        invoiceItems
-                          .reduce((acc, row) => {
-                            const qty = row.qty ?? row.quantity ?? 0;
-                            // Fallback to row.amount, then row.total, then row.rate * qty
-                            const amt =
-                              row.amount ?? row.total ?? row.rate * qty;
-                            return acc + amt;
-                          }, 0)
-                          .toFixed(2)
-                      }
+                      {grandTotal}
                     </td>
                   </tr>
                 </tfoot>
               </table>
             </td>
           </tr>
+
+          {/* Signature / QR / etc. row */}
           <tr>
-            <td colSpan={2} style={{ padding: 0, border: 'none' }}>
-              <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  border: '1px solid #000',
-                }}
-              >
-                <tbody>
-                  <tr>
-                    <td
-                      style={{
-                        textAlign: 'center',
-                        verticalAlign: 'middle',
-                        borderRight: '1px solid #000',
-                        height: '100px',
-                        width: '33.33%',
-                      }}
-                    >
-                      Scan QR Code
-                    </td>
-                    <td
-                      style={{
-                        textAlign: 'center',
-                        verticalAlign: 'middle',
-                        borderRight: '1px solid #000',
-                        height: '100px',
-                        width: '33.33%',
-                      }}
-                    >
-                      Customer Signature
-                    </td>
-                    <td
-                      style={{
-                        textAlign: 'center',
-                        verticalAlign: 'middle',
-                        height: '100px',
-                        width: '33.33%',
-                      }}
-                    >
-                      Authorized Signature
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+  <td colSpan={2} style={{ padding: 0, border: '1px solid #000' }}>
+    <table
+      style={{
+        width: '100%',
+        borderCollapse: 'collapse',
+      }}
+    >
+      <tbody>
+        <tr>
+          {/* Left box with centered, larger QR image (unchanged from your previous code) */}
+          <td
+            style={{
+              position: 'relative',
+              textAlign: 'center',
+              borderRight: '1px solid #000',
+              height: '120px',
+              width: '33.33%',
+            }}
+          >
+            <img
+              src="/QR.png"
+              alt="QR Code"
+              style={{
+                display: 'block',
+                margin: '0 auto',
+                width: '140px',
+                height: '140px',
+                marginBottom: '5px',
+              }}
+            />
+            <div>Scan QR Code</div>
+          </td>
+
+          {/* Middle box: "Customer Signature Thumb" at the bottom */}
+          <td
+            style={{
+              position: 'relative',
+              borderRight: '1px solid #000',
+              height: '120px',
+              width: '33.33%',
+            }}
+          >
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '5px',
+                left: 0,
+                right: 0,
+                textAlign: 'center',
+                fontWeight: 'bold',
+              }}
+            >
+              Customer Signature Thumb
+            </div>
+          </td>
+
+          {/* Right box: "Auto Car Care Point" at top, "Authorized Signature" at bottom */}
+          <td
+  style={{
+    position: 'relative',
+    height: '120px',
+    width: '33.33%',
+  }}
+>
+  {/* Top text */}
+  <div
+    style={{
+      position: 'absolute',
+      top: '5px',
+      left: 0,
+      right: 0,
+      textAlign: 'center',
+      fontWeight: 'bold',
+    }}
+  >
+    Auto Car Care Point
+  </div>
+
+  {/* Bottom text */}
+  <div
+    style={{
+      position: 'absolute',
+      bottom: '5px',
+      left: 0,
+      right: 0,
+      textAlign: 'center',
+      fontWeight: 'bold',
+    }}
+  >
+    Authorized Signature
+  </div>
+</td>
+        </tr>
+      </tbody>
+    </table>
+  </td>
+</tr>
+
+          <tr>
+            <td
+              colSpan={2}
+              style={{
+                border: '1px solid #000',
+                padding: '6px',
+                textAlign: 'center',
+              }}
+            >
+              Thank you Visit Next Time. For Car/Garage ServiceStation / Dealer /
+              Roadside Repair Technicians
             </td>
           </tr>
         </tbody>
