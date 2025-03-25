@@ -18,7 +18,7 @@ interface BillRow {
   taxable?: number;
   total?: number;
   quantity?: number;
-  amount?: number; // <-- The final per-item amount we want to display
+  amount?: number; 
 }
 
 interface LocationState {
@@ -39,14 +39,11 @@ const CounterBillPDF: FC = () => {
   const location = useLocation();
   const state = location.state as LocationState;
 
-  // Gather invoice items from either "items" or "billRows"
   const invoiceItems = state.items || state.billRows || [];
 
-  // Calculate grand total
   const grandTotal = invoiceItems
     .reduce((acc, row) => {
       const qty = row.qty ?? row.quantity ?? 0;
-      // Fallback to row.amount, then row.total, then row.rate * qty
       const amt = row.amount ?? row.total ?? row.rate * qty;
       return acc + amt;
     }, 0)
@@ -66,7 +63,6 @@ const CounterBillPDF: FC = () => {
     >
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <tbody>
-          {/* Header rows */}
           <tr>
             <td
               style={{
@@ -156,7 +152,6 @@ const CounterBillPDF: FC = () => {
             </td>
           </tr>
 
-          {/* Spares/Items */}
           <tr>
             <td
               colSpan={2}
@@ -278,7 +273,6 @@ const CounterBillPDF: FC = () => {
             </td>
           </tr>
 
-          {/* Signature / QR / etc. row */}
           <tr>
   <td colSpan={2} style={{ padding: 0, border: '1px solid #000' }}>
     <table
@@ -289,7 +283,7 @@ const CounterBillPDF: FC = () => {
     >
       <tbody>
         <tr>
-          {/* Left box with centered, larger QR image (unchanged from your previous code) */}
+    
           <td
             style={{
               position: 'relative',
@@ -313,7 +307,6 @@ const CounterBillPDF: FC = () => {
             <div>Scan QR Code</div>
           </td>
 
-          {/* Middle box: "Customer Signature Thumb" at the bottom */}
           <td
             style={{
               position: 'relative',
@@ -336,7 +329,6 @@ const CounterBillPDF: FC = () => {
             </div>
           </td>
 
-          {/* Right box: "Auto Car Care Point" at top, "Authorized Signature" at bottom */}
           <td
   style={{
     position: 'relative',
@@ -344,7 +336,6 @@ const CounterBillPDF: FC = () => {
     width: '33.33%',
   }}
 >
-  {/* Top text */}
   <div
     style={{
       position: 'absolute',
@@ -358,7 +349,6 @@ const CounterBillPDF: FC = () => {
     Auto Car Care Point
   </div>
 
-  {/* Bottom text */}
   <div
     style={{
       position: 'absolute',

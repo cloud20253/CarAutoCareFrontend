@@ -2,9 +2,10 @@ import React, { FC, useState, useEffect, useCallback, useRef } from 'react';
 import { AiOutlineUser, AiOutlineCalendar, AiOutlinePhone } from 'react-icons/ai';
 import { MdLocationOn, MdOutlineDirectionsCar } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
+import apiClient from 'Services/apiService';
 
 interface BillRow {
-  id?: number; // optional so that backend generates it
+  id?: number; 
   sNo: number;
   spareNo: string;
   spareName: string;
@@ -18,7 +19,7 @@ interface BillRow {
   sgstAmt: number;
   taxable: number;
   total: number;
-  amount: number; // computed amount for the individual row
+  amount: number; 
   checked?: boolean;
 }
 
@@ -26,7 +27,7 @@ interface SpareRow {
   spareName: string;
   spareNo?: string;
   rate: number;
-  qty: number; // temporary property used for calculation in the form
+  qty: number; 
   discountPercent: number;
   discountAmt: number;
   taxableValue: number;
@@ -36,15 +37,12 @@ interface SpareRow {
 }
 
 function computeBillRow(row: BillRow): BillRow {
-  // Use the quantity field for backend (which is computed from spareRow.qty)
   const baseAmount = row.rate * row.quantity;
   const discountAmt = (baseAmount * row.discountPercent) / 100;
   const taxable = baseAmount - discountAmt;
   const cgstAmt = (taxable * row.cgstPercent) / 100;
   const sgstAmt = (taxable * row.sgstPercent) / 100;
-  // Total is computed without adding GST amounts (adjust if you want to include them)
   const total = taxable;
-  // Here we set amount for the individual row
   const amount = total;
   return {
     ...row,
@@ -60,7 +58,6 @@ function computeBillRow(row: BillRow): BillRow {
 const CounterSaleForm: FC = () => {
   const navigate = useNavigate();
 
-  // Invoice details
   const [invoiceNo, setInvoiceNo] = useState('');
   const [invDate, setInvDate] = useState('');
   const [customerName, setCustomerName] = useState('');
@@ -85,8 +82,7 @@ const CounterSaleForm: FC = () => {
 
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [billRows, setBillRows] = useState<BillRow[]>([]);
-  
-  // Ref for detecting clicks outside the dropdown
+
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const computeSpareRowTotals = (row: SpareRow) => {
@@ -158,11 +154,10 @@ const CounterSaleForm: FC = () => {
     setSuggestions([]);
 
     const newBillRow: BillRow = computeBillRow({
-      // Do not set the id field so backend generates it
       sNo: billRows.length + 1,
       spareNo: updatedSpareRow.spareNo || '',
       spareName: updatedSpareRow.spareName,
-      // Use the temporary qty value as the final quantity field for backend mapping
+
       quantity: updatedSpareRow.qty,
       rate: updatedSpareRow.rate,
       discountPercent: updatedSpareRow.discountPercent,
@@ -177,8 +172,6 @@ const CounterSaleForm: FC = () => {
       checked: false,
     });
     setBillRows((prev) => [...prev, newBillRow]);
-
-    // Reset spareRow (keep discount for subsequent entries)
     setSpareRow((prev) => ({
       ...prev,
       spareName: '',
@@ -210,12 +203,11 @@ const CounterSaleForm: FC = () => {
   };
 
   const handleSave = () => {
-    // First, update each bill row with computed values
+  
     const updatedBillRows = billRows.map((row) => computeBillRow(row));
-    // Compute grand total (sum of each row's amount)
+
     const totalAmount = updatedBillRows.reduce((acc, curr) => acc + curr.amount, 0);
 
-    // Prepare payload according to backend's Invoice entity.
     const payload = {
       invDate,
       customerName,
@@ -224,9 +216,9 @@ const CounterSaleForm: FC = () => {
       adharNo,
       gstin,
       vehicleNo,
-      discount: 0, // set invoice-level discount if needed
-      totalAmount, // grand total for the invoice
-      items: updatedBillRows, // each item now has an "amount" field
+      discount: 0, 
+      totalAmount, 
+      items: updatedBillRows, 
     };
 
     fetch('http://localhost:8080/api/invoices/AddInvoice', {
@@ -236,7 +228,7 @@ const CounterSaleForm: FC = () => {
     })
       .then((res) => res.json())
       .then((data) => {
-        // Navigate to PDF view with the returned data
+
         navigate('/admin/counterbillPdf', { state: data });
       })
       .catch((error) => console.error('Error saving invoice:', error));
@@ -252,7 +244,6 @@ const CounterSaleForm: FC = () => {
     }
   }, [spareRow.discountPercent]);
 
-  // ------------------ Styles ------------------
   const containerStyle: React.CSSProperties = {
     width: '90%',
     margin: 'auto',
