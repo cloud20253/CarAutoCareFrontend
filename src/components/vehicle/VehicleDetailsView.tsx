@@ -22,7 +22,6 @@ const FormGrid2 = styled(Grid)(() => ({
     flexDirection: "column",
 }));
 
-// Updated interface with new fields for insurance info, vehicle inspection, and jobcard
 interface VehicleFormData {
     vehicleRegId?: string;
     appointmentId: string;
