@@ -133,7 +133,11 @@ const AddVehiclePartService: React.FC = () => {
                 return;
             }
 
-            const parts: SparePart[] = response.data || [];
+            // console.log("check---",response.data)
+
+
+            // Update part suggestions
+            const parts: SparePart[] = response.data.content || [];
             setPartSuggestions(parts);
 
         } catch (error) {
