@@ -53,7 +53,7 @@ export default function ResetPassword(props) {
                 token
             };
             const response = await ResetPasswordAPI(data);
-            if (response.code == 200) {
+            if (response.code === 200) {
                 console.log("Password reset successful:", response);
                 alert("Password reset successful!");
                 navigate("/signIn"); 

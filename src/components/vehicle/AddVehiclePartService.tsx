@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import apiClient from "Services/apiService";
-import { FaBarcode, FaRegListAlt } from "react-icons/fa";
 import {
     Grid,
     Box,
@@ -100,15 +99,13 @@ const AddVehiclePartService: React.FC = () => {
                 return;
             }
 
-            // Ensure responsePart.data is an array
             const transactions: any = Array.isArray(responsePart.data)
                 ? responsePart.data
                 : [responsePart.data];
             console.log(transactions[0].data)
             const transactionsData = transactions[0].data;
-            // Transform each transaction
             const newTransactions = transactionsData.map((resData: any, index: number) => ({
-                id: rows.length + index + 1, // Assign a unique ID
+                id: rows.length + index + 1, 
                 partNumber: resData.partNumber,
                 partName: resData.partName,
                 quantity: resData.quantity,
@@ -119,7 +116,6 @@ const AddVehiclePartService: React.FC = () => {
                 sparePartTransactionId: resData.sparePartTransactionId
             }));
 
-            // Append new transactions to the state
             setRows([...newTransactions]);
         } catch (err) {
             console.error("Error fetching transactions:", err);
@@ -128,20 +124,15 @@ const AddVehiclePartService: React.FC = () => {
 
     const fetchParts = async () => {
         try {
-            // Fetch all spare parts
             const response = await apiClient.get(
                 `https://carauto01-production-8b0b.up.railway.app/sparePartManagement/getAll`
             );
 
-            // Fetch spare part transactions based on vehicleRegId
             if (!id) {
                 console.error("Vehicle Registration ID is missing");
                 return;
             }
 
-
-
-            // Update part suggestions
             const parts: SparePart[] = response.data || [];
             setPartSuggestions(parts);
 
@@ -176,13 +167,13 @@ const AddVehiclePartService: React.FC = () => {
             const updatedData = {
                 ...createData,
                 vehicleRegId: Number(id),
-                userId: 1,// Ensure conversion to number
+                userId: 1,
             };
             const response = await apiClient.post("/sparePartTransactions/add", updatedData);
             console.log("check my data :", response);
             const sparePartTransactionId = response.data?.data.sparePartTransactionId;
             const newTransaction = {
-                id: rows.length + 1, // Assign unique id
+                id: rows.length + 1, 
                 partNumber: updatedData.partNumber,
                 partName: updatedData.partName,
                 quantity: updatedData.quantity,
@@ -193,7 +184,7 @@ const AddVehiclePartService: React.FC = () => {
                 sparePartTransactionId: sparePartTransactionId
             };
 
-            setRows((prevRows) => [...prevRows, newTransaction]); // Append new record
+            setRows((prevRows) => [...prevRows, newTransaction]); 
             setFeedback({
                 message: response.data.message || "Transaction created successfully",
                 severity: "success",
@@ -256,7 +247,6 @@ const AddVehiclePartService: React.FC = () => {
                 <Grid container spacing={3}>
                     <FormGrid item xs={12} md={6}>
                         <FormLabel htmlFor="partName">
-                            <FaBarcode style={{ marginRight: 8, verticalAlign: "middle" }} />
                             Part Name
                         </FormLabel>
                         <Autocomplete
@@ -271,7 +261,6 @@ const AddVehiclePartService: React.FC = () => {
 
                     <FormGrid item xs={12} md={6}>
                         <FormLabel htmlFor="partNumber">
-                            <FaBarcode style={{ marginRight: 8, verticalAlign: "middle" }} />
                             Part Number
                         </FormLabel>
                         <OutlinedInput
@@ -287,7 +276,6 @@ const AddVehiclePartService: React.FC = () => {
 
                     <FormGrid item xs={12} md={6}>
                         <FormLabel htmlFor="quantity">
-                            <FaRegListAlt style={{ marginRight: 8, verticalAlign: "middle" }} />
                             Quantity
                         </FormLabel>
                         <OutlinedInput

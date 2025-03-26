@@ -32,6 +32,10 @@ import BillForm from "components/vehicle/BillForm";
 import TransactionDetails from "components/StockManagement/TransactionDetails";
 import CounterSaleForm from "components/StockManagement/CounterSaleForm";
 import CounterBillPDF from "components/StockManagement/CounterBillPDF";
+import SupplierListPage from "components/Vendor/SupplierListPage";
+import AddNewSupplierPage from "components/Vendor/VendorManagementPage";
+import VendorUpdatePage from "components/Vendor/VendorUpdatePage";
+import InvoiceList from "components/StockManagement/InvoiceList";
 // import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
 
 const AppRoutes = () => {
@@ -46,7 +50,9 @@ const AppRoutes = () => {
             <Route path="/" element = {<Home/>} />
             <Route path="/add-part" element={<MyAddSparePart />} /> 
             <Route path="/getAll" element={<SparePart />} /> 
-             
+            <Route path="/supplier/add" element={<AddNewSupplierPage />} /> 
+            <Route path="/supplier/update/:vendorId" element={<VendorUpdatePage />} />
+            
             <Route path="/spare-part/:id" element={<SparePartDetails />} /> 
             <Route path="/book-service" element={<BookAppointment />} /> 
             <Route path="/edit-spare-part/:id" element={<EditSparePart />} />
@@ -62,6 +68,7 @@ const AppRoutes = () => {
                 <Route path="dashboard" element={<Dashboard />} />
                 {/* <Route path="invoice/:id" element={<InvoiceDetailsWrapper />} /> */}
                 <Route path="billForm/:id" element={<InvoiceForm />} />
+                <Route path="vendorManagement" element={<SupplierListPage />} />
                 <Route path="counterbillPdf" element={<CounterBillPDF />} />
                 <Route path="counterSale" element={<CounterSaleForm />} />
                 <Route path="transaction" element={<TransactionAdd />} /> 
@@ -69,6 +76,7 @@ const AppRoutes = () => {
                 <Route path="manage-stock" element={<StockManageGrid />} />
                 <Route path="users" element={<ManageUsers />} />
                 <Route path="bill" element={<BillForm />} />
+                <Route path="invoiceList" element={<InvoiceList />} />
                 <Route path="transaction-list" element={<TransactionList />} /> 
                 <Route path="user-part/view/:id" element={<TransactionDetails />} />
                 <Route path="vehicle" element={<VehicleList />} />

@@ -2,6 +2,7 @@ import React, { FC, useState, useEffect, useCallback, useRef } from 'react';
 import { AiOutlineUser, AiOutlineCalendar, AiOutlinePhone } from 'react-icons/ai';
 import { MdLocationOn, MdOutlineDirectionsCar } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
 import apiClient from 'Services/apiService';
 
 interface BillRow {
@@ -11,7 +12,7 @@ interface BillRow {
   spareName: string;
   quantity: number;
   rate: number;
-  discountPercent: number;
+  discountPercent: string | number; 
   discountAmt: number;
   cgstPercent: number;
   cgstAmt: number;
@@ -28,7 +29,7 @@ interface SpareRow {
   spareNo?: string;
   rate: number;
   qty: number; 
-  discountPercent: number;
+  discountPercent: string | number; 
   discountAmt: number;
   taxableValue: number;
   total: number;
@@ -36,9 +37,25 @@ interface SpareRow {
   sgstPercent?: number;
 }
 
+function computeSpareRowTotals(row: SpareRow): SpareRow {
+  const rate = row.rate;
+  const qty = row.qty;
+  const discountPercent = Number(row.discountPercent) || 0;
+  const lineAmount = rate * qty;
+  const discountAmt = (lineAmount * discountPercent) / 100;
+  const newTaxable = lineAmount - discountAmt;
+  return {
+    ...row,
+    discountAmt,
+    taxableValue: newTaxable,
+    total: newTaxable,
+  };
+}
+
 function computeBillRow(row: BillRow): BillRow {
   const baseAmount = row.rate * row.quantity;
-  const discountAmt = (baseAmount * row.discountPercent) / 100;
+  const discountPercent = Number(row.discountPercent) || 0;
+  const discountAmt = (baseAmount * discountPercent) / 100;
   const taxable = baseAmount - discountAmt;
   const cgstAmt = (taxable * row.cgstPercent) / 100;
   const sgstAmt = (taxable * row.sgstPercent) / 100;
@@ -57,8 +74,9 @@ function computeBillRow(row: BillRow): BillRow {
 
 const CounterSaleForm: FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
 
-  const [invoiceNo, setInvoiceNo] = useState('');
   const [invDate, setInvDate] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
@@ -72,7 +90,7 @@ const CounterSaleForm: FC = () => {
     spareNo: '',
     rate: 0,
     qty: 1,
-    discountPercent: 0,
+    discountPercent: '',
     discountAmt: 0,
     taxableValue: 0,
     total: 0,
@@ -85,23 +103,103 @@ const CounterSaleForm: FC = () => {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const computeSpareRowTotals = (row: SpareRow) => {
-    const lineAmount = row.rate * row.qty;
-    const discountAmt = (lineAmount * row.discountPercent) / 100;
-    const newTaxable = lineAmount - discountAmt;
-    return {
-      ...row,
-      discountAmt,
-      taxableValue: newTaxable,
-      total: newTaxable,
-    };
+  const inputStyle: React.CSSProperties = {
+    padding: '0.5rem',
+    borderRadius: '4px',
+    border: isDark ? '1px solid #555' : '1px solid #ccc',
+    width: '100%',
+    backgroundColor: isDark ? '#424242' : '#fff',
+    color: isDark ? '#fff' : '#000',
   };
+
+  const sectionStyle: React.CSSProperties = {
+    width: '48%',
+    border: isDark ? '1px solid #555' : '1px solid #ccc',
+    padding: '1rem',
+    borderRadius: '6px',
+    backgroundColor: isDark ? '#333' : '#fff',
+  };
+
+  const tableHeaderStyle: React.CSSProperties = {
+    backgroundColor: isDark ? '#555' : '#f5f5f5',
+    color: isDark ? '#fff' : '#000',
+    textAlign: 'left',
+  };
+
+  const tableCellStyle: React.CSSProperties = {
+    border: isDark ? '1px solid #555' : '1px solid #ccc',
+    padding: '0.5rem',
+    textAlign: 'center',
+    verticalAlign: 'middle',
+    backgroundColor: isDark ? '#424242' : '#fff',
+    color: isDark ? '#fff' : '#000',
+  };
+
+  const containerStyle: React.CSSProperties = {
+    width: '90%',
+    margin: 'auto',
+    marginTop: '2rem',
+    fontFamily: 'Arial, sans-serif',
+    backgroundColor: isDark ? '#1e1e1e' : '#f9f9f9',
+    color: isDark ? '#fff' : '#000',
+  };
+
+  const headerStyle: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: '1rem',
+  };
+
+  const sectionHeader: React.CSSProperties = {
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
+    marginBottom: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  };
+
+  const fieldGroup: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    marginBottom: '1rem',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    marginBottom: '0.25rem',
+    fontWeight: 'bold',
+  };
+
+  const tableStyle: React.CSSProperties = {
+    width: '100%',
+    borderCollapse: 'collapse',
+    marginTop: '1rem',
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    backgroundColor: '#007bff',
+    color: '#fff',
+    padding: '0.6rem 1.2rem',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  };
+
+  const removeBtnStyle: React.CSSProperties = {
+    backgroundColor: 'red',
+    color: '#fff',
+    padding: '0.6rem 1.2rem',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  };
+
+  const todayStr = new Date().toISOString().split('T')[0];
 
   const handleSpareRowChange = (key: keyof SpareRow, value: string | number) => {
     setSpareRow((prev) => {
-      const updatedValue = typeof value === 'number' ? value : value;
-      const newVal = key === 'discountPercent' && Number(updatedValue) < 0 ? 0 : Number(updatedValue);
-      const updatedRow = { ...prev, [key]: key === 'spareName' ? value : newVal };
+      const updatedValue = key === 'discountPercent' && value === '' ? '' : value;
+      const updatedRow = { ...prev, [key]: updatedValue };
       return computeSpareRowTotals(updatedRow);
     });
   };
@@ -112,9 +210,8 @@ const CounterSaleForm: FC = () => {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:8080/Filter/searchBarFilter?searchBarInput=${searchQuery}`);
-      const data = await response.json();
-      setSuggestions(data.list || []);
+      const response = await apiClient.get(`/Filter/searchBarFilter?searchBarInput=${searchQuery}`);
+      setSuggestions(response.data.list || []);
     } catch (error) {
       console.error('Error fetching part details:', error);
     }
@@ -157,7 +254,6 @@ const CounterSaleForm: FC = () => {
       sNo: billRows.length + 1,
       spareNo: updatedSpareRow.spareNo || '',
       spareName: updatedSpareRow.spareName,
-
       quantity: updatedSpareRow.qty,
       rate: updatedSpareRow.rate,
       discountPercent: updatedSpareRow.discountPercent,
@@ -183,6 +279,7 @@ const CounterSaleForm: FC = () => {
       total: 0,
       cgstPercent: 0,
       sgstPercent: 0,
+      discountPercent: '',
     }));
   };
 
@@ -203,9 +300,24 @@ const CounterSaleForm: FC = () => {
   };
 
   const handleSave = () => {
-  
-    const updatedBillRows = billRows.map((row) => computeBillRow(row));
+    if (!customerName) {
+      alert('Customer Name is required');
+      return;
+    }
+    if (!adharNo) {
+      alert('Aadhaar No is required');
+      return;
+    }
+    if (!customerMobile) {
+      alert('Mobile No is required');
+      return;
+    }
+    if (invDate > todayStr) {
+      alert('Invoice date cannot be in the future.');
+      return;
+    }
 
+    const updatedBillRows = billRows.map((row) => computeBillRow(row));
     const totalAmount = updatedBillRows.reduce((acc, curr) => acc + curr.amount, 0);
 
     const payload = {
@@ -216,20 +328,15 @@ const CounterSaleForm: FC = () => {
       adharNo,
       gstin,
       vehicleNo,
-      discount: 0, 
-      totalAmount, 
-      items: updatedBillRows, 
+      discount: 0,
+      totalAmount,
+      items: updatedBillRows,
     };
 
-    fetch('http://localhost:8080/api/invoices/AddInvoice', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-
-        navigate('/admin/counterbillPdf', { state: data });
+    apiClient
+      .post('/api/invoices/AddInvoice', payload)
+      .then((response) => {
+        navigate('/admin/counterbillPdf', { state: response.data });
       })
       .catch((error) => console.error('Error saving invoice:', error));
   };
@@ -244,112 +351,28 @@ const CounterSaleForm: FC = () => {
     }
   }, [spareRow.discountPercent]);
 
-  const containerStyle: React.CSSProperties = {
-    width: '90%',
-    margin: 'auto',
-    marginTop: '2rem',
-    fontFamily: 'Arial, sans-serif',
-  };
-
-  const headerStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginBottom: '1rem',
-  };
-
-  const sectionStyle: React.CSSProperties = {
-    width: '48%',
-    border: '1px solid #ccc',
-    padding: '1rem',
-    borderRadius: '6px',
-  };
-
-  const sectionHeader: React.CSSProperties = {
-    fontSize: '1.2rem',
-    fontWeight: 'bold',
-    marginBottom: '1rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  };
-
-  const fieldGroup: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    marginBottom: '1rem',
-  };
-
-  const labelStyle: React.CSSProperties = {
-    marginBottom: '0.25rem',
-    fontWeight: 'bold',
-  };
-
-  const inputStyle: React.CSSProperties = {
-    padding: '0.5rem',
-    borderRadius: '4px',
-    border: '1px solid #ccc',
-    width: '100%',
-  };
-
-  const tableStyle: React.CSSProperties = {
-    width: '100%',
-    borderCollapse: 'collapse',
-    marginTop: '1rem',
-  };
-
-  const tableCellStyle: React.CSSProperties = {
-    border: '1px solid #ccc',
-    padding: '0.5rem',
-    textAlign: 'center',
-    verticalAlign: 'middle',
-  };
-
-  const tableHeaderStyle: React.CSSProperties = {
-    backgroundColor: '#f5f5f5',
-    textAlign: 'left',
-  };
-
-  const buttonStyle: React.CSSProperties = {
-    backgroundColor: '#007bff',
-    color: '#fff',
-    padding: '0.6rem 1.2rem',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  };
-
-  const removeBtnStyle: React.CSSProperties = {
-    backgroundColor: 'red',
-    color: '#fff',
-    padding: '0.6rem 1.2rem',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
+  // ================================================
+  // NEW: Navigate to InvoiceList on "Manage Counter Sale"
+  // ================================================
+  const handleManageCounterSale = () => {
+    // Adjust the route to wherever your invoice list page is located
+    navigate('/admin/invoiceList');
   };
 
   return (
     <div style={containerStyle}>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-        <button style={buttonStyle}>Manage Counter Sale</button>
+        {/* Use the new handler here */}
+        <button style={buttonStyle} onClick={handleManageCounterSale}>
+          Manage Counter Sale
+        </button>
       </div>
+
       <div style={headerStyle}>
         <div style={sectionStyle}>
           <div style={sectionHeader}>
             <AiOutlineCalendar />
             <span>Invoice Details</span>
-          </div>
-          <div style={fieldGroup}>
-            <label htmlFor="invoiceNo" style={labelStyle}>
-              Invoice No.
-            </label>
-            <input
-              id="invoiceNo"
-              type="text"
-              placeholder="Invoice No."
-              style={inputStyle}
-              value={invoiceNo}
-              onChange={(e) => setInvoiceNo(e.target.value)}
-            />
           </div>
           <div style={fieldGroup}>
             <label htmlFor="invDate" style={labelStyle}>
@@ -360,10 +383,12 @@ const CounterSaleForm: FC = () => {
               type="date"
               style={inputStyle}
               value={invDate}
+              max={todayStr}
               onChange={(e) => setInvDate(e.target.value)}
             />
           </div>
         </div>
+
         <div style={sectionStyle}>
           <div style={sectionHeader}>
             <AiOutlineUser />
@@ -371,7 +396,7 @@ const CounterSaleForm: FC = () => {
           </div>
           <div style={fieldGroup}>
             <label htmlFor="customerName" style={labelStyle}>
-              Name
+              Name <span style={{ color: 'red' }}>*</span>
             </label>
             <input
               id="customerName"
@@ -380,6 +405,7 @@ const CounterSaleForm: FC = () => {
               style={inputStyle}
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
+              required
             />
           </div>
           <div style={fieldGroup}>
@@ -400,7 +426,7 @@ const CounterSaleForm: FC = () => {
           </div>
           <div style={fieldGroup}>
             <label htmlFor="customerMobile" style={labelStyle}>
-              Mobile No
+              Mobile No <span style={{ color: 'red' }}>*</span>
             </label>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <AiOutlinePhone style={{ marginRight: '0.5rem' }} />
@@ -411,20 +437,22 @@ const CounterSaleForm: FC = () => {
                 style={inputStyle}
                 value={customerMobile}
                 onChange={(e) => setCustomerMobile(e.target.value)}
+                required
               />
             </div>
           </div>
           <div style={fieldGroup}>
             <label htmlFor="adharNo" style={labelStyle}>
-              Adhar No
+              Aadhaar No <span style={{ color: 'red' }}>*</span>
             </label>
             <input
               id="adharNo"
               type="text"
-              placeholder="Enter Adhar No"
+              placeholder="Enter Aadhaar No"
               style={inputStyle}
               value={adharNo}
               onChange={(e) => setAdharNo(e.target.value)}
+              required
             />
           </div>
           <div style={fieldGroup}>
@@ -458,7 +486,7 @@ const CounterSaleForm: FC = () => {
           </div>
         </div>
       </div>
-      {/* Spare details input */}
+
       <table style={tableStyle}>
         <thead style={tableHeaderStyle}>
           <tr>
@@ -482,8 +510,8 @@ const CounterSaleForm: FC = () => {
                 {suggestions.length > 0 && (
                   <div
                     style={{
-                      background: '#fff',
-                      border: '1px solid #ccc',
+                      background: isDark ? '#424242' : '#fff',
+                      border: isDark ? '1px solid #555' : '1px solid #ccc',
                       position: 'absolute',
                       width: '100%',
                       zIndex: 1,
@@ -505,17 +533,17 @@ const CounterSaleForm: FC = () => {
             <td style={tableCellStyle}>
               <input
                 type="number"
-                style={inputStyle}
+                style={{ ...inputStyle, backgroundColor: isDark ? '#555' : '#f0f0f0' }}
                 value={spareRow.rate}
-                onChange={(e) => handleSpareRowChange('rate', e.target.value)}
+                disabled
               />
             </td>
             <td style={tableCellStyle}>
               <input
                 type="number"
-                style={inputStyle}
+                style={{ ...inputStyle, backgroundColor: isDark ? '#555' : '#f0f0f0' }}
                 value={spareRow.qty}
-                onChange={(e) => handleSpareRowChange('qty', e.target.value)}
+                disabled
               />
             </td>
             <td style={tableCellStyle}>
@@ -523,27 +551,55 @@ const CounterSaleForm: FC = () => {
                 type="number"
                 style={inputStyle}
                 value={spareRow.discountPercent}
-                onChange={(e) => handleSpareRowChange('discountPercent', e.target.value)}
+                onChange={(e) =>
+                  handleSpareRowChange(
+                    'discountPercent',
+                    e.target.value === '' ? '' : e.target.value
+                  )
+                }
               />
             </td>
           </tr>
         </tbody>
       </table>
+
       {/* Bill rows table */}
       <table style={tableStyle}>
         <thead>
           <tr style={tableHeaderStyle}>
-            <th style={tableCellStyle} rowSpan={2}>#</th>
-            <th style={tableCellStyle} rowSpan={2}>S.No</th>
-            <th style={tableCellStyle} rowSpan={2}>Spare No</th>
-            <th style={tableCellStyle} rowSpan={2}>Spare Name</th>
-            <th style={tableCellStyle} rowSpan={2}>Qty</th>
-            <th style={tableCellStyle} rowSpan={2}>Rate</th>
-            <th style={tableCellStyle} colSpan={2}>Discount</th>
-            <th style={tableCellStyle} colSpan={2}>CGST</th>
-            <th style={tableCellStyle} colSpan={2}>SGST</th>
-            <th style={tableCellStyle} rowSpan={2}>Taxable</th>
-            <th style={tableCellStyle} rowSpan={2}>Total</th>
+            <th style={tableCellStyle} rowSpan={2}>
+              #
+            </th>
+            <th style={tableCellStyle} rowSpan={2}>
+              S.No
+            </th>
+            <th style={tableCellStyle} rowSpan={2}>
+              Spare No
+            </th>
+            <th style={tableCellStyle} rowSpan={2}>
+              Spare Name
+            </th>
+            <th style={tableCellStyle} rowSpan={2}>
+              Qty
+            </th>
+            <th style={tableCellStyle} rowSpan={2}>
+              Rate
+            </th>
+            <th style={tableCellStyle} colSpan={2}>
+              Discount
+            </th>
+            <th style={tableCellStyle} colSpan={2}>
+              CGST
+            </th>
+            <th style={tableCellStyle} colSpan={2}>
+              SGST
+            </th>
+            <th style={tableCellStyle} rowSpan={2}>
+              Taxable
+            </th>
+            <th style={tableCellStyle} rowSpan={2}>
+              Total
+            </th>
           </tr>
           <tr style={tableHeaderStyle}>
             <th style={tableCellStyle}>%</th>
@@ -587,7 +643,9 @@ const CounterSaleForm: FC = () => {
                   style={inputStyle}
                   value={row.quantity}
                   onChange={(e) =>
-                    updateBillRow(row.id!, { quantity: parseInt(e.target.value || '1', 10) })
+                    updateBillRow(row.id!, {
+                      quantity: parseInt(e.target.value || '1', 10),
+                    })
                   }
                 />
               </td>
@@ -607,12 +665,13 @@ const CounterSaleForm: FC = () => {
                   style={inputStyle}
                   value={row.discountPercent}
                   onChange={(e) =>
-                    updateBillRow(row.id!, { discountPercent: parseFloat(e.target.value || '0') })
+                    updateBillRow(row.id!, {
+                      discountPercent: e.target.value === '' ? '' : e.target.value,
+                    })
                   }
                 />
               </td>
               <td style={tableCellStyle}>{row.discountAmt.toFixed(2)}</td>
-              {/* Non-editable GST fields */}
               <td style={tableCellStyle}>{row.cgstPercent.toFixed(2)}</td>
               <td style={tableCellStyle}>{row.cgstAmt.toFixed(2)}</td>
               <td style={tableCellStyle}>{row.sgstPercent.toFixed(2)}</td>
@@ -633,6 +692,7 @@ const CounterSaleForm: FC = () => {
           </tr>
         </tbody>
       </table>
+
       <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
         <button style={buttonStyle} onClick={handleSave}>
           Save

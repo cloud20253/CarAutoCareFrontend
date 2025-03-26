@@ -21,8 +21,8 @@ const reportItems = [
     icon: <FaCalendarAlt size={40} color="#f57c00" />,
   },
   {
-    text: "Counter Sale",
-    link: "/admin/counter-sale",
+    text: "Vendor Management",
+    link: "/admin/vendorManagement",
     icon: <FaShoppingCart size={40} color="#d32f2f" />,
   },
 ];

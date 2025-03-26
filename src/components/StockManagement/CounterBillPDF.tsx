@@ -18,11 +18,11 @@ interface BillRow {
   taxable?: number;
   total?: number;
   quantity?: number;
-  amount?: number; 
+  amount?: number;
 }
 
 interface LocationState {
-  invoiceNo: string;
+  invoiceNumber: string; // from backend
   invDate: string;
   customerName: string;
   customerAddress: string;
@@ -39,8 +39,10 @@ const CounterBillPDF: FC = () => {
   const location = useLocation();
   const state = location.state as LocationState;
 
+  // Gather invoice items from either "items" or "billRows"
   const invoiceItems = state.items || state.billRows || [];
 
+  // Calculate grand total
   const grandTotal = invoiceItems
     .reduce((acc, row) => {
       const qty = row.qty ?? row.quantity ?? 0;
@@ -61,27 +63,27 @@ const CounterBillPDF: FC = () => {
         color: theme.palette.mode === 'dark' ? '#fff' : '#000',
       }}
     >
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <tbody>
-          <tr>
-            <td
-              style={{
-                border: '1px solid #000',
-                padding: '6px',
-                textAlign: 'center',
-                verticalAlign: 'top',
-                width: '70%',
-              }}
-            >
-              <h2 style={{ margin: 0 }}>AUTO CAR CARE POINT</h2>
-              <p style={{ margin: 0 }}>
-                Burnasheeb Nagar, Shivnagar Road, Katol, (445201), Dist Satara
-              </p>
-              <p style={{ margin: 0 }}>
-                Ph: 9999999999 | 7890117886 | Email: autocarepoint@gmail.com
-              </p>
-              <p style={{ margin: 0 }}>GSTIN: 29CLJPS9999C1ZV</p>
-            </td>
+         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+         <tbody>
+         <tr>
+          <td
+         style={{
+         border: '1px solid #000',
+         padding: '6px',
+         textAlign: 'center',
+         verticalAlign: 'top',
+         width: '70%',
+  }}
+>
+           <h2 style={{ margin: 0, fontWeight: 'bold' }}>AUTO CAR CARE POINT</h2>
+           <p style={{ margin: 0 }}>
+           Buvasaheb Nagar, Shingnapur Road, Kolki, Tal.Phaltan(415523), Dist.Satara.
+           </p>
+           <p style={{ margin: 0 }}>
+           Ph : 9595054555 / 7758817766   Email : autocarcarepoint@gmail.com
+           </p>
+           <p style={{ margin: 0 }}>GSTIN : 27GLYPS9891C1ZV</p>
+           </td>
             <td
               style={{
                 border: '1px solid #000',
@@ -94,6 +96,7 @@ const CounterBillPDF: FC = () => {
               <strong style={{ fontSize: '1.2rem' }}>TAX INVOICE</strong>
             </td>
           </tr>
+
           <tr>
             <td
               style={{
@@ -119,6 +122,7 @@ const CounterBillPDF: FC = () => {
               INVOICE DETAILS
             </td>
           </tr>
+
           <tr>
             <td
               style={{
@@ -144,7 +148,7 @@ const CounterBillPDF: FC = () => {
               }}
             >
               <p style={{ margin: 0, textAlign: 'right' }}>
-                Invoice No: {state.invoiceNo}
+                Invoice No: {state.invoiceNumber}
               </p>
               <p style={{ margin: 0, textAlign: 'right' }}>
                 Invoice Date: {state.invDate}
@@ -160,14 +164,14 @@ const CounterBillPDF: FC = () => {
               <strong>SPARES / ITEMS</strong>
             </td>
           </tr>
+
           <tr>
             <td colSpan={2} style={{ padding: 0, border: '1px solid #000' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr
                     style={{
-                      backgroundColor:
-                        theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
+                      backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
                       color: theme.palette.mode === 'dark' ? '#fff' : '#000',
                     }}
                   >
@@ -201,8 +205,7 @@ const CounterBillPDF: FC = () => {
                   </tr>
                   <tr
                     style={{
-                      backgroundColor:
-                        theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
+                      backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
                       color: theme.palette.mode === 'dark' ? '#fff' : '#000',
                     }}
                   >
@@ -274,99 +277,91 @@ const CounterBillPDF: FC = () => {
           </tr>
 
           <tr>
-  <td colSpan={2} style={{ padding: 0, border: '1px solid #000' }}>
-    <table
-      style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-      }}
-    >
-      <tbody>
-        <tr>
-    
-          <td
-            style={{
-              position: 'relative',
-              textAlign: 'center',
-              borderRight: '1px solid #000',
-              height: '120px',
-              width: '33.33%',
-            }}
-          >
-            <img
-              src="/QR.png"
-              alt="QR Code"
-              style={{
-                display: 'block',
-                margin: '0 auto',
-                width: '140px',
-                height: '140px',
-                marginBottom: '5px',
-              }}
-            />
-            <div>Scan QR Code</div>
-          </td>
+            <td colSpan={2} style={{ padding: 0, border: '1px solid #000' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <tbody>
+                  <tr>
+                    <td
+                      style={{
+                        position: 'relative',
+                        textAlign: 'center',
+                        borderRight: '1px solid #000',
+                        height: '120px',
+                        width: '33.33%',
+                      }}
+                    >
+                      <img
+                        src="/QR.png"
+                        alt="QR Code"
+                        style={{
+                          display: 'block',
+                          margin: '0 auto',
+                          width: '140px',
+                          height: '140px',
+                          marginBottom: '5px',
+                        }}
+                      />
+                      <div>Scan QR Code</div>
+                    </td>
+                    <td
+                      style={{
+                        position: 'relative',
+                        borderRight: '1px solid #000',
+                        height: '120px',
+                        width: '33.33%',
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: '5px',
+                          left: 0,
+                          right: 0,
+                          textAlign: 'center',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        Customer Signature Thumb
+                      </div>
+                    </td>
 
-          <td
-            style={{
-              position: 'relative',
-              borderRight: '1px solid #000',
-              height: '120px',
-              width: '33.33%',
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '5px',
-                left: 0,
-                right: 0,
-                textAlign: 'center',
-                fontWeight: 'bold',
-              }}
-            >
-              Customer Signature Thumb
-            </div>
-          </td>
-
-          <td
-  style={{
-    position: 'relative',
-    height: '120px',
-    width: '33.33%',
-  }}
->
-  <div
-    style={{
-      position: 'absolute',
-      top: '5px',
-      left: 0,
-      right: 0,
-      textAlign: 'center',
-      fontWeight: 'bold',
-    }}
-  >
-    Auto Car Care Point
-  </div>
-
-  <div
-    style={{
-      position: 'absolute',
-      bottom: '5px',
-      left: 0,
-      right: 0,
-      textAlign: 'center',
-      fontWeight: 'bold',
-    }}
-  >
-    Authorized Signature
-  </div>
-</td>
-        </tr>
-      </tbody>
-    </table>
-  </td>
-</tr>
+                    <td
+                      style={{
+                        position: 'relative',
+                        height: '120px',
+                        width: '33.33%',
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '5px',
+                          left: 0,
+                          right: 0,
+                          textAlign: 'center',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        Auto Car Care Point
+                      </div>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: '5px',
+                          left: 0,
+                          right: 0,
+                          textAlign: 'center',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        Authorized Signature
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
 
           <tr>
             <td
@@ -377,8 +372,7 @@ const CounterBillPDF: FC = () => {
                 textAlign: 'center',
               }}
             >
-              Thank you Visit Next Time. For Car/Garage ServiceStation / Dealer /
-              Roadside Repair Technicians
+              Thank You For Visit.... This is a Computer Generated Invoice
             </td>
           </tr>
         </tbody>

@@ -16,8 +16,8 @@ import "slick-carousel/slick/slick-theme.css";
 import HowItWorks from "./HowItWorks";
 
 function Home() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loading] = useState(false);
+  const [error] = useState("");
   const navigate = useNavigate();
 
   const bounceVariant = {
