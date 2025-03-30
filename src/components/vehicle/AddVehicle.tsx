@@ -434,7 +434,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-          
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="vehicleBrand">Vehicle Brand</FormLabel>
             <OutlinedInput
@@ -560,7 +559,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-          
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="vehicleInspection">Vehicle Inspection</FormLabel>
             <OutlinedInput
@@ -573,7 +571,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-          
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="jobCard">Jobcard</FormLabel>
             <OutlinedInput
@@ -586,7 +583,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-          
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="insuranceStatus">Insurance Status</FormLabel>
             <FormControl fullWidth size="small">
@@ -644,7 +640,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-          
           <FormGrid item xs={12}>
             <Button type="submit" variant="contained" color="primary" fullWidth>
               {id ? "Update Vehicle" : "Add Vehicle"}
