@@ -421,7 +421,6 @@ export default function AddVehicle() {
               size="small"
             />
           </FormGrid>
-          
           <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="customerGstin">Customer GSTIN</FormLabel>
             <OutlinedInput
