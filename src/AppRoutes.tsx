@@ -39,6 +39,17 @@ import InvoiceList from "components/StockManagement/InvoiceList";
 import InvoiceEditForm from "components/StockManagement/InvoiceEditForm";
 import AppointmentList from "components/Appointments/AppointmentList";
 import SaleAccountReport from "pages/SaleAccountReport";
+import JobCard from "components/vehicle/jobCard";
+import EditJobOptionForm from "components/JobCard/EditJobOptionForm";
+import JobCardGrid from "components/JobCard/JobCardsGrid";
+import JobOptionForm from "components/JobCard/JobOptionForm";
+import JobCardList from "components/JobCard/JobCardList";
+import ManageServiceGrid from "components/ManageServices/ManageServiceGrid";
+import AddService from "components/ManageServices/AddService";
+import GetAllServices from "components/ManageServices/GetAllServices";
+import EditService from "components/ManageServices/EditServices";
+import JobCardPDF from "components/vehicle/jobcardpdf";
+import InvoiceTable from "components/vehicle/ServiceTab";
 // import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
 
 const AppRoutes = () => {
@@ -70,7 +81,11 @@ const AppRoutes = () => {
             <Route path="/admin/*" element={<AdminHeader />}>
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="appointmentList" element={<AppointmentList />} />
+                <Route path="jobCardgrid" element={<JobCardGrid />} />
                 <Route path="billForm/:id" element={<InvoiceForm />} />
+                <Route path="jobcardpdf" element={<JobCardPDF />} />
+                <Route path="ServiceTable" element={<InvoiceTable />} />
+                <Route path="serviceManage" element={<AddService />} />
                 <Route path="invoice/edit" element={<InvoiceEditForm />} />
                 <Route path="vendorManagement" element={<SupplierListPage />} />
                 <Route path="counterbillPdf" element={<CounterBillPDF />} />
@@ -78,21 +93,30 @@ const AppRoutes = () => {
                 <Route path="counterSale/:invoiceNumber" element={<CounterSaleForm />} />
                 <Route path="transaction" element={<TransactionAdd />} /> 
                 <Route path="manage-repair" element={<ManageRepairPage />} />
+                <Route path="manageService" element={<GetAllServices />} />
                 <Route path="manage-stock" element={<StockManageGrid />} />
+                <Route path="editJob/:id" element={<EditJobOptionForm />} />
                 <Route path="users" element={<ManageUsers />} />
                 <Route path="bill" element={<BillForm />} />
                 <Route path="invoiceList" element={<InvoiceList />} />
                 <Route path="transaction-list" element={<TransactionList />} /> 
                 <Route path="user-part/view/:id" element={<TransactionDetails />} />
                 <Route path="vehicle" element={<VehicleList />} />
+                <Route path="editService/:id" element={<EditService />} />
                 <Route path="vehicle/add" element={<AddVehicle/>} />
+                <Route path="jobcards/add" element={<JobOptionForm />} />
+                <Route path="job-card/:id" element={<JobCard/>} />
+
                 <Route path="vehicle/edit/:id" element={<AddVehicle/>} />
                 <Route path="vehicle/view/:id" element={<VehicleDetailsView/>} />
                 <Route path="vehicle/add/servicepart/:id" element={<AddVehiclePartService/>} />
                 <Route path="vehicle/details/:id" element={<AddVehicle/>} />
+                <Route path="jobcard/manage" element={<JobCardList/>} />
+                <Route path="services" element={<ManageServiceGrid/>} />
                 <Route path="spare-part/transaction/add" element={<TransactionAdd />} />
                 <Route path="spare-part/transaction/list" element={<TransactionAll />} />
                 <Route path="sales-monthly-report" element={<SaleAccountReport />} />
+
             </Route>
         </Routes>
         </>
