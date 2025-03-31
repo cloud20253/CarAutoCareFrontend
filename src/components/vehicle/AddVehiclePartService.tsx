@@ -14,6 +14,12 @@ import {
   TextField,
   IconButton,
   InputAdornment,
+  Paper,
+  FormHelperText,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomizedDataGrid from "components/CustomizedDataGrid";
@@ -21,12 +27,33 @@ import { GridCellParams, GridRowsProp, GridColDef } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CancelIcon from "@mui/icons-material/Cancel";
 import SparePartDeleteModel from "./SparePartDeleteModel";
+import { Task, Description, NoteAdd } from "@mui/icons-material";
 
-const FormGrid = styled(Grid)(() => ({
+// Styled components
+const FormGrid = styled(Grid)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
+  marginBottom: theme.spacing(2),
+}));
+const HeaderCard = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  textAlign: "center",
+  cursor: "pointer",
+  borderRadius: theme.shape.borderRadius,
+  transition: "transform 0.3s, box-shadow 0.3s",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+  minHeight: 150,
+  boxShadow: theme.shadows[2],
+  "&:hover": {
+    transform: "scale(1.05)",
+    boxShadow: theme.shadows[4],
+  },
 }));
 
+// Interfaces
 interface CreateTransaction {
   vehicleRegId?: number;
   partNumber: string;
@@ -38,10 +65,9 @@ interface CreateTransaction {
   transactionType: string;
   billNo: number;
   sparePartTransactionId: number;
-  cgst: number; 
+  cgst: number;
   sgst: number;
 }
-
 const initialCreateData: CreateTransaction = {
   vehicleRegId: undefined,
   partNumber: "",
@@ -82,9 +108,10 @@ const AddVehiclePartService: React.FC = () => {
   const [selectedId, setSelectedId] = useState<number>(0);
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+  const [currentTab, setCurrentTab] = useState<string>("spare");
 
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id } = useParams(); // 'id' here is the vehicleRegId
 
   useEffect(() => {
     if (id) {
@@ -156,7 +183,6 @@ const AddVehiclePartService: React.FC = () => {
     setCreateData((prev) => ({
       ...prev,
       [name]: name === "quantity" ? Number(value) : value,
-      // Recompute total if user changes amount or quantity
       total:
         name === "amount"
           ? Number(value) * prev.quantity
@@ -195,7 +221,6 @@ const AddVehiclePartService: React.FC = () => {
     setSearchKeyword("");
   };
 
-  // Submit the transaction
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -258,18 +283,13 @@ const AddVehiclePartService: React.FC = () => {
     );
   }
 
-  // GST calculation based on row.amount or row.total
   const computeGstAmounts = (row: any) => {
-    // If you want to base GST on the entire total (amount * quantity):
-    // const base = row.total;
-    // Or if you want to base it just on the per-item amount:
-    const base = row.total; 
+    const base = row.total;
     const cgstAmount = (base * row.cgst) / 100;
     const sgstAmount = (base * row.sgst) / 100;
     return { cgstAmount, sgstAmount };
   };
 
-  // Disable sorting by adding sortable: false in each column
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 80, sortable: false },
     { field: "partNumber", headerName: "Part Number", width: 150, sortable: false },
@@ -310,162 +330,242 @@ const AddVehiclePartService: React.FC = () => {
       renderCell: (params) => renderActionButtons(params),
     },
   ];
-
   const grandTotal = rows.reduce((acc, row) => acc + (row.total as number), 0);
-
+  const headerCards = [
+    {
+      label: "Job Card",
+      icon: <Task fontSize="large" color="primary" />,
+      value: "jobCard",
+      onClick: () => navigate(`/admin/job-card/${id}`), // Pass vehicleRegId to Job Card component
+    },
+    {
+      label: "Spare",
+      icon: <Description fontSize="large" color="primary" />,
+      value: "spare",
+      onClick: () => setCurrentTab("spare"),
+    },
+    {
+      label: "Service",
+      icon: <NoteAdd fontSize="large" color="primary" />,
+      value: "service",
+      onClick: () => setCurrentTab("service"),
+    },
+    {
+      label: "Service Queue",
+      icon: <DeleteIcon fontSize="large" color="primary" />,
+      value: "serviceQueue",
+      onClick: () => setCurrentTab("serviceQueue"),
+    },
+  ];
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1, width: "100%" }}>
-      {/* Header */}
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-        <Typography component="h2" variant="h6">
-          Add Vehicle Service Parts
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        flexGrow: 1,
+        width: "100%",
+        p: 2,
+        backgroundColor: "#f9f9f9",
+      }}
+    >
+      {/* Display the vehicleRegId */}
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle1" color="textSecondary">
+          Vehicle Registration ID: {id}
         </Typography>
-        <Button variant="contained" color="primary" onClick={() => navigate(-1)}>
-          Back
-        </Button>
-      </Stack>
-
-      {/* Responsive Form */}
-      <form onSubmit={handleCreateSubmit}>
-        <Grid container spacing={3}>
-          {/* Part Name / Search */}
-          <FormGrid item xs={12} sm={6}>
-            <FormLabel htmlFor="partName">Part Name (Type & Search)</FormLabel>
-            {createData.partName && createData.manufacturer ? (
-              <OutlinedInput
-                value={`${createData.partName} - ${createData.manufacturer}`}
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton onClick={handleClearSelection}>
-                      <CancelIcon />
-                    </IconButton>
-                  </InputAdornment>
-                }
-                size="small"
-                fullWidth
-                disabled
-              />
-            ) : (
-              <>
-                <TextField
-                  name="partName"
-                  value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
-                  placeholder="Type to search spare parts..."
-                  variant="outlined"
-                  size="small"
-                  fullWidth
-                />
-                {partSuggestions.length > 0 && (
-                  <Box
-                    sx={{
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      mt: 1,
-                      maxHeight: 200,
-                      overflowY: "auto",
-                    }}
-                  >
-                    {partSuggestions.map((suggestion) => (
-                      <Box
-                        key={suggestion.sparePartId}
-                        sx={{
-                          p: 1,
-                          cursor: "pointer",
-                          "&:hover": { backgroundColor: "#f0f0f0" },
-                        }}
-                        onClick={() => handleSelectSuggestion(suggestion)}
-                      >
-                        {suggestion.manufacturer} - {suggestion.partName} - {suggestion.description} <br />
-                        <small>CGST: {suggestion.cgst}% | SGST: {suggestion.sgst}%</small>
-                      </Box>
-                    ))}
-                  </Box>
-                )}
-              </>
-            )}
-          </FormGrid>
-
-          {/* Part Number */}
-          <FormGrid item xs={12} sm={6}>
-            <FormLabel htmlFor="partNumber">Part Number</FormLabel>
-            <OutlinedInput
-              name="partNumber"
-              value={createData.partNumber}
-              onChange={handleCreateChange}
-              placeholder="Auto-filled Part Number"
-              size="small"
-              required
-              disabled
-            />
-          </FormGrid>
-
-          {/* Quantity */}
-          <FormGrid item xs={12} sm={6}>
-            <FormLabel htmlFor="quantity">Quantity</FormLabel>
-            <OutlinedInput
-              name="quantity"
-              value={createData.quantity}
-              onChange={handleCreateChange}
-              type="number"
-              size="small"
-              required
-              inputProps={{ min: 1 }}
-            />
-          </FormGrid>
-
-          {/* Amount */}
-          <FormGrid item xs={12} sm={6}>
-            <FormLabel htmlFor="amount">Amount</FormLabel>
-            <OutlinedInput
-              name="amount"
-              value={createData.amount}
-              onChange={handleCreateChange}
-              type="number"
-              size="small"
-              required
-            />
-          </FormGrid>
-
-          {/* Submit */}
-          <FormGrid item xs={12}>
-            <Button type="submit" variant="contained" color="primary">
-              Create Transaction
-            </Button>
-          </FormGrid>
-        </Grid>
-      </form>
-
-      {/* Data Grid */}
-      {rows.length !== 0 && (
+      </Box>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        {headerCards.map((card) => (
+          <Grid item xs={12} sm={6} md={3} key={card.value}>
+            <HeaderCard onClick={card.onClick}>
+              <Box sx={{ mb: 1 }}>{card.icon}</Box>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                {card.label}
+              </Typography>
+            </HeaderCard>
+          </Grid>
+        ))}
+      </Grid>
+      {currentTab === "jobCard" && (
+        <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 3, width: "100%" }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Job Card Content
+          </Typography>
+        </Paper>
+      )}
+      {currentTab === "spare" && (
         <>
-          <Box sx={{ width: "100%", overflowX: "auto", mt: 4 }}>
-            <CustomizedDataGrid
-              columns={columns}
-              rows={rows}
-              // Example of controlling DataGrid sizing:
-              autoHeight
-              // If you have a fixed height, you can do:
-              // sx={{ minWidth: 1000 }}
-            />
-          </Box>
-
-          {/* Grand Total */}
-          <Box sx={{ textAlign: "right", mt: 2 }}>
-            <Typography variant="h6">Grand Total: {grandTotal}</Typography>
-          </Box>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{
+              mb: 2,
+              p: 2,
+              backgroundColor: "#fff",
+              borderRadius: 3,
+              boxShadow: 1,
+              width: "100%",
+            }}
+          >
+            <Typography
+              component="h2"
+              variant="h6"
+              sx={{ fontWeight: 600, display: "flex", alignItems: "center" }}
+            >
+              Add Vehicle Service Parts
+            </Typography>
+            <Button variant="contained" color="primary" onClick={() => navigate(-1)}>
+              Back
+            </Button>
+          </Stack>
+          <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 3, width: "100%" }}>
+            <form onSubmit={handleCreateSubmit}>
+              <Grid container spacing={2}>
+                <FormGrid item xs={12} sm={6}>
+                  <FormLabel htmlFor="partName" sx={{ mb: 1 }}>
+                    Part Name (Type & Search)
+                  </FormLabel>
+                  {createData.partName && createData.manufacturer ? (
+                    <OutlinedInput
+                      value={`${createData.partName} - ${createData.manufacturer}`}
+                      endAdornment={
+                        <InputAdornment position="end">
+                          <IconButton onClick={handleClearSelection}>
+                            <CancelIcon />
+                          </IconButton>
+                        </InputAdornment>
+                      }
+                      size="small"
+                      fullWidth
+                      disabled
+                    />
+                  ) : (
+                    <>
+                      <TextField
+                        name="partName"
+                        value={searchKeyword}
+                        onChange={(e) => setSearchKeyword(e.target.value)}
+                        placeholder="Type to search spare parts..."
+                        variant="outlined"
+                        size="small"
+                        fullWidth
+                      />
+                      {partSuggestions.length > 0 && (
+                        <Box
+                          sx={{
+                            border: "1px solid #ccc",
+                            borderRadius: "4px",
+                            mt: 1,
+                            maxHeight: 200,
+                            overflowY: "auto",
+                            backgroundColor: "#fff",
+                          }}
+                        >
+                          {partSuggestions.map((suggestion) => (
+                            <Box
+                              key={suggestion.sparePartId}
+                              sx={{
+                                p: 1,
+                                cursor: "pointer",
+                                "&:hover": { backgroundColor: "#f0f0f0" },
+                              }}
+                              onClick={() => handleSelectSuggestion(suggestion)}
+                            >
+                              {suggestion.manufacturer} - {suggestion.partName} - {suggestion.description} <br />
+                              <small>
+                                CGST: {suggestion.cgst}% | SGST: {suggestion.sgst}%
+                              </small>
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
+                    </>
+                  )}
+                </FormGrid>
+                <FormGrid item xs={12} sm={6}>
+                  <FormLabel htmlFor="partNumber" sx={{ mb: 1 }}>
+                    Part Number
+                  </FormLabel>
+                  <OutlinedInput
+                    name="partNumber"
+                    value={createData.partNumber}
+                    onChange={handleCreateChange}
+                    placeholder="Auto-filled Part Number"
+                    size="small"
+                    required
+                    disabled
+                  />
+                </FormGrid>
+                <FormGrid item xs={12} sm={6}>
+                  <FormLabel htmlFor="quantity" sx={{ mb: 1 }}>
+                    Quantity
+                  </FormLabel>
+                  <OutlinedInput
+                    name="quantity"
+                    value={createData.quantity}
+                    onChange={handleCreateChange}
+                    type="number"
+                    size="small"
+                    required
+                    inputProps={{ min: 1 }}
+                  />
+                </FormGrid>
+                <FormGrid item xs={12} sm={6}>
+                  <FormLabel htmlFor="amount" sx={{ mb: 1 }}>
+                    Amount
+                  </FormLabel>
+                  <OutlinedInput
+                    name="amount"
+                    value={createData.amount}
+                    onChange={handleCreateChange}
+                    type="number"
+                    size="small"
+                    required
+                  />
+                </FormGrid>
+                <Grid item xs={12}>
+                  <Button type="submit" variant="contained" color="primary" fullWidth>
+                    Create Transaction
+                  </Button>
+                </Grid>
+              </Grid>
+            </form>
+          </Paper>
+          {rows.length !== 0 && (
+            <>
+              <Paper elevation={3} sx={{ p: 2, mb: 2, borderRadius: 3, width: "100%" }}>
+                <Box sx={{ width: "100%", overflowX: "auto" }}>
+                  <CustomizedDataGrid columns={columns} rows={rows} autoHeight />
+                </Box>
+              </Paper>
+              <Paper elevation={3} sx={{ p: 2, textAlign: "right", borderRadius: 3, width: "100%" }}>
+                <Typography variant="h6">Grand Total: {grandTotal}</Typography>
+              </Paper>
+            </>
+          )}
         </>
       )}
-
-      {/* Delete Confirmation Dialog */}
+      {currentTab === "service" && (
+        <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 3, width: "100%" }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Service Content
+          </Typography>
+        </Paper>
+      )}
+      {currentTab === "serviceQueue" && (
+        <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 3, width: "100%" }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Service Queue Content
+          </Typography>
+        </Paper>
+      )}
       <SparePartDeleteModel
         open={open}
         onClose={() => setOpen(false)}
         deleteItemId={selectedId}
         onDelete={handleDeleteConfirmed}
       />
-
-      {/* Snackbar */}
       {feedback && (
         <Snackbar
           open={!!feedback}
