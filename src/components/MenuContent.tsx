@@ -52,7 +52,7 @@ const mainListItems = [
     text: "Account Report",
     icon: <AssignmentIcon sx={{ color: "#512da8" }} />,
     subMenu: [
-      { text: "Sale Account Report", icon: <BuildIcon sx={{ color: "#1976d2" }} />, link: "/admin/manage-service" },
+      { text: "Sale Account Report", icon: <BuildIcon sx={{ color: "#1976d2" }} />, link: "/admin/sales-monthly-report" },
       { text: "Purches Account Report", icon: <RepairIcon sx={{ color: "#388e3c" }} />, link: "/admin/manage-repair" },
     ]
   },

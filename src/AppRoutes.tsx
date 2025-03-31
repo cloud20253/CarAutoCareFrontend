@@ -38,6 +38,7 @@ import VendorUpdatePage from "components/Vendor/VendorUpdatePage";
 import InvoiceList from "components/StockManagement/InvoiceList";
 import InvoiceEditForm from "components/StockManagement/InvoiceEditForm";
 import AppointmentList from "components/Appointments/AppointmentList";
+import SaleAccountReport from "pages/SaleAccountReport";
 // import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
 
 const AppRoutes = () => {
@@ -91,6 +92,7 @@ const AppRoutes = () => {
                 <Route path="vehicle/details/:id" element={<AddVehicle/>} />
                 <Route path="spare-part/transaction/add" element={<TransactionAdd />} />
                 <Route path="spare-part/transaction/list" element={<TransactionAll />} />
+                <Route path="sales-monthly-report" element={<SaleAccountReport />} />
             </Route>
         </Routes>
         </>

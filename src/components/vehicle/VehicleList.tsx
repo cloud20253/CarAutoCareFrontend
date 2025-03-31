@@ -15,7 +15,7 @@ import {
   OutlinedInput,
   Select,
 } from '@mui/material';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { GridCellParams, GridRowsProp, GridColDef } from '@mui/x-data-grid';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import InputAdornment from '@mui/material/InputAdornment';
