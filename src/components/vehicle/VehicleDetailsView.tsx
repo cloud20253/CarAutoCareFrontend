@@ -283,12 +283,10 @@ export default function VehicleDetailsView() {
                     <Typography>Worker :</Typography>
                     <FormLabel>{formData.worker}</FormLabel>
                 </FormGrid>
-
                 <FormGrid item xs={12} md={6}>
                     <Typography>Status :</Typography>
                     <FormLabel>{formData.status}</FormLabel>
                 </FormGrid>
-
                 <FormGrid item xs={12} md={6}>
                     <Typography>Date Of Admission :</Typography>
                     <FormLabel>{formData.date}</FormLabel>
