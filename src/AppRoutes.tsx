@@ -54,6 +54,7 @@ import ServiceTab from "components/vehicle/ServiceTab";
 import VendorManagementGrid from "components/Vendor/VendorManagementGrid";
 // import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
 import InvoicePDFGenerator from "components/vehicle/InvoicePDFGenerator";
+import PDFGenerator from "components/pdf/PDFGenerator";
 
 const AppRoutes = () => {
     return(
@@ -123,7 +124,7 @@ const AppRoutes = () => {
                 <Route path="services" element={<ManageServiceGrid/>} />
                 <Route path="spare-part/transaction/add" element={<TransactionAdd />} />
                 <Route path="spare-part/transaction/list" element={<TransactionAll />} />
-
+                <Route path="pdf" element={<PDFGenerator />} />
             </Route>
         </Routes>
         </>
