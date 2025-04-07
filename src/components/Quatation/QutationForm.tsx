@@ -5,95 +5,94 @@ import {
   Grid,
   TextField,
   Typography,
-  Paper
+  Paper,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import apiClient from '../../Services/apiService';
 
 interface FormData {
   quotationDate: string;
-  vehicleNo: string;
+  vehicleNumber: string;
   customerName: string;
-  mobileNo: string;
-  emailId: string;
+  customerMobile: string;
+  customerEmail: string;
   customerAddress: string;
 }
 
 export default function AddNewQuotation() {
   const navigate = useNavigate();
-
-  // Form state
   const [formData, setFormData] = useState<FormData>({
     quotationDate: '',
-    vehicleNo: '',
+    vehicleNumber: '',
     customerName: '',
-    mobileNo: '',
-    emailId: '',
+    customerMobile: '',
+    customerEmail: '',
     customerAddress: '',
   });
 
-  // Error state for basic validations
   const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [alert, setAlert] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
 
-  // Handle input changes
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Validate form fields
   const validateForm = () => {
     const newErrors: Partial<FormData> = {};
-
-    // Required checks
     if (!formData.quotationDate) {
       newErrors.quotationDate = 'Quotation Date is required';
     }
-    if (!formData.vehicleNo.trim()) {
-      newErrors.vehicleNo = 'Vehicle No is required';
+    if (!formData.vehicleNumber.trim()) {
+      newErrors.vehicleNumber = 'Vehicle No is required';
     }
     if (!formData.customerName.trim()) {
       newErrors.customerName = 'Customer Name is required';
     }
-    if (!formData.mobileNo.trim()) {
-      newErrors.mobileNo = 'Mobile No is required';
+    if (!formData.customerMobile.trim()) {
+      newErrors.customerMobile = 'Mobile No is required';
     }
-    if (!formData.emailId.trim()) {
-      newErrors.emailId = 'Email is required';
+    if (!formData.customerEmail.trim()) {
+      newErrors.customerEmail = 'Email is required';
     }
     if (!formData.customerAddress.trim()) {
       newErrors.customerAddress = 'Customer Address is required';
     }
-
-    // Basic email format check
-    if (formData.emailId && !/^\S+@\S+\.\S+$/.test(formData.emailId)) {
-      newErrors.emailId = 'Please enter a valid email address';
+    if (formData.customerEmail && !/^\S+@\S+\.\S+$/.test(formData.customerEmail)) {
+      newErrors.customerEmail = 'Please enter a valid email address';
     }
-
-    // Basic mobile number check (10 digits, no other chars)
-    if (formData.mobileNo && !/^\d{10}$/.test(formData.mobileNo)) {
-      newErrors.mobileNo = 'Please enter a valid 10-digit mobile number';
+    if (formData.customerMobile && !/^\d{10}$/.test(formData.customerMobile)) {
+      newErrors.customerMobile = 'Please enter a valid 10-digit mobile number';
     }
-
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // If no errors, form is valid
+    return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      // If validation passes, navigate to desired route
-      navigate('/admin/vehicle/add/servicepart');
+      try {
+        const response = await apiClient.post('/api/quotations/add', formData);
+        setAlert({ message: 'Quotation saved successfully', severity: 'success' });
+        navigate(`/admin/vehicle/add/sparepart/${response.data.id}`);
+      } catch (error: any) {
+        console.error(error);
+        setAlert({
+          message: error.response?.data?.message || 'Failed to save quotation',
+          severity: 'error'
+        });
+      }
     }
   };
 
-  // Reset the form
   const handleReset = () => {
     setFormData({
       quotationDate: '',
-      vehicleNo: '',
+      vehicleNumber: '',
       customerName: '',
-      mobileNo: '',
-      emailId: '',
+      customerMobile: '',
+      customerEmail: '',
       customerAddress: '',
     });
     setErrors({});
@@ -105,7 +104,6 @@ export default function AddNewQuotation() {
         Add New Quotation
       </Typography>
       <Grid container spacing={2}>
-        {/* Quotation Date */}
         <Grid item xs={12} sm={6}>
           <TextField
             label="Quotation Date"
@@ -120,20 +118,18 @@ export default function AddNewQuotation() {
             InputLabelProps={{ shrink: true }}
           />
         </Grid>
-        {/* Vehicle No */}
         <Grid item xs={12} sm={6}>
           <TextField
             label="Vehicle No"
-            name="vehicleNo"
-            value={formData.vehicleNo}
+            name="vehicleNumber"
+            value={formData.vehicleNumber}
             onChange={handleChange}
-            error={!!errors.vehicleNo}
-            helperText={errors.vehicleNo}
+            error={!!errors.vehicleNumber}
+            helperText={errors.vehicleNumber}
             fullWidth
             required
           />
         </Grid>
-        {/* Customer Name */}
         <Grid item xs={12} sm={6}>
           <TextField
             label="Customer Name"
@@ -146,33 +142,30 @@ export default function AddNewQuotation() {
             required
           />
         </Grid>
-        {/* Mobile No */}
         <Grid item xs={12} sm={6}>
           <TextField
             label="Mobile No"
-            name="mobileNo"
-            value={formData.mobileNo}
+            name="customerMobile"
+            value={formData.customerMobile}
             onChange={handleChange}
-            error={!!errors.mobileNo}
-            helperText={errors.mobileNo}
+            error={!!errors.customerMobile}
+            helperText={errors.customerMobile}
             fullWidth
             required
           />
         </Grid>
-        {/* Email Id */}
         <Grid item xs={12} sm={6}>
           <TextField
             label="Email Id"
-            name="emailId"
-            value={formData.emailId}
+            name="customerEmail"
+            value={formData.customerEmail}
             onChange={handleChange}
-            error={!!errors.emailId}
-            helperText={errors.emailId}
+            error={!!errors.customerEmail}
+            helperText={errors.customerEmail}
             fullWidth
             required
           />
         </Grid>
-        {/* Customer Address */}
         <Grid item xs={12} sm={6}>
           <TextField
             label="Customer Address"
@@ -186,20 +179,21 @@ export default function AddNewQuotation() {
           />
         </Grid>
       </Grid>
-      {/* Action Buttons */}
       <Box sx={{ textAlign: 'right', mt: 3 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSubmit}
-          sx={{ mr: 2 }}
-        >
+        <Button variant="contained" color="primary" onClick={handleSubmit} sx={{ mr: 2 }}>
           Save
         </Button>
         <Button variant="outlined" onClick={handleReset}>
           Reset
         </Button>
       </Box>
+      {alert && (
+        <Snackbar open autoHideDuration={6000} onClose={() => setAlert(null)}>
+          <Alert onClose={() => setAlert(null)} severity={alert.severity} sx={{ width: '100%' }}>
+            {alert.message}
+          </Alert>
+        </Snackbar>
+      )}
     </Paper>
   );
 }

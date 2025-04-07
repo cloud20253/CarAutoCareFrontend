@@ -81,7 +81,6 @@ const initialCreateData: CreateTransaction = {
   cgst: 0,
   sgst: 0,
 };
-
 interface SpareFilterDto {
   sparePartId: number;
   partName: string;
@@ -92,12 +91,10 @@ interface SpareFilterDto {
   cgst: number;
   sgst: number;
 }
-
 interface Feedback {
   message: string;
   severity: "success" | "error";
 }
-
 const AddVehiclePartService: React.FC = () => {
   const [createData, setCreateData] = useState<CreateTransaction>(initialCreateData);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -110,23 +107,20 @@ const AddVehiclePartService: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>("spare");
 
   const navigate = useNavigate();
-  const { id } = useParams(); // 'id' here is the vehicleRegId
+  const { id } = useParams(); 
 
   useEffect(() => {
     if (id) {
       fetchSparePartList();
     }
   }, [id]);
-
   const fetchSparePartList = async () => {
     try {
       const responsePart = await apiClient.get(
-        `/sparePartTransactions/vehicleRegId?vehicleRegId=${id}`
-      );
+        `/sparePartTransactions/vehicleRegId?vehicleRegId=${id}` );
       if (!responsePart.data || responsePart.data.length === 0) {
         console.warn("No transactions found for this vehicleRegId");
-        return;
-      }
+        return; }
       const transactions: any = Array.isArray(responsePart.data)
         ? responsePart.data
         : [responsePart.data];
@@ -143,14 +137,10 @@ const AddVehiclePartService: React.FC = () => {
         vehicleRegId: resData.vehicleRegId,
         sparePartTransactionId: resData.sparePartTransactionId,
         cgst: resData.cgst || 0,
-        sgst: resData.sgst || 0,
-      }));
+        sgst: resData.sgst || 0, }));
       setRows([...newTransactions]);
     } catch (err) {
-      console.error("Error fetching transactions:", err);
-    }
-  };
-
+      console.error("Error fetching transactions:", err);  } };
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchKeyword);
@@ -159,24 +149,19 @@ const AddVehiclePartService: React.FC = () => {
       clearTimeout(handler);
     };
   }, [searchKeyword]);
-
   const fetchPartSuggestions = useCallback(async (keyword: string) => {
     if (!keyword.trim()) {
       setPartSuggestions([]);
-      return;
-    }
+      return; }
     try {
       const response = await apiClient.get(`/Filter/search?keyword=${keyword}`);
       setPartSuggestions(response.data);
     } catch (error) {
-      console.error("Error fetching part suggestions:", error);
-    }
+      console.error("Error fetching part suggestions:", error); }
   }, []);
-
   useEffect(() => {
     fetchPartSuggestions(debouncedSearch);
   }, [debouncedSearch, fetchPartSuggestions]);
-
   const handleCreateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setCreateData((prev) => ({
@@ -187,10 +172,7 @@ const AddVehiclePartService: React.FC = () => {
           ? Number(value) * prev.quantity
           : name === "quantity"
           ? prev.amount * Number(value)
-          : prev.total,
-    }));
-  };
-
+          : prev.total,  })); };
   const handleSelectSuggestion = (suggestion: SpareFilterDto) => {
     setCreateData((prev) => ({
       ...prev,
@@ -203,9 +185,7 @@ const AddVehiclePartService: React.FC = () => {
       sgst: suggestion.sgst,
     }));
     setSearchKeyword("");
-    setPartSuggestions([]);
-  };
-
+    setPartSuggestions([]); };
   const handleClearSelection = () => {
     setCreateData((prev) => ({
       ...prev,
@@ -217,17 +197,14 @@ const AddVehiclePartService: React.FC = () => {
       cgst: 0,
       sgst: 0,
     }));
-    setSearchKeyword("");
-  };
-
+    setSearchKeyword(""); };
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const updatedData = {
         ...createData,
         vehicleRegId: Number(id),
-        userId: null,
-      };
+        userId: null,  };
       const response = await apiClient.post("/sparePartTransactions/add", updatedData);
       const sparePartTransactionId = response.data?.data?.sparePartTransactionId;
       const newTransaction = {
@@ -242,8 +219,7 @@ const AddVehiclePartService: React.FC = () => {
         vehicleRegId: updatedData.vehicleRegId,
         sparePartTransactionId,
         cgst: updatedData.cgst,
-        sgst: updatedData.sgst,
-      };
+        sgst: updatedData.sgst,  };
       setRows((prevRows) => [...prevRows, newTransaction]);
       setFeedback({
         message: response.data.message || "Transaction created successfully",
@@ -253,42 +229,26 @@ const AddVehiclePartService: React.FC = () => {
     } catch (error: any) {
       setFeedback({
         message: error.response?.data?.message || "Failed to create transaction",
-        severity: "error",
-      });
-    }
-  };
-
+        severity: "error", }); } };
   const handleCloseSnackbar = () => {
-    setFeedback(null);
-  };
-
+    setFeedback(null); }; 
   const handleDelete = (id: number) => {
     setSelectedId(id);
-    setOpen(true);
-  };
-
+    setOpen(true); };
   const handleDeleteConfirmed = (id: number) => {
-    setRows((prevRows) => prevRows.filter((row) => row.sparePartTransactionId !== id));
-  };
-
+    setRows((prevRows) => prevRows.filter((row) => row.sparePartTransactionId !== id)); };
   function renderActionButtons(params: GridCellParams) {
     return (
       <IconButton
         color="secondary"
-        onClick={() => handleDelete(params.row.sparePartTransactionId as number)}
-      >
+        onClick={() => handleDelete(params.row.sparePartTransactionId as number)} >
         <DeleteIcon />
-      </IconButton>
-    );
-  }
-
+      </IconButton> );}
   const computeGstAmounts = (row: any) => {
     const base = row.total;
     const cgstAmount = (base * row.cgst) / 100;
     const sgstAmount = (base * row.sgst) / 100;
-    return { cgstAmount, sgstAmount };
-  };
-
+    return { cgstAmount, sgstAmount }; };
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 80, sortable: false },
     { field: "partNumber", headerName: "Part Number", width: 150, sortable: false },
@@ -305,9 +265,7 @@ const AddVehiclePartService: React.FC = () => {
       valueGetter: (params: any) => {
         if (!params?.row) return "";
         const { cgstAmount } = computeGstAmounts(params.row);
-        return cgstAmount ? cgstAmount.toFixed(2) : "0.00";
-      },
-    },
+        return cgstAmount ? cgstAmount.toFixed(2) : "0.00"; }, },
     { field: "sgst", headerName: "SGST (%)", width: 120, sortable: false },
     {
       field: "sgstAmount",
@@ -317,39 +275,31 @@ const AddVehiclePartService: React.FC = () => {
       valueGetter: (params: any) => {
         if (!params?.row) return "";
         const { sgstAmount } = computeGstAmounts(params.row);
-        return sgstAmount ? sgstAmount.toFixed(2) : "0.00";
-      },
-    },
+        return sgstAmount ? sgstAmount.toFixed(2) : "0.00"; }, },
     { field: "total", headerName: "Total", width: 150, sortable: false },
     {
       field: "action",
       headerName: "Action",
       width: 120,
       sortable: false,
-      renderCell: (params) => renderActionButtons(params),
-    },
-  ];
+      renderCell: (params) => renderActionButtons(params), }, ];
   const grandTotal = rows.reduce((acc, row) => acc + (row.total as number), 0);
   const headerCards = [
     {
       label: "Job Card",
       icon: <Task fontSize="large" color="primary" />,
       value: "jobCard",
-      onClick: () => navigate(`/admin/job-card/${id}`), 
-    },
+      onClick: () => navigate(`/admin/job-card/${id}`),  },
     {
       label: "Spare",
       icon: <Description fontSize="large" color="primary" />,
       value: "spare",
-      onClick: () => setCurrentTab("spare"),
-    },
+      onClick: () => setCurrentTab("spare"), },
     {
       label: "Service",
       icon: <NoteAdd fontSize="large" color="primary" />,
       value: "service",
-      onClick: () => navigate(`/admin/serviceTab/${id}`),
-    },
-  ];
+      onClick: () => navigate(`/admin/serviceTab/${id}`), }, ];
   return (
     <Box
       sx={{
@@ -359,9 +309,7 @@ const AddVehiclePartService: React.FC = () => {
         width: "100%",
         p: 2,
         backgroundColor: "#f9f9f9",
-      }}
-    >
-      {/* Display the vehicleRegId */}
+      }} >
       <Box sx={{ mb: 2 }}>
         <Typography variant="subtitle1" color="textSecondary">
           Vehicle Registration ID: {id}
@@ -384,10 +332,8 @@ const AddVehiclePartService: React.FC = () => {
           <Typography variant="h6" sx={{ mb: 2 }}>
             Job Card Content
           </Typography>
-        </Paper>
-      )}
-      {currentTab === "spare" && (
-        <>
+        </Paper> )}
+      {currentTab === "spare" && (<>
           <Stack
             direction="row"
             alignItems="center"
@@ -398,14 +344,11 @@ const AddVehiclePartService: React.FC = () => {
               backgroundColor: "#fff",
               borderRadius: 3,
               boxShadow: 1,
-              width: "100%",
-            }}
-          >
+              width: "100%", }} >
             <Typography
               component="h2"
               variant="h6"
-              sx={{ fontWeight: 600, display: "flex", alignItems: "center" }}
-            >
+              sx={{ fontWeight: 600, display: "flex", alignItems: "center" }} >
               Add Vehicle Service Parts
             </Typography>
             <Button variant="contained" color="primary" onClick={() => navigate(-1)}>
@@ -427,14 +370,10 @@ const AddVehiclePartService: React.FC = () => {
                           <IconButton onClick={handleClearSelection}>
                             <CancelIcon />
                           </IconButton>
-                        </InputAdornment>
-                      }
+                        </InputAdornment> } 
                       size="small"
                       fullWidth
-                      disabled
-                    />
-                  ) : (
-                    <>
+                      disabled  />  ) : ( <>
                       <TextField
                         name="partName"
                         value={searchKeyword}
@@ -442,8 +381,7 @@ const AddVehiclePartService: React.FC = () => {
                         placeholder="Type to search spare parts..."
                         variant="outlined"
                         size="small"
-                        fullWidth
-                      />
+                        fullWidth  />
                       {partSuggestions.length > 0 && (
                         <Box
                           sx={{
@@ -452,9 +390,7 @@ const AddVehiclePartService: React.FC = () => {
                             mt: 1,
                             maxHeight: 200,
                             overflowY: "auto",
-                            backgroundColor: "#fff",
-                          }}
-                        >
+                            backgroundColor: "#fff",  }}  >
                           {partSuggestions.map((suggestion) => (
                             <Box
                               key={suggestion.sparePartId}
@@ -463,8 +399,7 @@ const AddVehiclePartService: React.FC = () => {
                                 cursor: "pointer",
                                 "&:hover": { backgroundColor: "#f0f0f0" },
                               }}
-                              onClick={() => handleSelectSuggestion(suggestion)}
-                            >
+                              onClick={() => handleSelectSuggestion(suggestion)} >
                               {suggestion.manufacturer} - {suggestion.partName} - {suggestion.description} <br />
                               <small>
                                 CGST: {suggestion.cgst}% | SGST: {suggestion.sgst}%

@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import { InvoiceFormData } from './InvoiceFormData';
 
 interface BillRow {
   id?: number;
@@ -24,7 +25,9 @@ interface BillRow {
 }
 
 interface LocationState {
-  invoiceNumber: string; 
+  invoiceData: InvoiceFormData;
+  invoiceNumber: string;
+  jobCardNumber: string;
   invDate: string;
   customerName: string;
   customerAddress: string;
@@ -37,7 +40,7 @@ interface LocationState {
   vehicleRegId: string;
   customerAadharNo: string;
   customerGstin: string;
-  date: string;
+  transactionDate: string;
   regNo: string;
   model: string;
   kmsDriven: string;
@@ -60,7 +63,7 @@ interface LocationState {
     sgstPercent: string;
     igstPercent: string;
   }[];
-  globalDiscount : number ,
+  globalDiscount : number;
   subTotal: number;
   partsSubtotal:number;
   laboursSubtotal:number;
@@ -76,14 +79,6 @@ const CounterBillPDF: FC = () => {
 
   const invoiceItems = state.items || state.billRows || [];
   const invoiceRef = useRef<HTMLDivElement>(null); 
-
-  const grandTotal = invoiceItems
-    .reduce((acc, row) => {
-      const qty = row.qty ?? row.quantity ?? 0;
-      const amt = row.amount ?? row.total ?? row.rate * qty;
-      return acc + amt;
-    }, 0)
-    .toFixed(2);
 
   const generatePDF = async () => {
     if (invoiceRef.current) {
@@ -128,16 +123,17 @@ const CounterBillPDF: FC = () => {
   };
   return (
     <div
-      ref={invoiceRef} 
+      ref={invoiceRef}
       style={{
         width: '100%',
-        minHeight: '100%',
+        minHeight: '297mm',
         margin: '0 auto',
-        padding: '1rem',
+        padding: '5mm',
         fontFamily: 'Arial, sans-serif',
+        fontSize: '0.9rem',
         backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff',
         color: theme.palette.mode === 'dark' ? '#fff' : '#000',
- }}>
+      }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <tbody>
           <tr>
@@ -156,7 +152,7 @@ const CounterBillPDF: FC = () => {
               <p style={{ margin: 0 }}>
                 Ph : 9595054555 / 7758817766   Email : autocarcarepoint@gmail.com
               </p>
-              <p style={{ margin: 0 }}>GSTIN : 27GLYPS9891C1ZV</p>
+              <p style={{ margin: '5px 0 0 0', fontSize: '0.9rem' }}>GSTIN : 27GLYPS9891C1ZV</p>
             </td>
             <td
               style={{
@@ -168,6 +164,21 @@ const CounterBillPDF: FC = () => {
               }}
             >
               <strong style={{ fontSize: '1.2rem' }}>TAX INVOICE</strong>
+              {state.invoiceNumber && (
+                <p style={{ margin: '5px 0 0 0' }}>
+                  <strong>Invoice No:</strong> {state.invoiceNumber}
+                </p>
+              )}
+              {state.transactionDate && (
+                <p style={{ margin: '5px 0 0 0' }}>
+                  <strong>Invoice Date:</strong> {new Date(state.transactionDate).toLocaleDateString('en-GB')}
+                </p>
+              )}
+              {state.jobCardNumber && (
+                <p style={{ margin: '5px 0 0 0' }}>
+                  <strong>Job Card No:</strong> {state.jobCardNumber}
+                </p>
+              )}
             </td>
           </tr>
           <tr>
@@ -221,10 +232,13 @@ const CounterBillPDF: FC = () => {
               }}
             >
               <p style={{ margin: 0, textAlign: 'left' }}>
-                Invoice No: {state.vehicleRegId}
+                Invoice No: {state.invoiceNumber}
               </p>
               <p style={{ margin: 0, textAlign: 'left' }}>
-                Invoice Date: {state.invDate}
+                Invoice Date: {state.transactionDate}
+              </p>
+              <p style={{ margin: 0, textAlign: 'left' }}>
+                Jobcard No: {state.jobCardNumber}
               </p>
               <p style={{ margin: 0, textAlign: 'left' }}>
                 Reg No: {state.regNo}
@@ -234,9 +248,8 @@ const CounterBillPDF: FC = () => {
                 KMs Driven: {state.kmsDriven}
               </p><p style={{ margin: 0, textAlign: 'left' }}>
                 Model: {state.model}
-              </p><p style={{ margin: 0, textAlign: 'left' }}>
-                Jobcard No: {state.date}
               </p>
+             
             </td>
           </tr>
 
@@ -490,8 +503,6 @@ const CounterBillPDF: FC = () => {
                     const cgst = (taxableAmount *Number(part.cgstPercent)) / 100;
                     const sgst = (taxableAmount *Number(part.sgstPercent)) / 100;
                     const igst = (taxableAmount *Number(part.igstPercent)) / 100;
-                    console.log(sgst,cgst,igst)
-                    const net = base - discount;
                     const amount = taxableAmount;
                     return (
                       <tr key={index}>
@@ -761,7 +772,6 @@ const CounterBillPDF: FC = () => {
           ></td>
         </tr>
           
-          
                 </thead>
                 <tbody>
                   {state.labours.map((part, index) => {        
@@ -781,7 +791,6 @@ const CounterBillPDF: FC = () => {
                     const sgst = (taxableAmount *Number(part.sgstPercent)) / 100;
                     const igst = (taxableAmount *Number(part.igstPercent)) / 100;
                     console.log(sgst,cgst,igst)
-                    const net = base - discount;
                     const amount = taxableAmount;
                     return (
                       <tr key={index}>
@@ -971,13 +980,6 @@ const CounterBillPDF: FC = () => {
     </div>
   );
 };
-const tableHeaderCell: React.CSSProperties = {
-  border: '1px solid #000',
-  padding: '6px',
-  textAlign: 'center',
-  verticalAlign: 'middle',
-};
-
 const tableBodyCell: React.CSSProperties = {
   border: '1px solid #000',
   padding: '6px',

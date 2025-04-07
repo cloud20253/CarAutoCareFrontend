@@ -20,10 +20,14 @@ import Vehiclestatus from 'pages/vechiclestatus';
 import VehicleByAppointmentId from 'pages/VehicleByAppointmentId';
 import ManageRepairPage from "components/RepairsComponent/ManageRepairPage";
 import VehicleList from "components/vehicle/VehicleList";
+import QuatationList from "components/Quatation/QuatationList";
+
 import AddVehicle from "components/vehicle/AddVehicle";
 import TransactionAdd from "pages/TransactionManagement/TransactionAdd";
 import TransactionAll from "pages/TransactionManagement/TransactionAll";
 import AddVehiclePartService from "components/vehicle/AddVehiclePartService";
+import QuatationGrid from "components/Quatation/QuatationGrid";
+
 import StockManageGrid from "components/StockManagement/StockManageGrid";
 import TransactionList from "components/StockManagement/TransactionList";
 import VehicleDetailsView from "components/vehicle/VehicleDetailsView";
@@ -51,10 +55,20 @@ import EditService from "components/ManageServices/EditServices";
 import JobCardPDF from "components/vehicle/jobcardpdf";
 import InvoiceTable from "components/vehicle/ServiceTab";
 import ServiceTab from "components/vehicle/ServiceTab";
+import QuatationServiceTab from "components/Quatation/QuatationServiceTab";
+import SpareTab from "components/Quatation/SpareTab";
+
 import VendorManagementGrid from "components/Vendor/VendorManagementGrid";
 // import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
 import InvoicePDFGenerator from "components/vehicle/InvoicePDFGenerator";
+<<<<<<< HEAD
+import QuatationPDFGeneration from "components/Quatation/QuatationPDFGeneration";
+import QuatationEdit from "components/Quatation/QuatationEdit";
+
+
+=======
 import PDFGenerator from "components/pdf/PDFGenerator";
+>>>>>>> 028b97ff974697358c114422cc28c9aa0a83f3ce
 
 const AppRoutes = () => {
     return(
@@ -90,6 +104,8 @@ const AppRoutes = () => {
                 <Route path="billForm/:id" element={<InvoiceForm />} />
                 <Route path="jobcardpdf" element={<JobCardPDF />} />
                 <Route path="invoicepdfgenerator" element={<InvoicePDFGenerator />} />
+                <Route path="quatationpdfgenerator/:id" element={<QuatationPDFGeneration />} />
+
 
                 <Route path="ServiceTable" element={<InvoiceTable />} />
                 <Route path="serviceManage" element={<AddService />} />
@@ -109,15 +125,25 @@ const AppRoutes = () => {
                 <Route path="transaction-list" element={<TransactionList />} /> 
                 <Route path="user-part/view/:id" element={<TransactionDetails />} />
                 <Route path="vehicle" element={<VehicleList />} />
+                <Route path="quatationlist" element={<QuatationList />} />
+
                 <Route path="editService/:id" element={<EditService />} />
                 <Route path="vehicle/add" element={<AddVehicle/>} />
                 <Route path="jobcards/add" element={<JobOptionForm />} />
                 <Route path="job-card/:id" element={<JobCard/>} />
-                <Route path="serviceTab/:vehicleId" element={<ServiceTab />} />
+              
+
                 <Route path="quatation" element={<AddNewQuotation />} />
+                <Route path="quationserviceTab/:vehicleId" element={<QuatationServiceTab />} />
+
+                <Route path="serviceTab/:vehicleId" element={<ServiceTab />} />
+                <Route path="spareTab/:vehicleId" element={<SpareTab />} />
+                <Route path="quotation/edit/:id" element={<QuatationEdit/>} />
 
                 <Route path="vehicle/edit/:id" element={<AddVehicle/>} />
                 <Route path="vehicle/view/:id" element={<VehicleDetailsView/>} />
+                <Route path="vehicle/add/sparepart/:id" element={<QuatationGrid/>} />
+
                 <Route path="vehicle/add/servicepart/:id" element={<AddVehiclePartService/>} />
                 <Route path="vehicle/details/:id" element={<AddVehicle/>} />
                 <Route path="jobcard/manage" element={<JobCardList/>} />

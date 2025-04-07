@@ -2,21 +2,18 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import apiClient from 'Services/apiService';
 
-// Define types
 interface Service {
   serviceId: number;
   serviceName: string;
-  serviceRate: number;
+  serviceRate: number | null;
   totalGst: number;
 }
 
 interface InvoiceService extends Service {
   quantity: number;
   taxable: number;
-  total: number;
-  // For used services, this field is returned by the API.
+  total: number | null;
   vehicleServicesUsedId?: number;
-  // For new (unsaved) services, newService is true.
   newService?: boolean;
 }
 
@@ -41,7 +38,6 @@ const ServiceTab = () => {
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch search results using apiClient
   useEffect(() => {
     if (debouncedSearchQuery) {
       apiClient
@@ -51,7 +47,6 @@ const ServiceTab = () => {
     }
   }, [debouncedSearchQuery]);
 
-  // Hide dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -66,7 +61,6 @@ const ServiceTab = () => {
       document.removeEventListener('click', handleClickOutside, true);
   }, []);
 
-  // On mount, fetch already used services for the vehicle
   useEffect(() => {
     if (vehicleId) {
       apiClient
@@ -75,15 +69,14 @@ const ServiceTab = () => {
           const mapped: InvoiceService[] = res.data.map((item: any) => ({
             serviceId: item.serviceId,
             serviceName: item.serviceName,
-            serviceRate: item.rate,
+            serviceRate: item.rate, // might be null
             totalGst: item.cGST + item.sGST,
             quantity: item.quantity,
             taxable: item.rate * item.quantity,
             total: item.rate * item.quantity,
             newService: false,
-            vehicleServicesUsedId: item.vehicleServicesUsedId
+            vehicleServicesUsedId: item.vehicleServicesUsedId,
           }));
-          // Merge used services with any new services already in state
           setServices((prev) => [
             ...mapped,
             ...prev.filter((s) => s.newService)
@@ -93,7 +86,6 @@ const ServiceTab = () => {
     }
   }, [vehicleId]);
 
-  // Add a new (unsaved) service
   const addService = (service: Service) => {
     if (services.some((s) => s.serviceId === service.serviceId)) {
       setShowModal(true);
@@ -104,9 +96,9 @@ const ServiceTab = () => {
       {
         ...service,
         quantity: 1,
-        taxable: service.serviceRate,
-        total: service.serviceRate,
-        newService: true
+        taxable: service.serviceRate ? service.serviceRate : 0,
+        total: service.serviceRate ? service.serviceRate : 0,
+        newService: true,
       }
     ]);
     setSearchQuery('');
@@ -120,22 +112,20 @@ const ServiceTab = () => {
           ? {
               ...service,
               quantity,
-              taxable: service.serviceRate * quantity,
-              total: service.serviceRate * quantity
+              taxable: (service.serviceRate ?? 0) * quantity,
+              total: (service.serviceRate ?? 0) * quantity,
             }
           : service
       )
     );
   };
 
-  // Remove a new (unsaved) service by its id
   const removeNewService = (serviceId: number) => {
     setServices((prev) =>
       prev.filter((service) => !(service.newService && service.serviceId === serviceId))
     );
   };
 
-  // Delete a used service via API using vehicleServicesUsedId
   const deleteUsedService = (vehicleServicesUsedId: number | undefined) => {
     if (!vehicleServicesUsedId) return;
     apiClient
@@ -154,11 +144,10 @@ const ServiceTab = () => {
       .catch(console.error);
   };
 
-  // Separate services into new and used
   const newServices = services.filter((s) => s.newService);
   const usedServices = services.filter((s) => !s.newService);
 
-  const grandTotal = services.reduce((sum, service) => sum + service.total, 0);
+  const grandTotal = services.reduce((sum, service) => sum + (service.total ?? 0), 0);
 
   const saveInvoice = () => {
     if (!vehicleId) {
@@ -173,7 +162,8 @@ const ServiceTab = () => {
           rate: service.serviceRate,
           cGST: 0,
           sGST: 0,
-          vehicleId: parseInt(vehicleId, 10)
+          vehicleId: parseInt(vehicleId, 10),
+          date: new Date().toISOString().slice(0, 10)
         })
       )
     )
@@ -183,7 +173,6 @@ const ServiceTab = () => {
             (res) => res.status >= 200 && res.status < 300
           )
         ) {
-          // Mark new services as saved (remove newService flag)
           setServices((prev) =>
             prev.map((service) =>
               service.newService ? { ...service, newService: false } : service
@@ -196,10 +185,9 @@ const ServiceTab = () => {
       })
       .catch(console.error);
   };
-
+  
   return (
     <div className="min-h-screen p-4 bg-gray-50">
-      {/* Search Bar */}
       <div
         className="mb-4 lg:mb-6 max-w-4xl mx-auto relative"
         ref={searchContainerRef}
@@ -223,7 +211,7 @@ const ServiceTab = () => {
                   {service.serviceName}
                 </div>
                 <div className="text-gray-500 text-xs">
-                  Rate: ₹{service.serviceRate}
+                  Rate: ₹{(service.serviceRate ?? 0).toFixed(2)}
                 </div>
               </div>
             ))}
@@ -231,7 +219,6 @@ const ServiceTab = () => {
         )}
       </div>
 
-      {/* New Services Table */}
       <div className="mb-8">
         <h2 className="text-xl font-bold mb-2">New Services</h2>
         <div className="mx-auto bg-white rounded-lg shadow-sm overflow-x-auto">
@@ -261,16 +248,10 @@ const ServiceTab = () => {
               {newServices.length > 0 ? (
                 newServices.map((service, index) => (
                   <tr key={`${service.serviceId}-new-${index}`} className="hover:bg-gray-50">
-                    <td className="p-1 lg:p-2 border text-center">
-                      {index + 1}
-                    </td>
-                    <td className="p-1 lg:p-2 border text-center">
-                      {service.serviceId}
-                    </td>
+                    <td className="p-1 lg:p-2 border text-center">{index + 1}</td>
+                    <td className="p-1 lg:p-2 border text-center">{service.serviceId}</td>
                     <td className="p-1 lg:p-2 border">
-                      <span className="line-clamp-1 text-xs sm:text-sm">
-                        {service.serviceName}
-                      </span>
+                      <span className="line-clamp-1 text-xs sm:text-sm">{service.serviceName}</span>
                     </td>
                     <td className="p-1 lg:p-2 border text-center">
                       <input
@@ -284,13 +265,13 @@ const ServiceTab = () => {
                       />
                     </td>
                     <td className="p-1 lg:p-2 border text-right whitespace-nowrap">
-                      ₹{service.serviceRate.toFixed(2)}
+                      ₹{(service.serviceRate ?? 0).toFixed(2)}
                     </td>
                     <td className="p-1 lg:p-2 border text-right">0</td>
                     <td className="p-1 lg:p-2 border text-right">0.0</td>
                     <td className="p-1 lg:p-2 border text-right">0.00</td>
                     <td className="p-1 lg:p-2 border text-right whitespace-nowrap">
-                      ₹{service.total.toFixed(2)}
+                      ₹{(service.total ?? 0).toFixed(2)}
                     </td>
                     <td className="p-1 lg:p-2 border text-center">
                       <button
@@ -314,7 +295,6 @@ const ServiceTab = () => {
         </div>
       </div>
 
-      {/* Used Services Table */}
       <div className="mb-8">
         <h2 className="text-xl font-bold mb-2">Used Services</h2>
         <div className="mx-auto bg-white rounded-lg shadow-sm overflow-x-auto">
@@ -322,9 +302,7 @@ const ServiceTab = () => {
             <thead>
               <tr className="bg-gray-100">
                 <th className="p-2 border text-center" colSpan={10}>
-                  <span className="text-sm lg:text-base">
-                    Used Service Invoice
-                  </span>
+                  <span className="text-sm lg:text-base">Used Service Invoice</span>
                 </th>
               </tr>
               <tr className="bg-gray-50">
@@ -344,34 +322,26 @@ const ServiceTab = () => {
               {usedServices.length > 0 ? (
                 usedServices.map((service, index) => (
                   <tr key={`${service.vehicleServicesUsedId}-used-${index}`} className="hover:bg-gray-50">
-                    <td className="p-1 lg:p-2 border text-center">
-                      {index + 1}
-                    </td>
+                    <td className="p-1 lg:p-2 border text-center">{index + 1}</td>
                     <td className="p-1 lg:p-2 border text-center">
                       {service.vehicleServicesUsedId || service.serviceId}
                     </td>
                     <td className="p-1 lg:p-2 border">
-                      <span className="line-clamp-1 text-xs sm:text-sm">
-                        {service.serviceName}
-                      </span>
+                      <span className="line-clamp-1 text-xs sm:text-sm">{service.serviceName}</span>
                     </td>
-                    <td className="p-1 lg:p-2 border text-center">
-                      {service.quantity}
-                    </td>
+                    <td className="p-1 lg:p-2 border text-center">{service.quantity}</td>
                     <td className="p-1 lg:p-2 border text-right whitespace-nowrap">
-                      ₹{service.serviceRate.toFixed(2)}
+                      ₹{(service.serviceRate ?? 0).toFixed(2)}
                     </td>
                     <td className="p-1 lg:p-2 border text-right">0</td>
                     <td className="p-1 lg:p-2 border text-right">0.0</td>
                     <td className="p-1 lg:p-2 border text-right">0.00</td>
                     <td className="p-1 lg:p-2 border text-right whitespace-nowrap">
-                      ₹{service.total.toFixed(2)}
+                      ₹{(service.total ?? 0).toFixed(2)}
                     </td>
                     <td className="p-1 lg:p-2 border text-center">
                       <button
-                        onClick={() =>
-                          deleteUsedService(service.vehicleServicesUsedId)
-                        }
+                        onClick={() => deleteUsedService(service.vehicleServicesUsedId)}
                         className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
                       >
                         Delete
@@ -391,14 +361,9 @@ const ServiceTab = () => {
         </div>
       </div>
 
-      {/* Grand Total */}
       <div className="mt-4 flex justify-end">
-        <div className="text-xl font-semibold">
-          Grand Total: ₹{grandTotal.toFixed(2)}
-        </div>
+        <div className="text-xl font-semibold">Grand Total: ₹{grandTotal.toFixed(2)}</div>
       </div>
-
-      {/* Save Invoice for New Services */}
       {newServices.length > 0 && (
         <div className="mt-4 flex justify-end">
           <button
@@ -410,14 +375,11 @@ const ServiceTab = () => {
         </div>
       )}
 
-      {/* Modals */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-4 rounded-lg w-1/3 text-center">
             <h3 className="font-semibold text-xl">Service Already Added</h3>
-            <p className="mt-2 text-sm">
-              This service is already added to the invoice.
-            </p>
+            <p className="mt-2 text-sm">This service is already added to the invoice.</p>
             <button
               onClick={() => setShowModal(false)}
               className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
@@ -432,9 +394,7 @@ const ServiceTab = () => {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-4 rounded-lg w-1/3 text-center">
             <h3 className="font-semibold text-xl">Invoice Saved!</h3>
-            <p className="mt-2 text-sm">
-              Your invoice has been successfully saved.
-            </p>
+            <p className="mt-2 text-sm">Your invoice has been successfully saved.</p>
             <button
               onClick={() => setShowSuccessModal(false)}
               className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
