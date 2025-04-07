@@ -61,14 +61,11 @@ import SpareTab from "components/Quatation/SpareTab";
 import VendorManagementGrid from "components/Vendor/VendorManagementGrid";
 // import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
 import InvoicePDFGenerator from "components/vehicle/InvoicePDFGenerator";
-<<<<<<< HEAD
 import QuatationPDFGeneration from "components/Quatation/QuatationPDFGeneration";
 import QuatationEdit from "components/Quatation/QuatationEdit";
 
 
-=======
-import PDFGenerator from "components/pdf/PDFGenerator";
->>>>>>> 028b97ff974697358c114422cc28c9aa0a83f3ce
+// import PDFGenerator from "components/pdf/PDFGenerator";
 
 const AppRoutes = () => {
     return(
@@ -150,7 +147,6 @@ const AppRoutes = () => {
                 <Route path="services" element={<ManageServiceGrid/>} />
                 <Route path="spare-part/transaction/add" element={<TransactionAdd />} />
                 <Route path="spare-part/transaction/list" element={<TransactionAll />} />
-                <Route path="pdf" element={<PDFGenerator />} />
             </Route>
         </Routes>
         </>
