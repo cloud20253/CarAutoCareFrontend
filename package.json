@@ -12,6 +12,7 @@
     "@mui/x-data-grid-pro": "^7.27.1",
     "@mui/x-date-pickers": "^7.27.1",
     "@mui/x-tree-view": "^7.26.0",
+    "@react-pdf/renderer": "^4.3.0",
     "@react-spring/web": "^9.7.5",
     "@tsparticles/engine": "^3.8.1",
     "@types/html2canvas": "^0.5.35",

@@ -2,7 +2,6 @@ import { keyframes } from "@emotion/react";
 import { useTheme } from "@mui/material/styles";
 import { Box, Card, CardActionArea, CardContent, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import ArticleIcon from '@mui/icons-material/Article';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
