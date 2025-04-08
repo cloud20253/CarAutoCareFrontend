@@ -362,6 +362,8 @@ export default function VehicleList() {
           <Button variant="contained" color="primary" sx={{ alignSelf: 'start' }} onClick={handleSearch}>
             Search
           </Button>
+
+          
         </Grid>
         <VehicleDeleteModal open={open} onClose={() => setOpen(false)} deleteItemId={Number(selectedId)} />
       </Grid>
