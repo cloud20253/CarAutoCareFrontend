@@ -223,6 +223,20 @@ const TransactionAdd: React.FC = () => {
           </FormGrid>
 
           <FormGrid item xs={12} md={6}>
+            <FormLabel htmlFor="billNo">
+              Bill Number
+            </FormLabel>
+            <OutlinedInput
+              name="billNo"
+              value={createData.billNo}
+              onChange={handleCreateChange}
+              placeholder="Enter Bill Number"
+              size="small"
+              required
+            />
+          </FormGrid>
+
+          <FormGrid item xs={12} md={6}>
             <FormLabel htmlFor="partName">Spare Part (Search)</FormLabel>
             <Autocomplete
               disablePortal
@@ -273,20 +287,6 @@ const TransactionAdd: React.FC = () => {
               size="small"
               required
               inputProps={{ min: 1 }}
-            />
-          </FormGrid>
-
-          <FormGrid item xs={12} md={6}>
-            <FormLabel htmlFor="billNo">
-              Bill Number
-            </FormLabel>
-            <OutlinedInput
-              name="billNo"
-              value={createData.billNo}
-              onChange={handleCreateChange}
-              placeholder="Enter Bill Number"
-              size="small"
-              required
             />
           </FormGrid>
 
