@@ -57,7 +57,7 @@ const AddCustomerForm: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      await apiClient.post('/customers', formData);
+      await apiClient.post('/api/v1/customer/register', formData);
       setFormData({ name: '', address: '', mobile: '', email: '', aadhar: '', gstin: '' });
     } catch (error) {
       console.error('Error submitting form:', error);

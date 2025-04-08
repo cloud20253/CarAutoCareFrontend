@@ -57,12 +57,14 @@ import InvoiceTable from "components/vehicle/ServiceTab";
 import ServiceTab from "components/vehicle/ServiceTab";
 import QuatationServiceTab from "components/Quatation/QuatationServiceTab";
 import SpareTab from "components/Quatation/SpareTab";
+import CustomerList from "components/Customer/CustomerList";
 
 import VendorManagementGrid from "components/Vendor/VendorManagementGrid";
 // import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
 import InvoicePDFGenerator from "components/vehicle/InvoicePDFGenerator";
 import QuatationPDFGeneration from "components/Quatation/QuatationPDFGeneration";
 import QuatationEdit from "components/Quatation/QuatationEdit";
+import AddCustomerForm from "components/Customer/Customers";
 
 import CounterSaleReport from "components/Reports/CounterSaleReport";
 import CounterSalesReportPDF from "components/Reports/CounterSalesReportPDF";
@@ -112,7 +114,8 @@ const AppRoutes = () => {
                 <Route path="jobcardpdf" element={<JobCardPDF />} />
                 <Route path="invoicepdfgenerator" element={<InvoicePDFGenerator />} />
                 <Route path="quatationpdfgenerator/:id" element={<QuatationPDFGeneration />} />
-
+                <Route path="manage-customer" element={<CustomerList />} />
+                <Route path="AddCustomer" element={<AddCustomerForm />} />
 
                 <Route path="ServiceTable" element={<InvoiceTable />} />
                 <Route path="serviceManage" element={<AddService />} />
