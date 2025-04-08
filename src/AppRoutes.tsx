@@ -64,7 +64,15 @@ import InvoicePDFGenerator from "components/vehicle/InvoicePDFGenerator";
 import QuatationPDFGeneration from "components/Quatation/QuatationPDFGeneration";
 import QuatationEdit from "components/Quatation/QuatationEdit";
 
+import CounterSaleReport from "components/Reports/CounterSaleReport";
+import CounterSalesReportPDF from "components/Reports/CounterSalesReportPDF";
+import JobSaleReport from "components/Reports/JobSaleReport";
+import JobSaleReportPDF from "components/Reports/JobSaleReportPDF";
+import PurchaseReport from "components/Reports/PurchaseReport";
+import PurchaseReportPDF from "components/Reports/PurchaseReportPDF";
 
+import SuperTechServiceReport from "components/Reports/SuperTechServiceReport";
+import SuperTechServiceReportPDF from "components/Reports/SuperTechServiceReportPDF";
 // import PDFGenerator from "components/pdf/PDFGenerator";
 
 const AppRoutes = () => {
@@ -123,6 +131,17 @@ const AppRoutes = () => {
                 <Route path="user-part/view/:id" element={<TransactionDetails />} />
                 <Route path="vehicle" element={<VehicleList />} />
                 <Route path="quatationlist" element={<QuatationList />} />
+
+                <Route path="countersalereport" element={<CounterSaleReport />} />
+                <Route path="countersalereportPdf" element={<CounterSalesReportPDF />} />
+                <Route path="jobsalereport" element={<JobSaleReport />} />
+                <Route path="jobsalereportPdf" element={<JobSaleReportPDF />} />
+                <Route path="purchasereport" element={<PurchaseReport />} />
+                <Route path="purchasereportPdf" element={<PurchaseReportPDF />} />
+                <Route path="supertechservicereport" element={<SuperTechServiceReport />} />
+                <Route path="supertechservicereportPdf" element={<SuperTechServiceReportPDF/>} />
+
+
 
                 <Route path="editService/:id" element={<EditService />} />
                 <Route path="vehicle/add" element={<AddVehicle/>} />
