@@ -47,7 +47,7 @@ const mainListItems = [
 
       { text: "Purchase Report", icon: <RepairIcon sx={{ color: "#f57c00" }} />, link: "/admin/purchasereport" },
       { text: "Superwise/Technician Service Report", icon: <RepairIcon sx={{ color: "#d32f2f" }} />, link: "/admin/supertechservicereport" },
-      { text: "Vehicle History", icon: <RepairIcon sx={{ color: "#7b1fa2" }} />, link: "/admin/vehiclehistory" },
+      { text: "Vehicle History", icon: <RepairIcon sx={{ color: "#7b1fa2" }} />, link: "/admin/vehiclehistorywithpdf" },
     ]
   },
   { 

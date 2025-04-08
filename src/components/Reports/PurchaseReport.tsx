@@ -48,7 +48,7 @@ interface Invoice {
   items: InvoiceItem[];
 }
 
-const CounterSaleReport: React.FC = () => {
+const PurchaseReport: React.FC = () => {
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
   const [rows, setRows] = useState<GridRowsProp>([]);
@@ -209,4 +209,4 @@ const CounterSaleReport: React.FC = () => {
   );
 };
 
-export default CounterSaleReport;
+export default PurchaseReport;

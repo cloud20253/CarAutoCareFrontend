@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { FormControl, Stack, Button, TextField, Typography,IconButton } from '@mui/material';
+import { FormControl, Stack, Button, TextField, Typography,IconButton, Divider } from '@mui/material';
 import CustomizedDataGrid from 'components/CustomizedDataGrid'; // Assuming you have a customized data grid component
 import Copyright from 'internals/components/Copyright'; // Assuming you have a copyright component
 import { GridCellParams, GridRowsProp, GridColDef } from '@mui/x-data-grid';
@@ -48,7 +48,7 @@ interface Invoice {
   items: InvoiceItem[];
 }
 
-const CounterSaleReport: React.FC = () => {
+const SuperTechServiceReport: React.FC = () => {
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
   const [rows, setRows] = useState<GridRowsProp>([]);
@@ -151,7 +151,7 @@ const CounterSaleReport: React.FC = () => {
       Service Details
       </Typography>
 
-      <Stack
+ <Stack
       direction="row"
       alignItems="center"
       justifyContent="flex-start" // Align items to the left
@@ -188,6 +188,33 @@ const CounterSaleReport: React.FC = () => {
     </Stack>
 
 
+
+    <Stack
+      direction={{ xs: 'column', sm: 'row' }} // Stack vertically on small screens, horizontally on larger screens
+      spacing={2} // Space between items
+      sx={{ mb: 2 }} // Margin bottom
+    >
+      <TextField
+        label="Search Supervisor"
+        variant="outlined"
+        fullWidth
+        // You can add onChange handler to filter/search logic
+      />
+      <TextField
+        label="Search Technician"
+        variant="outlined"
+        fullWidth
+        // You can add onChange handler to filter/search logic
+      />
+      <TextField
+        label="Search Worker"
+        variant="outlined"
+        fullWidth
+        // You can add onChange handler to filter/search logic
+      />
+    </Stack>
+
+
       {/* <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
         <FormControl>
           <TextField
@@ -216,7 +243,7 @@ const CounterSaleReport: React.FC = () => {
         </Button>
       </Stack> */}
 
-
+<Divider style={{ marginBottom: '20px', width: '100%', backgroundColor: 'black', height: 2, }}></Divider>
 
 
 
@@ -253,4 +280,4 @@ const CounterSaleReport: React.FC = () => {
   );
 };
 
-export default CounterSaleReport;
+export default SuperTechServiceReport;

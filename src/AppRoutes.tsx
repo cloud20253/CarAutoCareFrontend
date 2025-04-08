@@ -73,6 +73,8 @@ import PurchaseReportPDF from "components/Reports/PurchaseReportPDF";
 
 import SuperTechServiceReport from "components/Reports/SuperTechServiceReport";
 import SuperTechServiceReportPDF from "components/Reports/SuperTechServiceReportPDF";
+import VehicalHistoryWithPDF from "components/Reports/VehicalHistoryWithPDF";
+
 // import PDFGenerator from "components/pdf/PDFGenerator";
 
 const AppRoutes = () => {
@@ -140,6 +142,8 @@ const AppRoutes = () => {
                 <Route path="purchasereportPdf" element={<PurchaseReportPDF />} />
                 <Route path="supertechservicereport" element={<SuperTechServiceReport />} />
                 <Route path="supertechservicereportPdf" element={<SuperTechServiceReportPDF/>} />
+                <Route path="vehiclehistorywithpdf" element={<VehicalHistoryWithPDF/>} />
+
 
 
 

@@ -22,7 +22,7 @@ interface LocationState {
   reportData: BillRow[];
 }
 
-const CounterBillPDF: FC = () => {
+const CounterSalesReportPDF: FC = () => {
   const theme = useTheme();
   const location = useLocation(); // Use without type argument
   const { fromDate, toDate, reportData } = location.state as LocationState || {}; // Type assertion
@@ -191,4 +191,4 @@ const tableBodyCell: React.CSSProperties = {
   verticalAlign: 'middle',
 };
 
-export default CounterBillPDF;
+export default CounterSalesReportPDF;
