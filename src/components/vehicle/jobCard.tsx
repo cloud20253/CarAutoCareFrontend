@@ -74,6 +74,7 @@ const JobCard: React.FC = () => {
   const [workshopNote, setWorkshopNote] = useState("");
   const [message, setMessage] = useState("");
   const [jobCards, setJobCards] = useState<JobCardData[]>([]);
+  const [vehicleData, setVehicleData] = useState<any>(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -85,6 +86,7 @@ const JobCard: React.FC = () => {
   useEffect(() => {
     if (vehicleId !== 0) {
       fetchJobCards();
+      fetchVehicleData();
     }
   }, [vehicleId]);
 
@@ -106,6 +108,20 @@ const JobCard: React.FC = () => {
     }
   }, [debouncedSearch]);
 
+
+
+  const fetchVehicleData = async () => {
+    try {
+      const vehicleRegId =vehicleId;
+      const response = await apiClient.get(`http://localhost:8080/vehicle-reg/getById?vehicleRegId=${vehicleRegId}`);
+      setVehicleData(response.data.data);
+      localStorage.setItem("vehicleData", JSON.stringify(response.data.data));
+
+    } catch (error) {
+      console.error("Error fetching vehicle data:", error);
+      setMessage("Error fetching vehicle data.");
+    }
+  };
   const fetchJobOptions = async (query: string) => {
     try {
       const response = await apiClient.get(`/registerJobCard/search?query=${query}`);
@@ -127,6 +143,8 @@ const JobCard: React.FC = () => {
     }
   };
 
+
+  
   const handleJobSelect = (
     event: React.SyntheticEvent,
     newValue: JobOption | null

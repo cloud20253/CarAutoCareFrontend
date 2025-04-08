@@ -61,14 +61,21 @@ import SpareTab from "components/Quatation/SpareTab";
 import VendorManagementGrid from "components/Vendor/VendorManagementGrid";
 // import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
 import InvoicePDFGenerator from "components/vehicle/InvoicePDFGenerator";
-<<<<<<< HEAD
 import QuatationPDFGeneration from "components/Quatation/QuatationPDFGeneration";
 import QuatationEdit from "components/Quatation/QuatationEdit";
 
+import CounterSaleReport from "components/Reports/CounterSaleReport";
+import CounterSalesReportPDF from "components/Reports/CounterSalesReportPDF";
+import JobSaleReport from "components/Reports/JobSaleReport";
+import JobSaleReportPDF from "components/Reports/JobSaleReportPDF";
+import PurchaseReport from "components/Reports/PurchaseReport";
+import PurchaseReportPDF from "components/Reports/PurchaseReportPDF";
 
-=======
-import PDFGenerator from "components/pdf/PDFGenerator";
->>>>>>> 028b97ff974697358c114422cc28c9aa0a83f3ce
+import SuperTechServiceReport from "components/Reports/SuperTechServiceReport";
+import SuperTechServiceReportPDF from "components/Reports/SuperTechServiceReportPDF";
+import VehicalHistoryWithPDF from "components/Reports/VehicalHistoryWithPDF";
+
+// import PDFGenerator from "components/pdf/PDFGenerator";
 
 const AppRoutes = () => {
     return(
@@ -127,6 +134,19 @@ const AppRoutes = () => {
                 <Route path="vehicle" element={<VehicleList />} />
                 <Route path="quatationlist" element={<QuatationList />} />
 
+                <Route path="countersalereport" element={<CounterSaleReport />} />
+                <Route path="countersalereportPdf" element={<CounterSalesReportPDF />} />
+                <Route path="jobsalereport" element={<JobSaleReport />} />
+                <Route path="jobsalereportPdf" element={<JobSaleReportPDF />} />
+                <Route path="purchasereport" element={<PurchaseReport />} />
+                <Route path="purchasereportPdf" element={<PurchaseReportPDF />} />
+                <Route path="supertechservicereport" element={<SuperTechServiceReport />} />
+                <Route path="supertechservicereportPdf" element={<SuperTechServiceReportPDF/>} />
+                <Route path="vehiclehistorywithpdf" element={<VehicalHistoryWithPDF/>} />
+
+
+
+
                 <Route path="editService/:id" element={<EditService />} />
                 <Route path="vehicle/add" element={<AddVehicle/>} />
                 <Route path="jobcards/add" element={<JobOptionForm />} />
@@ -150,7 +170,6 @@ const AppRoutes = () => {
                 <Route path="services" element={<ManageServiceGrid/>} />
                 <Route path="spare-part/transaction/add" element={<TransactionAdd />} />
                 <Route path="spare-part/transaction/list" element={<TransactionAll />} />
-                <Route path="pdf" element={<PDFGenerator />} />
             </Route>
         </Routes>
         </>

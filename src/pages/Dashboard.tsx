@@ -41,7 +41,7 @@ const data = [
   {
     value: "Quotation",
     icon: <GarageIcon sx={{ color: "primary.dark", fontSize: 40 }} />,
-    url: "/admin/quatation",
+    url: "/admin/quatationlist",
   },
   {
     value: "Insurance",
