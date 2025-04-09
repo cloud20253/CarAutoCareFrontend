@@ -146,10 +146,6 @@ const AppRoutes = () => {
                 <Route path="supertechservicereport" element={<SuperTechServiceReport />} />
                 <Route path="supertechservicereportPdf" element={<SuperTechServiceReportPDF/>} />
                 <Route path="vehiclehistorywithpdf" element={<VehicalHistoryWithPDF/>} />
-
-
-
-
                 <Route path="editService/:id" element={<EditService />} />
                 <Route path="vehicle/add" element={<AddVehicle/>} />
                 <Route path="jobcards/add" element={<JobOptionForm />} />

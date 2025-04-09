@@ -112,7 +112,6 @@ const defaultInvoiceData: InvoiceFormData = {
   advanceAmount: '',
   totalInWords: '' };
 
-// Update the DiscountSelector component to use Popover for better positioning
 const DiscountSelector: React.FC<{
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -188,7 +187,7 @@ const DiscountSelector: React.FC<{
           paper: {
             sx: {
               width: '70px',
-              mt: '-10px', // Negative margin to move it up
+              mt: '-10px', 
               zIndex: 9999
             }
           }
@@ -379,17 +378,9 @@ export default function InvoiceForm() {
       setFormData(prev => ({ ...prev, parts }));
     } catch (error: any) {
       console.error('Error fetching data:', error);
-      // Only show error dialog if it's not a "no parts found" error
-      if (error.response?.data?.message && 
-          !error.response.data.message.includes("No parts found") && 
-          !error.response.data.message.includes("No vehicle data found")) {
-        setDialogTitle("Error");
-        setDialogMessage("Error fetching vehicle or parts data.");
-        setDialogOpen(true);
-      } else {
-        // For "no parts" or "no vehicle data" errors, just log them and continue
-        console.log("Info:", error.response?.data?.message || "No parts or vehicle data found");
-      }
+      setDialogTitle("Error");
+      setDialogMessage("Error fetching vehicle or parts data.");
+      setDialogOpen(true);
     } finally {
       setLoadingData(false); }
   }, [id, setFormData, setDialogTitle, setDialogMessage, setDialogOpen, setLoadingData]);
@@ -426,63 +417,51 @@ export default function InvoiceForm() {
     const totals = computeTotals();
     const advanceAmount = formData.advanceAmount === '' ? 0 : parseFloat(formData.advanceAmount);
 
-    // Prepare data for API submission
-    const invoiceData = {
-      vehicleRegId: formData.vehicleRegId,
-      customerName: formData.customerName,
-      customerAddress: formData.customerAddress,
-      customerMobile: formData.customerMobile,
-      customerAadharNo: formData.customerAadharNo,
-      customerGstin: formData.customerGstin,
-      invoiceDate: formData.date,
-      regNo: formData.regNo,
-      model: formData.model,
-      kmsDriven: formData.kmsDriven,
-      // Only include invoice and job card numbers if they have values
-      // Remove the prefix if it exists to ensure consistent format
-      ...(formData.invoiceNumber ? { 
-        invoiceNumber: typeof formData.invoiceNumber === 'string' && formData.invoiceNumber.startsWith('INV') ? 
-          formData.invoiceNumber.substring(3) : formData.invoiceNumber 
-      } : {}),
-      ...(formData.jobCardNumber ? { 
-        jobCardNumber: typeof formData.jobCardNumber === 'string' && formData.jobCardNumber.startsWith('JC') ? 
-          formData.jobCardNumber.substring(2) : formData.jobCardNumber 
-      } : {}),
-      globalDiscount: formData.globalDiscount || 0,
-      subTotal: totals.subTotal,
-      totalAmount: totals.totalAmount,
-      partsSubtotal: totals.partsSubtotal,
-      laboursSubtotal: totals.laboursSubtotal,
-      advanceAmount: advanceAmount,
-      parts: formData.parts.map(part => ({
-        partName: part.partName,
-        quantity: parseInt(part.quantity) || 0,
-        unitPrice: parseFloat(part.unitPrice) || 0,
-        discountPercent: formData.globalDiscount || parseFloat(part.discountPercent) || 0,
-        cgstPercent: parseFloat(part.cgstPercent) || 0,
-        sgstPercent: parseFloat(part.sgstPercent) || 0,
-        igstPercent: parseFloat(part.igstPercent) || 0
-      })),
-      labours: formData.labours.map(labour => ({
-        description: labour.description,
-        quantity: parseInt(labour.quantity) || 0,
-        unitPrice: parseFloat(labour.unitPrice) || 0,
-        discountPercent: formData.globalDiscount || parseFloat(labour.discountPercent) || 0,
-        cgstPercent: parseFloat(labour.cgstPercent) || 0,
-        sgstPercent: parseFloat(labour.sgstPercent) || 0,
-        igstPercent: parseFloat(labour.igstPercent) || 0
-      }))
-    };
-
     try {
-      // First check if an invoice already exists for this vehicle
-      const checkResponse = await apiClient.get(`/api/vehicle-invoices/vehicle/${formData.vehicleRegId}`);
+      const invoiceData = {
+        vehicleRegId: formData.vehicleRegId,
+        customerName: formData.customerName,
+        customerAddress: formData.customerAddress,
+        customerMobile: formData.customerMobile,
+        customerAadharNo: formData.customerAadharNo,
+        customerGstin: formData.customerGstin,
+        invoiceDate: formData.date,
+        regNo: formData.regNo,
+        model: formData.model,
+        kmsDriven: formData.kmsDriven,
+        invoiceNumber: formData.invoiceNumber, 
+        jobCardNumber: formData.jobCardNumber, 
+        globalDiscount: formData.globalDiscount || 0,
+        subTotal: totals.subTotal,
+        totalAmount: totals.totalAmount,
+        partsSubtotal: totals.partsSubtotal,
+        laboursSubtotal: totals.laboursSubtotal,
+        advanceAmount: advanceAmount,
+        parts: formData.parts.map(part => ({
+          partName: part.partName,
+          quantity: parseInt(part.quantity) || 0,
+          unitPrice: parseFloat(part.unitPrice) || 0,
+          discountPercent: formData.globalDiscount || parseFloat(part.discountPercent) || 0,
+          cgstPercent: parseFloat(part.cgstPercent) || 0,
+          sgstPercent: parseFloat(part.sgstPercent) || 0,
+          igstPercent: parseFloat(part.igstPercent) || 0
+        })),
+        labours: formData.labours.map(labour => ({
+          description: labour.description,
+          quantity: parseInt(labour.quantity) || 0,
+          unitPrice: parseFloat(labour.unitPrice) || 0,
+          discountPercent: formData.globalDiscount || parseFloat(labour.discountPercent) || 0,
+          cgstPercent: parseFloat(labour.cgstPercent) || 0,
+          sgstPercent: parseFloat(labour.sgstPercent) || 0,
+          igstPercent: parseFloat(labour.igstPercent) || 0
+        }))
+      };
+
+      const checkResponse = await apiClient.get(`/api/vehicle-invoices/search/vehicle-reg/${formData.vehicleRegId}`);
       
       if (checkResponse.data && checkResponse.data.length > 0) {
-        // Invoice already exists, use the existing one
         const existingInvoice = checkResponse.data[0];
         
-        // Prepare data for PDF generation using the existing invoice
         const submissionData = {
           ...formData,
           invoiceNumber: existingInvoice.invoiceNumber,
@@ -495,16 +474,13 @@ export default function InvoiceForm() {
           transactionDate: existingInvoice.invoiceDate
         };
         
-        // Navigate to PDF generator with existing invoice data
         navigate('/admin/invoicepdfgenerator', { state: submissionData });
         return;
       }
       
-      // No existing invoice found, create a new one
       const response = await apiClient.post('/api/vehicle-invoices/save', invoiceData);
       
       if (response.data) {
-        // Use the invoice and job card numbers as returned by the backend without adding prefixes
         const submissionData = {
           ...formData,
           invoiceNumber: response.data.invoiceNumber,
@@ -519,17 +495,9 @@ export default function InvoiceForm() {
         navigate('/admin/invoicepdfgenerator', { state: submissionData });
       }
     } catch (error: any) {
-      // Only show error dialog if it's not a "no parts found" error
-      if (error.response?.data?.message && 
-          !error.response.data.message.includes("No parts found") && 
-          !error.response.data.message.includes("No vehicle data found")) {
-        setDialogTitle("Error");
-        setDialogMessage(error.response?.data?.message || "Failed to save invoice data.");
-        setDialogOpen(true);
-      } else {
-        // For "no parts" or "no vehicle data" errors, just log them and continue
-        console.log("Info:", error.response?.data?.message || "No parts or vehicle data found");
-      }
+      setDialogTitle("Error");
+      setDialogMessage(error.response?.data?.message || "Failed to save invoice data.");
+      setDialogOpen(true);
     }
   };
   const numberToWords = (num: number): string => {
