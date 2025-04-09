@@ -1,5 +1,6 @@
 import { DataGrid } from '@mui/x-data-grid';
-import { GridColDef, GridRowsProp, DataGridProps } from '@mui/x-data-grid';
+import { GridColDef, GridRowsProp } from '@mui/x-data-grid';
+import { useEffect, useState } from 'react';
 
 interface CustomizedDataGridProps {
   columns: GridColDef[]; 
@@ -14,11 +15,18 @@ export default function CustomizedDataGrid({
   checkboxSelection = true,
   autoHeight = false,
 }: CustomizedDataGridProps) {
+  const [localRows, setLocalRows] = useState<GridRowsProp>(rows);
+  
+  useEffect(() => {
+    console.log('CustomizedDataGrid received new rows:', rows);
+    setLocalRows(rows);
+  }, [rows]);
+
   return (
     <DataGrid
       autoHeight={autoHeight}
       checkboxSelection={checkboxSelection}
-      rows={rows}
+      rows={localRows}
       columns={columns}
       getRowClassName={(params) =>
         params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'
