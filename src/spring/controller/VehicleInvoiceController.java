@@ -1,6 +1,7 @@
 package com.spring.jwt.VehicleReg.VehicleInvoice.controller;
 
 import com.spring.jwt.VehicleReg.VehicleInvoice.entity.VehicleInvoice;
+import com.spring.jwt.VehicleReg.VehicleInvoice.service.InvoiceSequenceService;
 import com.spring.jwt.VehicleReg.VehicleInvoice.service.VehicleInvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -18,6 +19,9 @@ public class VehicleInvoiceController {
     
     @Autowired
     private VehicleInvoiceService vehicleInvoiceService;
+    
+    @Autowired
+    private InvoiceSequenceService sequenceService;
     
     @PostMapping("/save")
     public ResponseEntity<VehicleInvoice> saveInvoice(@RequestBody VehicleInvoice invoice) {
@@ -42,16 +46,6 @@ public class VehicleInvoiceController {
     @GetMapping("/number/{invoiceNumber}")
     public ResponseEntity<VehicleInvoice> getInvoiceByNumber(@PathVariable String invoiceNumber) {
         return ResponseEntity.ok(vehicleInvoiceService.getInvoiceByInvoiceNumber(invoiceNumber).orElseThrow(() -> new RuntimeException("Invoice not found with number: " + invoiceNumber)));
-    }
-    
-    @GetMapping("/search/customer/{customerName}")
-    public ResponseEntity<List<VehicleInvoice>> searchInvoicesByCustomerName(@PathVariable String customerName) {
-        return ResponseEntity.ok(vehicleInvoiceService.searchInvoicesByCustomerName(customerName));
-    }
-    
-    @GetMapping("/search/vehicle/{vehicleNo}")
-    public ResponseEntity<List<VehicleInvoice>> searchInvoicesByVehicleNo(@PathVariable String vehicleNo) {
-        return ResponseEntity.ok(vehicleInvoiceService.searchInvoicesByVehicleNo(vehicleNo));
     }
     
     @GetMapping("/search/date")

@@ -30,10 +30,10 @@ public class VehicleInvoiceServiceImpl implements VehicleInvoiceService {
     @Override
     public VehicleInvoice saveInvoice(VehicleInvoice invoice) {
         // Generate invoice and job card numbers
-        if (invoice.getInvoiceNumber() == null) {
+        if (invoice.getInvoiceNumber() == null || invoice.getInvoiceNumber().trim().isEmpty()) {
             invoice.setInvoiceNumber(sequenceService.getNextInvoiceNumber());
         }
-        if (invoice.getJobCardNumber() == null) {
+        if (invoice.getJobCardNumber() == null || invoice.getJobCardNumber().trim().isEmpty()) {
             invoice.setJobCardNumber(sequenceService.getNextJobCardNumber());
         }
         return vehicleInvoiceRepository.save(invoice);

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -14,9 +14,12 @@ import {
   MenuItem,
   OutlinedInput,
   Select,
+  Chip,
+  Tooltip,
+  Badge,
 } from '@mui/material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { GridCellParams, GridRowsProp, GridColDef } from '@mui/x-data-grid';
+import { GridCellParams, GridRowsProp, GridColDef, GridValueFormatter, GridValidRowModel } from '@mui/x-data-grid';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import InputAdornment from '@mui/material/InputAdornment';
 import {
@@ -33,21 +36,23 @@ import VehicleDeleteModal from './VehicleDeleteModal';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import PreviewIcon from '@mui/icons-material/Preview';
-import { Print } from '@mui/icons-material';
+import { Print, Receipt, ReceiptLong } from '@mui/icons-material';
 import { filter } from 'types/SparePart';
 import { Theme } from '@mui/material/styles';
+import apiClient from 'Services/apiService';
+import ReceiptIcon from '@mui/icons-material/Receipt';
 
 interface Vehicle {
   vehicleRegId: string;
   vehicleNumber?: string;         
   customerName?: string;           
   customerMobileNumber?: string;    
-  advancePayment?: number;          
+  advancePayment: number;          
   kmsDriven?: number;               
   superwiser?: string;
   technician?: string;
   worker?: string;
-  status?: string; // <-- We will map this to the "Ready" column
+  status?: string;
   date?: string;
 }
 
@@ -63,15 +68,16 @@ export default function VehicleList() {
   const [selectedType, setSelectedType] = React.useState<string>("");
   const [textInput, setTextInput] = React.useState<string>("");
 
-  // New local search state for filtering the data grid rows
   const [localSearchTerm, setLocalSearchTerm] = useState<string>("");
+
+  const [invoiceStatus, setInvoiceStatus] = useState<{ [key: string]: boolean }>({});
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const handleDelete = (id: string) => {
     setSelectedId(id);
     setOpen(true);
   };
 
-  // Renders the action buttons in the last column
   function renderActionButtons(params: GridCellParams) {
     return (
       <>
@@ -111,15 +117,71 @@ export default function VehicleList() {
     );
   }
 
-  // Updated columns: "Ready" column now mapped to the 'status' field
+  const checkInvoiceStatus = async (vehicleRegId: number): Promise<boolean> => {
+    try {
+      console.log(`Checking invoice status for vehicle ${vehicleRegId}...`);
+      const response = await apiClient.get(`/api/vehicle-invoices/search/vehicle-reg/${vehicleRegId}`);
+      console.log(`Invoice response for vehicle ${vehicleRegId}:`, response.data);
+      
+      const hasInvoice = Array.isArray(response.data) && response.data.length > 0;
+      console.log(`Vehicle ${vehicleRegId} has invoice:`, hasInvoice);
+      
+      setInvoiceStatus(prev => {
+        const newStatus = {
+          ...prev,
+          [vehicleRegId.toString()]: hasInvoice
+        };
+        console.log('Updated invoice status:', newStatus);
+        return newStatus;
+      });
+
+      return hasInvoice;
+    } catch (error) {
+      console.error(`Error checking invoice status for vehicle ${vehicleRegId}:`, error);
+      setInvoiceStatus(prev => ({
+        ...prev,
+        [vehicleRegId.toString()]: false
+      }));
+      return false;
+    }
+  };
+
+  const renderInvoiceStatus = (params: GridCellParams) => {
+    const key = params.row.vehicleRegId.toString();
+    const hasInvoice = invoiceStatus[key] ?? false;
+    console.log(`Rendering invoice status for vehicle ${key}:`, hasInvoice);
+    
+    return (
+      <Tooltip title={hasInvoice ? "Invoice Generated" : "Invoice Not Generated"}>
+        <Badge color="error" variant="dot" invisible={hasInvoice}>
+          <ReceiptIcon color={hasInvoice ? "success" : "error"} />
+        </Badge>
+      </Tooltip>
+    );
+  };
+
   const columns: GridColDef[] = [
+    {
+      field: 'invoiceStatus',
+      headerName: 'Invoice',
+      flex: 1,
+      minWidth: 100,
+      renderCell: renderInvoiceStatus,
+    },
     { field: 'date', headerName: 'Date', flex: 1, minWidth: 100 },
     { field: 'vehicleNoName', headerName: 'Veh No/Name', flex: 1, minWidth: 150 },
     { field: 'customerMobile', headerName: 'Customer & Mobile', flex: 1, minWidth: 150 },
     { field: 'status', headerName: 'Ready', flex: 1, minWidth: 100 },
-    { field: 'estimate', headerName: 'Estimate', flex: 1, minWidth: 100 },
-    { field: 'advance', headerName: 'Advance', flex: 1, minWidth: 100 },
-    { field: 'due', headerName: 'Due', flex: 1, minWidth: 100 },
+    { 
+      field: 'advance', 
+      headerName: 'Advance', 
+      flex: 1, 
+      minWidth: 100,
+      type: 'number',
+      valueFormatter: ((params: { value: number | null | undefined }) => {
+        return params.value ? `₹${params.value.toLocaleString('en-IN')}` : '₹0';
+      }) as GridValueFormatter<GridValidRowModel>
+    },
     { field: 'superwiser', headerName: 'Supervisor', flex: 1, minWidth: 100 },
     { field: 'technician', headerName: 'Technician', flex: 1, minWidth: 100 },
     { field: 'worker', headerName: 'Worker', flex: 1, minWidth: 100 },
@@ -127,7 +189,6 @@ export default function VehicleList() {
     { field: 'Action', headerName: 'Action', flex: 1, minWidth: 250, renderCell: (params) => renderActionButtons(params) },
   ];
 
-  // Search logic (server-side) remains unchanged
   const handleSearch = async () => {
     let requestData: filter = {};
     let response;
@@ -160,56 +221,21 @@ export default function VehicleList() {
         response = res.data;
       }
 
-      if (response && Array.isArray(response)) {
-        const formattedRows = response.map((vehicle: Vehicle, index: number) => ({
-          id: index + 1,
-          date: vehicle.date ?? '',
-          vehicleNoName: vehicle.vehicleNumber ?? '',
-          customerMobile: vehicle.customerName 
-            ? `${vehicle.customerName} - ${vehicle.customerMobileNumber ?? ''}`
-            : '',
-          status: vehicle.status ?? '',
-          estimate: '',
-          advance: vehicle.advancePayment ?? 0,
-          due: '',
-          superwiser: vehicle.superwiser ?? '',
-          technician: vehicle.technician ?? '',
-          worker: vehicle.worker ?? '',
-          kilometer: vehicle.kmsDriven ?? 0,
-          vehicleRegId: vehicle.vehicleRegId,
-        }));
-        setRows(formattedRows);
-      } else if (response && typeof response === 'object') {
-        const singleRow = {
-          id: 1,
-          date: response.date ?? '',
-          vehicleNoName: response.vehicleNumber ?? '',
-          customerMobile: response.customerName
-            ? `${response.customerName} - ${response.customerMobileNumber ?? ''}`
-            : '',
-          status: response.status ?? '',
-          estimate: '',
-          advance: response.advancePayment ?? 0,
-          due: '',
-          superwiser: response.superwiser ?? '',
-          technician: response.technician ?? '',
-          worker: response.worker ?? '',
-          kilometer: response.kmsDriven ?? 0,
-          vehicleRegId: response.vehicleRegId,
-        };
-        setRows([singleRow]);
+      if (response) {
+        const vehicleList = Array.isArray(response) ? response : [response];
+        await processVehicleData(vehicleList);
       } else {
         setRows([]);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
+      setRows([]);
     }
   };
-
-  // On mount, if no search filter is applied, load the list based on listType
   React.useEffect(() => {
     const getVehicleList = async () => {
       try {
+        let response;
         if (listType) {
           let statusFilter = '';
           if (listType === 'serviceQueue') {
@@ -218,59 +244,28 @@ export default function VehicleList() {
             statusFilter = 'complete';
           }
           const res = await GetVehicleByStatus({ status: statusFilter });
-          const data = res.data;
-          if (data && Array.isArray(data)) {
-            const formattedRows = data.map((vehicle: Vehicle, index: number) => ({
-              id: index + 1,
-              date: vehicle.date ?? '',
-              vehicleNoName: vehicle.vehicleNumber ?? '',
-              customerMobile: vehicle.customerName
-                ? `${vehicle.customerName} - ${vehicle.customerMobileNumber ?? ''}`
-                : '',
-              status: vehicle.status ?? '',
-              estimate: '',
-              advance: vehicle.advancePayment ?? 0,
-              due: '',
-              superwiser: vehicle.superwiser ?? '',
-              technician: vehicle.technician ?? '',
-              worker: vehicle.worker ?? '',
-              kilometer: vehicle.kmsDriven ?? 0,
-              vehicleRegId: vehicle.vehicleRegId,
-            }));
-            setRows(formattedRows);
-          }
+          response = res.data;
         } else {
           const res = await VehicleListData();
-          const data = res.data;
-          if (data && Array.isArray(data)) {
-            const formattedRows = data.map((vehicle: Vehicle, index: number) => ({
-              id: index + 1,
-              date: vehicle.date ?? '',
-              vehicleNoName: vehicle.vehicleNumber ?? '',
-              customerMobile: vehicle.customerName
-                ? `${vehicle.customerName} - ${vehicle.customerMobileNumber ?? ''}`
-                : '',
-              status: vehicle.status ?? '',
-              estimate: '',
-              advance: vehicle.advancePayment ?? 0,
-              due: '',
-              superwiser: vehicle.superwiser ?? '',
-              technician: vehicle.technician ?? '',
-              worker: vehicle.worker ?? '',
-              kilometer: vehicle.kmsDriven ?? 0,
-              vehicleRegId: vehicle.vehicleRegId,
-            }));
-            setRows(formattedRows);
-          }
+          response = res.data;
+        }
+        
+        if (response) {
+          const vehicleList = Array.isArray(response) ? response : [response];
+          await processVehicleData(vehicleList);
+        } else {
+          setRows([]);
+          setInvoiceStatus({});
         }
       } catch (error) {
         console.error('Error fetching vehicle data:', error);
+        setRows([]);
+        setInvoiceStatus({});
       }
     };
     getVehicleList();
   }, [listType]);
 
-  // Client-side filtering using the local search term:
   const filteredRows = rows.filter((row) => {
     const search = localSearchTerm.toLowerCase();
     return (
@@ -283,6 +278,65 @@ export default function VehicleList() {
     );
   });
 
+  const processVehicleData = async (vehicleList: any[]) => {
+    if (!vehicleList || vehicleList.length === 0) {
+      console.log('No vehicles found');
+      setRows([]);
+      setInvoiceStatus({});
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      console.log('Processing vehicles:', vehicleList);
+      
+      const initialStatus = vehicleList.reduce((acc, vehicle) => {
+        acc[vehicle.vehicleRegId.toString()] = false;
+        return acc;
+      }, {} as { [key: string]: boolean });
+      setInvoiceStatus(initialStatus);
+      
+      const processedVehicles = await Promise.all(
+        vehicleList.map(async (vehicle) => {
+          const vehicleId = vehicle.vehicleRegId;
+          console.log(`Processing vehicle ${vehicleId}...`);
+          console.log('Vehicle data:', vehicle);
+          console.log('Advance payment:', vehicle.advancePayment);
+          
+          const hasInvoice = await checkInvoiceStatus(vehicleId);
+          
+          const processedVehicle = {
+            id: vehicleId.toString(),
+            vehicleRegId: vehicleId,
+            date: vehicle.date ?? '',
+            vehicleNoName: vehicle.vehicleNumber ?? '',
+            customerMobile: vehicle.customerName
+              ? `${vehicle.customerName} - ${vehicle.customerMobileNumber ?? ''}`
+              : '',
+            status: vehicle.status ?? '',
+            advance: Number(vehicle.advancePayment) || 0,
+            superwiser: vehicle.superwiser ?? '',
+            technician: vehicle.technician ?? '',
+            worker: vehicle.worker ?? '',
+            kilometer: vehicle.kmsDriven ?? 0,
+          };
+          
+          console.log('Processed vehicle:', processedVehicle);
+          return processedVehicle;
+        })
+      );
+      
+      console.log('All processed vehicles:', processedVehicles);
+      setRows(processedVehicles);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error processing vehicle data:', error);
+      setRows([]);
+      setInvoiceStatus({});
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '1700px' } }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
@@ -293,8 +347,6 @@ export default function VehicleList() {
           Add Vehicle
         </Button>
       </Stack>
-
-      {/* New Search Box Above the Data Grid */}
       <Box sx={{ mb: 2 }}>
         <FormControl fullWidth>
           <OutlinedInput
