@@ -87,31 +87,31 @@ const PurchaseReportPDF: FC = () => {
     try {
       console.log("Starting PDF generation process...");
       const options = { scale: 3 };
-      const canvas = await html2canvas(invoiceElement, options as any);
-      const imgData = canvas.toDataURL("image/png", 0.9);
+    const canvas = await html2canvas(invoiceElement, options as any);
+    const imgData = canvas.toDataURL("image/png", 0.9);
 
-      const pageWidth = 210; 
-      const pageHeight = 297; 
+    const pageWidth = 210; 
+    const pageHeight = 297; 
 
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width; 
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width; 
 
-      let finalHeight = imgHeight;
-      let scaleFactor = 1;
+    let finalHeight = imgHeight;
+    let scaleFactor = 1;
 
-      if (finalHeight > pageHeight) {
-        scaleFactor = pageHeight / imgHeight; 
-        finalHeight = pageHeight;
-      }
+    if (finalHeight > pageHeight) {
+      scaleFactor = pageHeight / imgHeight; 
+      finalHeight = pageHeight;
+    }
 
-      const pdf = new jsPDF({
-        orientation: "p",
-        unit: "mm",
-        format: "a4",
-        compress: true,
-      });
+    const pdf = new jsPDF({
+      orientation: "p",
+      unit: "mm",
+      format: "a4",
+      compress: true,
+    });
       
-      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, finalHeight);
+    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, finalHeight);
       
       console.log("PDF created, opening in new tab...");
       const pdfBlob = pdf.output('blob');
@@ -301,44 +301,44 @@ const PurchaseReportPDF: FC = () => {
   
   return (
     <>
-      <div
-        ref={invoiceRef}
-        id="invoice-container"
-        style={{
+    <div
+      ref={invoiceRef}
+      id="invoice-container"
+      style={{
           width: '210mm',
-          minHeight: '297mm',
-          margin: '0 auto',
+        minHeight: '297mm',
+        margin: '0 auto',
           padding: '10mm',
-          fontFamily: 'Arial, sans-serif',
+        fontFamily: 'Arial, sans-serif',
           fontSize: '12px',
-          backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff',
-          color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-        }}
-      >
+        backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff',
+        color: theme.palette.mode === 'dark' ? '#fff' : '#000',
+      }}
+    >
         {renderBills()}
       </div>
       
       <div style={{ marginTop: '20px', textAlign: 'center' }}>
-        <button
-          style={{
-            border: 'none',
-            borderRadius: '5px',
-            padding: '10px 20px',
+    <button
+      style={{
+        border: 'none',
+        borderRadius: '5px',
+        padding: '10px 20px',
             backgroundColor: '#60B5FF',
             color: '#fff',
-            fontSize: '1rem',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'background-color 0.3s ease',
-          }}
+        fontSize: '1rem',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        transition: 'background-color 0.3s ease',
+      }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#AFDDFF')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#60B5FF')}
-          onClick={generatePDF}
-        >
-          Print
-        </button>
-      </div>
-    </>
+      onClick={generatePDF}
+    >
+    Print
+    </button>
+    </div>
+          </>
   );
 };
 

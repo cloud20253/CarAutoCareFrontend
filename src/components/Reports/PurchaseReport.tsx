@@ -106,8 +106,8 @@ const PurchaseReport: React.FC = () => {
               transactions: billTransactions
             };
             return row;
-          });
-          setRows(formattedRows);
+        });
+        setRows(formattedRows);
         } else {
           alert('Invalid response format from server');
         }
@@ -151,19 +151,19 @@ const PurchaseReport: React.FC = () => {
   
     window.open(url, '_blank');
   };
-  
+
   function renderActionButtons(params: GridCellParams) {
-    return (
-      <>
-        <IconButton
-          color="secondary"
+        return (
+          <>
+            <IconButton
+              color="secondary"
           onClick={() => handlePrint(params.row.invoiceNumber)}
-        >
-          <Print />
-        </IconButton>
-      </>
-    );
-  }
+            >
+              <Print />
+            </IconButton>
+          </>
+        );
+      }
 
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'Sr.No', flex: 1, minWidth: 100 },
@@ -206,7 +206,7 @@ const PurchaseReport: React.FC = () => {
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '1700px' } }}>
       <Typography variant="h4" gutterBottom>
-        Purchase Report
+      Purchase Report
       </Typography>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
         <FormControl>
@@ -242,31 +242,31 @@ const PurchaseReport: React.FC = () => {
         </div>
       )}
       <Grid container spacing={1} columns={12}>
-        <Grid item xs={12}>
-          <CustomizedDataGrid columns={columns} rows={rows} />
-        </Grid>
-      </Grid>
+      <Grid item xs={12}>
+      <CustomizedDataGrid columns={columns} rows={rows} />
+   </Grid>
+         </Grid>
 
-      <div style={{ marginTop: '20px', textAlign: 'center' }}>
-        <button
-          style={{
-            border: 'none',
-            borderRadius: '5px',
-            padding: '10px 20px',
+        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+    <button
+      style={{
+        border: 'none',
+        borderRadius: '5px',
+        padding: '10px 20px',
             backgroundColor: '#60B5FF',
             color: '#fff',
-            fontSize: '1rem',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'background-color 0.3s ease',
-          }}
+        fontSize: '1rem',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        transition: 'background-color 0.3s ease',
+      }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#AFDDFF')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#60B5FF')}
           onClick={() => handlePrint()}
         >
           Print All
-        </button>
-      </div>
+    </button>
+</div>
       <Copyright sx={{ my: 4 }} />
     </Box>
   );

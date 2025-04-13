@@ -65,7 +65,7 @@ import InvoicePDFGenerator from "components/vehicle/InvoicePDFGenerator";
 import QuatationPDFGeneration from "components/Quatation/QuatationPDFGeneration";
 import QuatationEdit from "components/Quatation/QuatationEdit";
 import AddCustomerForm from "components/Customer/Customers";
-
+import ReportForm from "components/Reports/ReportForm";
 import CounterSaleReport from "components/Reports/CounterSaleReport";
 import CounterSalesReportPDF from "components/Reports/CounterSalesReportPDF";
 import JobSaleReport from "components/Reports/JobSaleReport";
@@ -115,7 +115,8 @@ const AppRoutes = () => {
                 <Route path="invoicepdfgenerator" element={<InvoicePDFGenerator />} />
                 <Route path="quatationpdfgenerator/:id" element={<QuatationPDFGeneration />} />
                 <Route path="manage-customer" element={<CustomerList />} />
-                <Route path="AddCustomer" element={<AddCustomerForm />} />
+                <Route path="AddCustomer" element={<AddCustomerForm />} />  
+                <Route path="manage-reports" element={<ReportForm />} />
 
                 <Route path="ServiceTable" element={<InvoiceTable />} />
                 <Route path="serviceManage" element={<AddService />} />
