@@ -120,7 +120,7 @@ const ReportForm: React.FC = () => {
         const tbody = document.getElementById('counter_tableBody') as HTMLTableSectionElement;
         if (!tbody) return;
 
-        tbody.innerHTML = ''; 
+      tbody.innerHTML = ''; 
         let rowIndex = 1;
 
         const invoiceMap: Record<string, {
@@ -189,7 +189,7 @@ const ReportForm: React.FC = () => {
                   gst5, gst12, gst18, gst28 } = invoiceData;
           
           const row = document.createElement('tr');
-          row.innerHTML = `
+        row.innerHTML = `
             <td>${rowIndex}</td>
             <td>${invoice.invDate}</td>
             <td>${invoice.customerName}</td>
@@ -202,7 +202,7 @@ const ReportForm: React.FC = () => {
             <td>${parseFloat(totalCGST.toFixed(2))}</td>
             <td>${parseFloat(totalSGST.toFixed(2))}</td>
             <td>${parseFloat(totalIGST.toFixed(2))}</td>
-            <td>0.00</td>
+          <td>0.00</td>
             <td>${parseFloat(gst5.amount.toFixed(2))}</td>
             <td>${parseFloat(gst5.taxable.toFixed(2))}</td>
             <td>${parseFloat(gst5.cgst.toFixed(2))}</td>
@@ -223,8 +223,8 @@ const ReportForm: React.FC = () => {
             <td>${parseFloat(gst28.cgst.toFixed(2))}</td>
             <td>${parseFloat(gst28.sgst.toFixed(2))}</td>
             <td>0.00</td>
-          `;
-          tbody.appendChild(row);
+        `;
+        tbody.appendChild(row);
           rowIndex++;
         });
         
@@ -375,7 +375,7 @@ const ReportForm: React.FC = () => {
                   gst5, gst12, gst18, gst28 } = invoiceData;
           
           const row = document.createElement('tr');
-          row.innerHTML = `
+    row.innerHTML = `
             <td>${rowIndex}</td>
             <td>${invoice.invoiceDate}</td>
             <td>${invoice.customerName}</td>
@@ -388,7 +388,7 @@ const ReportForm: React.FC = () => {
             <td>${parseFloat(totalCGST.toFixed(2))}</td>
             <td>${parseFloat(totalSGST.toFixed(2))}</td>
             <td>${parseFloat(totalIGST.toFixed(2))}</td>
-            <td>0.00</td>
+      <td>0.00</td>
             <td>${parseFloat(gst5.amount.toFixed(2))}</td>
             <td>${parseFloat(gst5.taxable.toFixed(2))}</td>
             <td>${parseFloat(gst5.cgst.toFixed(2))}</td>
@@ -409,8 +409,8 @@ const ReportForm: React.FC = () => {
             <td>${parseFloat(gst28.cgst.toFixed(2))}</td>
             <td>${parseFloat(gst28.sgst.toFixed(2))}</td>
             <td>${parseFloat(gst28.igst.toFixed(2))}</td>
-          `;
-          tbody.appendChild(row);
+    `;
+    tbody.appendChild(row);
           rowIndex++;
         });
         

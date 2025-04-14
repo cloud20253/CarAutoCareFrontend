@@ -120,36 +120,98 @@ const PurchaseReport: React.FC = () => {
   };
 
   const handlePrint = (billNo?: string) => {
-    let dataToSend: {
-      fromDate: string;
-      toDate: string;
-      reportData: ReportRow[];
-      transactions: SparePartTransaction[];
-    };
-  
     if (billNo) {
       const invoice = rows.find((row) => row.invoiceNumber === billNo);
       if (!invoice) return;
   
-      dataToSend = {
+      const dataToSend = {
         fromDate,
         toDate,
         reportData: [invoice],
         transactions: invoice.transactions,
       };
+      
+      const query = encodeURIComponent(JSON.stringify(dataToSend));
+      const url = `/admin/purchasereportPdf?data=${query}`;
+    
+      window.open(url, '_blank');
     } else {
-      dataToSend = {
-        fromDate,
-        toDate,
-        reportData: rows,
-        transactions: allTransactions,
-      };
+      // Direct print of the current page
+      const printContent = document.createElement('div');
+      printContent.innerHTML = `
+        <div style="padding: 20px; font-family: Arial, sans-serif;">
+          <h1 style="text-align: center; margin-bottom: 20px;">Purchase Report</h1>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+            <p><strong>From Date:</strong> ${fromDate}</p>
+            <p><strong>To Date:</strong> ${toDate}</p>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+              <tr style="background-color: #f2f2f2;">
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Sr.No</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Invoice No</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Invoice Date</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Total Quantity</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Taxable</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Net Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map((row, index) => {
+                const hasGST = row.transactions.some(t => (t.cgst || 0) > 0 || (t.sgst || 0) > 0);
+                const taxableValue = hasGST ? row.taxable : 0;
+                
+                return `
+                  <tr style="border-bottom: 1px solid #ddd;">
+                    <td style="border: 1px solid #ddd; padding: 8px;">${row.id}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${row.invoiceNumber}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${row.invDate}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${row.totalQuantity}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">₹${Number(taxableValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">₹${Number(row.netTotal).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+            <tfoot>
+              <tr style="background-color: #f2f2f2; font-weight: bold;">
+                <td style="border: 1px solid #ddd; padding: 8px;" colspan="3">Total</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${rows.reduce((sum, row) => sum + row.totalQuantity, 0)}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">₹${Number(rows.reduce((sum, row) => {
+                  const hasGST = row.transactions.some(t => (t.cgst || 0) > 0 || (t.sgst || 0) > 0);
+                  return sum + (hasGST ? row.taxable : 0);
+                }, 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">₹${Number(rows.reduce((sum, row) => sum + row.netTotal, 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      `;
+      
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.open();
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Purchase Report</title>
+            </head>
+            <body>
+              ${printContent.innerHTML}
+              <script>
+                window.onload = function() {
+                  window.print();
+                  window.onafterprint = function() {
+                    window.close();
+                  };
+                };
+              </script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
     }
-  
-    const query = encodeURIComponent(JSON.stringify(dataToSend));
-    const url = `/admin/purchasereportPdf?data=${query}`;
-  
-    window.open(url, '_blank');
   };
 
   function renderActionButtons(params: GridCellParams) {
@@ -246,6 +308,31 @@ const PurchaseReport: React.FC = () => {
       <CustomizedDataGrid columns={columns} rows={rows} />
    </Grid>
          </Grid>
+
+      {rows.length > 0 && (
+        <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1, boxShadow: 1 }}>
+          <Grid container spacing={2}>
+            <Grid item xs={4}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                Total Quantity: {rows.reduce((sum, row) => sum + row.totalQuantity, 0)}
+              </Typography>
+            </Grid>
+            <Grid item xs={4}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                Total Taxable: ₹{Number(rows.reduce((sum, row) => {
+                  const hasGST = row.transactions.some(t => (t.cgst || 0) > 0 || (t.sgst || 0) > 0);
+                  return sum + (hasGST ? row.taxable : 0);
+                }, 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </Typography>
+            </Grid>
+            <Grid item xs={4}>
+              <Typography variant="subtitle1" fontWeight="bold">
+                Total Net: ₹{Number(rows.reduce((sum, row) => sum + row.netTotal, 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </Typography>
+            </Grid>
+          </Grid>
+        </Box>
+      )}
 
         <div style={{ marginTop: '20px', textAlign: 'center' }}>
     <button

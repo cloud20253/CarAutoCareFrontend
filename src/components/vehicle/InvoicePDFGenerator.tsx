@@ -1,4 +1,4 @@
-import React, { FC, useRef } from 'react';
+import React, { FC, useRef, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import { jsPDF } from 'jspdf';
@@ -25,7 +25,7 @@ interface BillRow {
 }
 
 interface LocationState {
-  invoiceData: InvoiceFormData;
+  invoiceData?: InvoiceFormData;
   invoiceNumber: string;
   jobCardNumber: string;
   invDate: string;
@@ -75,10 +75,91 @@ interface LocationState {
 const CounterBillPDF: FC = () => {
   const theme = useTheme();
   const location = useLocation();
-  const state = location.state as LocationState;
+  const [invoiceData, setInvoiceData] = useState<LocationState | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const invoiceRef = useRef<HTMLDivElement>(null);
 
-  const invoiceItems = state.items || state.billRows || [];
-  const invoiceRef = useRef<HTMLDivElement>(null); 
+  useEffect(() => {
+    const fetchInvoiceData = async () => {
+      try {
+        setLoading(true);
+        // Get the invoice number from URL query parameters
+        const searchParams = new URLSearchParams(window.location.search);
+        const invoiceNumber = searchParams.get('invoiceNumber');
+        
+        if (!invoiceNumber) {
+          throw new Error('Invoice number not provided');
+        }
+
+        // Fetch invoice data from API
+        const response = await fetch(`http://localhost:8080/api/vehicle-invoices/number/${invoiceNumber}`);
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Transform the API data into the format expected by the component
+        const formattedData: LocationState = {
+          invoiceNumber: data.invoiceNumber || '',
+          jobCardNumber: data.jobCardNumber || '',
+          invDate: data.invoiceDate || '',
+          customerName: data.customerName || '',
+          customerAddress: data.customerAddress || '',
+          customerMobile: data.customerMobile || '',
+          adharNo: data.customerAadharNo || '',
+          gstin: data.customerGstin || '',
+          vehicleNo: data.vehicleNo || '',
+          items: [],
+          billRows: [],
+          vehicleRegId: data.vehicleRegId || '',
+          customerAadharNo: data.customerAadharNo || '',
+          customerGstin: data.customerGstin || '',
+          transactionDate: data.invoiceDate || '',
+          regNo: data.regNo || '',
+          model: data.model || '',
+          kmsDriven: data.kmsDriven || '',
+          comments: data.comments || '',
+          parts: data.parts?.map((part: any) => ({
+            partName: part.partName || '',
+            quantity: part.quantity?.toString() || '0',
+            unitPrice: part.unitPrice?.toString() || '0',
+            discountPercent: part.discountPercent?.toString() || '0',
+            cgstPercent: part.cgstPercent?.toString() || '0',
+            sgstPercent: part.sgstPercent?.toString() || '0',
+            igstPercent: part.igstPercent?.toString() || '0',
+          })) || [],
+          labours: data.labours?.map((labour: any) => ({
+            description: labour.description || '',
+            quantity: labour.quantity?.toString() || '0',
+            unitPrice: labour.unitPrice?.toString() || '0',
+            discountPercent: labour.discountPercent?.toString() || '0',
+            cgstPercent: labour.cgstPercent?.toString() || '0',
+            sgstPercent: labour.sgstPercent?.toString() || '0',
+            igstPercent: labour.igstPercent?.toString() || '0',
+          })) || [],
+          globalDiscount: data.globalDiscount || 0,
+          subTotal: data.subTotal || 0,
+          partsSubtotal: data.partsSubtotal || 0,
+          laboursSubtotal: data.laboursSubtotal || 0,
+          totalAmount: data.totalAmount || 0,
+          advanceAmount: data.advanceAmount?.toString() || '0',
+          totalInWords: data.totalInWords || '',
+        };
+
+        setInvoiceData(formattedData);
+      } catch (err) {
+        console.error('Error fetching invoice data:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInvoiceData();
+  }, [location]);
 
   const generatePDF = async () => {
     if (invoiceRef.current) {
@@ -105,6 +186,7 @@ const CounterBillPDF: FC = () => {
       pdf.save('invoice.pdf');
     }
   };
+  
   const numberToWords = (num: number): string => {
     const ones = [
       '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
@@ -121,9 +203,25 @@ const CounterBillPDF: FC = () => {
     };
     return convert(num);
   };
+
+  if (loading) {
+    return <div>Loading invoice data...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!invoiceData) {
+    return <div>No invoice data found</div>;
+  }
+
+  const state = invoiceData;
+  const invoiceItems = [];
+
   return (
     <div
-      ref={invoiceRef}
+      ref={invoiceRef} 
       style={{
         width: '100%',
         minHeight: '297mm',
@@ -232,14 +330,14 @@ const CounterBillPDF: FC = () => {
               }}
             >
               <p style={{ margin: 0, textAlign: 'left' }}>
-                Invoice No: {state.invoiceNumber}
-              </p>
+                    Invoice No: {state.invoiceNumber}
+                  </p>
               <p style={{ margin: 0, textAlign: 'left' }}>
                 Invoice Date: {state.transactionDate}
-              </p>
+                  </p>
               <p style={{ margin: 0, textAlign: 'left' }}>
-                Jobcard No: {state.jobCardNumber}
-              </p>
+                    Jobcard No: {state.jobCardNumber}
+                  </p>
               <p style={{ margin: 0, textAlign: 'left' }}>
                 Reg No: {state.regNo}
               </p><p style={{ margin: 0, textAlign: 'left' }}>

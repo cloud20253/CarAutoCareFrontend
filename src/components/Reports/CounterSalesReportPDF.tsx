@@ -1,272 +1,396 @@
-import React, { useRef, useEffect, useState } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-  Box,
-  Typography,
-} from '@mui/material';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import apiClient from 'Services/apiService';
+import React, { FC } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
 
-interface CounterSaleData {
-  invoiceNo: string;
-  date: string;
-  serialNo: string;
-  gst: string;
-  productName: string;
-  state: string;
-  totalSale: number;
-  totalTaxable: number;
-  gst0: {
-    taxable: number;
-    cgst: number;
-    sgst: number;
-    igst: number;
-  };
-  gst5: {
-    taxable: number;
-    cgst: number;
-    sgst: number;
-    igst: number;
-  };
-  gst12: {
-    taxable: number;
-    cgst: number;
-    sgst: number;
-    igst: number;
-  };
-  gst18: {
-    taxable: number;
-    cgst: number;
-    sgst: number;
-    igst: number;
-  };
-  gst28: {
-    taxable: number;
-    cgst: number;
-    sgst: number;
-    igst: number;
-  };
+interface BillRow {
+  id?: number;
+  sNo: number;
+  spareNo: string;
+  spareName: string;
+  qty?: number;
+  rate: number;
+  discountPercent: number;
+  discountAmt: number;
+  cgstPercent: number;
+  cgstAmt: number;
+  sgstPercent: number;
+  sgstAmt: number;
+  taxable?: number;
+  total?: number;
+  quantity?: number;
+  amount?: number;
 }
 
-const CounterSalesReportPDF: React.FC = () => {
-  const invoiceRef = useRef<HTMLDivElement>(null);
-  const [salesData, setSalesData] = useState<CounterSaleData[]>([]);
-  const [totals, setTotals] = useState<CounterSaleData>({
-    invoiceNo: 'Total',
-    date: '',
-    serialNo: '',
-    gst: '',
-    productName: '',
-    state: '',
-    totalSale: 0,
-    totalTaxable: 0,
-    gst0: { taxable: 0, cgst: 0, sgst: 0, igst: 0 },
-    gst5: { taxable: 0, cgst: 0, sgst: 0, igst: 0 },
-    gst12: { taxable: 0, cgst: 0, sgst: 0, igst: 0 },
-    gst18: { taxable: 0, cgst: 0, sgst: 0, igst: 0 },
-    gst28: { taxable: 0, cgst: 0, sgst: 0, igst: 0 },
-  });
+interface LocationState {
+  invoiceNumber: string; 
+  invDate: string;
+  customerName: string;
+  customerAddress: string;
+  customerMobile: string;
+  adharNo: string;
+  gstin: string;
+  vehicleNo: string;
+  items?: BillRow[];
+  billRows?: BillRow[];
+}
 
-  useEffect(() => {
-    fetchSalesData();
-  }, []);
+const CounterSaleRepostPDF: FC = () => {
+  const theme = useTheme();
+  const location = useLocation();
+  const state = location.state as LocationState;
 
-  const fetchSalesData = async () => {
-    try {
-      const response = await apiClient.get('/api/counter-sales/report');
-      if (response.data) {
-        setSalesData(response.data);
-        calculateTotals(response.data);
-      } else {
-        console.error('No data received from the API');
-      }
-    } catch (error) {
-      console.error('Error fetching sales data:', error);
-    }
-  };
+  const invoiceItems = state.items || state.billRows || [];
 
-  const calculateTotals = (data: CounterSaleData[]) => {
-    const newTotals = data.reduce((acc, curr) => ({
-      ...acc,
-      totalSale: acc.totalSale + curr.totalSale,
-      totalTaxable: acc.totalTaxable + curr.totalTaxable,
-      gst0: {
-        taxable: acc.gst0.taxable + curr.gst0.taxable,
-        cgst: acc.gst0.cgst + curr.gst0.cgst,
-        sgst: acc.gst0.sgst + curr.gst0.sgst,
-        igst: acc.gst0.igst + curr.gst0.igst,
-      },
-      gst5: {
-        taxable: acc.gst5.taxable + curr.gst5.taxable,
-        cgst: acc.gst5.cgst + curr.gst5.cgst,
-        sgst: acc.gst5.sgst + curr.gst5.sgst,
-        igst: acc.gst5.igst + curr.gst5.igst,
-      },
-      gst12: {
-        taxable: acc.gst12.taxable + curr.gst12.taxable,
-        cgst: acc.gst12.cgst + curr.gst12.cgst,
-        sgst: acc.gst12.sgst + curr.gst12.sgst,
-        igst: acc.gst12.igst + curr.gst12.igst,
-      },
-      gst18: {
-        taxable: acc.gst18.taxable + curr.gst18.taxable,
-        cgst: acc.gst18.cgst + curr.gst18.cgst,
-        sgst: acc.gst18.sgst + curr.gst18.sgst,
-        igst: acc.gst18.igst + curr.gst18.igst,
-      },
-      gst28: {
-        taxable: acc.gst28.taxable + curr.gst28.taxable,
-        cgst: acc.gst28.cgst + curr.gst28.cgst,
-        sgst: acc.gst28.sgst + curr.gst28.sgst,
-        igst: acc.gst28.igst + curr.gst28.igst,
-      },
-    }), totals);
-    setTotals(newTotals);
-  };
+  const grandTotal = invoiceItems
+    .reduce((acc, row) => {
+      const qty = row.qty ?? row.quantity ?? 0;
+      const amt = row.amount ?? row.total ?? row.rate * qty;
+      return acc + amt;
+    }, 0)
+    .toFixed(2);
 
-  const generatePDF = async () => {
-    if (!invoiceRef.current) return;
-
-    try {
-      const canvas = await html2canvas(invoiceRef.current, {
-        allowTaint: true,
-        useCORS: true
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const imgWidth = 297;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width; 
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      pdf.save('counter-sales-report.pdf');
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-    }
-  };
-  
   return (
-    <Box sx={{ m: 2 }}>
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">Counter Sales Report</Typography>
-        <Button variant="contained" onClick={generatePDF}>
-          Download PDF
-        </Button>
-      </Box>
+    <div
+      style={{
+        width: '100%',
+        minHeight: '100%',
+        margin: '0 auto',
+        padding: '1rem',
+        fontFamily: 'Arial, sans-serif',
+        backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff',
+        color: theme.palette.mode === 'dark' ? '#fff' : '#000',
+      }}
+    >
+         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+         <tbody>
+         <tr>
+          <td
+         style={{
+         border: '1px solid #000',
+         padding: '6px',
+         textAlign: 'center',
+         verticalAlign: 'top',
+         width: '70%',
+  }}
+>
+           <h2 style={{ margin: 0, fontWeight: 'bold' }}>AUTO CAR CARE POINT</h2>
+           <p style={{ margin: 0 }}>
+           Buvasaheb Nagar, Shingnapur Road, Kolki, Tal.Phaltan(415523), Dist.Satara.
+           </p>
+           <p style={{ margin: 0 }}>
+           Ph : 9595054555 / 7758817766   Email : autocarcarepoint@gmail.com
+           </p>
+           <p style={{ margin: 0 }}>GSTIN : 27GLYPS9891C1ZV</p>
+           </td>
+            <td
+              style={{
+                border: '1px solid #000',
+                padding: '6px',
+                textAlign: 'center',
+                verticalAlign: 'middle',
+                width: '30%',
+              }}
+            >
+              <strong style={{ fontSize: '1.2rem' }}>TAX INVOICE</strong>
+            </td>
+          </tr>
 
-      <div ref={invoiceRef}>
-        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
-          <Table size="small" sx={{ minWidth: 2000, '& th, & td': { whiteSpace: 'nowrap', px: 1, py: 0.5 } }}>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ minWidth: 60 }}>S.No</TableCell>
-                <TableCell sx={{ minWidth: 100 }}>Invoice No</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>Date</TableCell>
-                <TableCell sx={{ minWidth: 120 }}>Serial No</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>GST</TableCell>
-                <TableCell sx={{ minWidth: 150 }}>Product Name</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>State</TableCell>
-                <TableCell sx={{ minWidth: 100 }}>Total Sale</TableCell>
-                <TableCell sx={{ minWidth: 100 }}>Total Taxable</TableCell>
-                <TableCell sx={{ minWidth: 100 }}>0% Taxable</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>0% CGST</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>0% SGST</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>0% IGST</TableCell>
-                <TableCell sx={{ minWidth: 100 }}>5% Taxable</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>2.5% CGST</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>2.5% SGST</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>5% IGST</TableCell>
-                <TableCell sx={{ minWidth: 100 }}>12% Taxable</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>6% CGST</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>6% SGST</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>12% IGST</TableCell>
-                <TableCell sx={{ minWidth: 100 }}>18% Taxable</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>9% CGST</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>9% SGST</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>18% IGST</TableCell>
-                <TableCell sx={{ minWidth: 100 }}>28% Taxable</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>14% CGST</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>14% SGST</TableCell>
-                <TableCell sx={{ minWidth: 80 }}>28% IGST</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {salesData.map((row, index) => (
-                <TableRow key={index}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{row.invoiceNo}</TableCell>
-                  <TableCell>{row.date}</TableCell>
-                  <TableCell>{row.serialNo}</TableCell>
-                  <TableCell>{row.gst}</TableCell>
-                  <TableCell>{row.productName}</TableCell>
-                  <TableCell>{row.state}</TableCell>
-                  <TableCell>{row.totalSale.toFixed(2)}</TableCell>
-                  <TableCell>{row.totalTaxable.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst0.taxable.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst0.cgst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst0.sgst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst0.igst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst5.taxable.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst5.cgst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst5.sgst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst5.igst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst12.taxable.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst12.cgst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst12.sgst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst12.igst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst18.taxable.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst18.cgst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst18.sgst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst18.igst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst28.taxable.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst28.cgst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst28.sgst.toFixed(2)}</TableCell>
-                  <TableCell>{row.gst28.igst.toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
-              <TableRow sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
-                <TableCell colSpan={7}>Total</TableCell>
-                <TableCell>{totals.totalSale.toFixed(2)}</TableCell>
-                <TableCell>{totals.totalTaxable.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst0.taxable.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst0.cgst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst0.sgst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst0.igst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst5.taxable.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst5.cgst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst5.sgst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst5.igst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst12.taxable.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst12.cgst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst12.sgst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst12.igst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst18.taxable.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst18.cgst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst18.sgst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst18.igst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst28.taxable.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst28.cgst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst28.sgst.toFixed(2)}</TableCell>
-                <TableCell>{totals.gst28.igst.toFixed(2)}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-</div>
-    </Box>
+          <tr>
+            <td
+              style={{
+                border: '1px solid #000',
+                padding: '6px',
+                fontWeight: 'bold',
+                verticalAlign: 'top',
+                width: '50%',
+              }}
+            >
+              CUSTOMER DETAILS
+            </td>
+            <td
+              style={{
+                border: '1px solid #000',
+                padding: '6px',
+                fontWeight: 'bold',
+                textAlign: 'right',
+                verticalAlign: 'top',
+                width: '50%',
+              }}
+            >
+              INVOICE DETAILS
+            </td>
+          </tr>
+
+          <tr>
+            <td
+              style={{
+                border: '1px solid #000',
+                padding: '6px',
+                verticalAlign: 'top',
+                width: '50%',
+              }}
+            >
+              <p style={{ margin: 0 }}>Name: {state.customerName}</p>
+              <p style={{ margin: 0 }}>Address: {state.customerAddress}</p>
+              <p style={{ margin: 0 }}>Mobile: {state.customerMobile}</p>
+              <p style={{ margin: 0 }}>Vehicle No: {state.vehicleNo}</p>
+              {state.adharNo && <p style={{ margin: 0 }}>Aadhaar No: {state.adharNo}</p>}
+              {state.gstin && <p style={{ margin: 0 }}>GSTIN: {state.gstin}</p>}
+            </td>
+            <td
+              style={{
+                border: '1px solid #000',
+                padding: '6px',
+                verticalAlign: 'top',
+                width: '50%',
+              }}
+            >
+              <p style={{ margin: 0, textAlign: 'right' }}>
+                Invoice No: {state.invoiceNumber}
+              </p>
+              <p style={{ margin: 0, textAlign: 'right' }}>
+                Invoice Date: {state.invDate}
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td
+              colSpan={2}
+              style={{ border: '1px solid #000', padding: '6px', textAlign: 'center' }}
+            >
+              <strong>SPARES / ITEMS</strong>
+            </td>
+          </tr>
+
+          <tr>
+            <td colSpan={2} style={{ padding: 0, border: '1px solid #000' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr
+                    style={{
+                      backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
+                      color: theme.palette.mode === 'dark' ? '#fff' : '#000',
+                    }}
+                  >
+                    <th rowSpan={2} style={tableHeaderCell}>
+                      S.No
+                    </th>
+                    <th rowSpan={2} style={tableHeaderCell}>
+                      Particular/Item
+                    </th>
+                    <th rowSpan={2} style={tableHeaderCell}>
+                      Qty
+                    </th>
+                    <th rowSpan={2} style={tableHeaderCell}>
+                      Unit Price
+                    </th>
+                    <th rowSpan={2} style={tableHeaderCell}>
+                      Discount (%)
+                    </th>
+                    <th rowSpan={2} style={tableHeaderCell}>
+                      Taxable Amt
+                    </th>
+                    <th colSpan={2} style={tableHeaderCell}>
+                      CGST
+                    </th>
+                    <th colSpan={2} style={tableHeaderCell}>
+                      SGST
+                    </th>
+                    <th rowSpan={2} style={tableHeaderCell}>
+                      Amount
+                    </th>
+                  </tr>
+                  <tr
+                    style={{
+                      backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
+                      color: theme.palette.mode === 'dark' ? '#fff' : '#000',
+                    }}
+                  >
+                    <th style={tableHeaderCell}>Rate</th>
+                    <th style={tableHeaderCell}>Amt</th>
+                    <th style={tableHeaderCell}>Rate</th>
+                    <th style={tableHeaderCell}>Amt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoiceItems.map((item: BillRow, idx: number) => {
+                    const quantity = item.qty ?? item.quantity ?? 0;
+                    return (
+                      <tr key={idx}>
+                        <td style={tableBodyCell}>{idx + 1}</td>
+                        <td style={tableBodyCell}>{item.spareName}</td>
+                        <td style={tableBodyCell}>{quantity}</td>
+                        <td style={tableBodyCell}>{(item.rate || 0).toFixed(2)}</td>
+                        <td style={tableBodyCell}>
+                          {(item.discountPercent || 0).toFixed(2)}%
+                        </td>
+                        <td style={tableBodyCell}>
+                          {(item.taxable || 0).toFixed(2)}
+                        </td>
+                        <td style={tableBodyCell}>
+                          {(item.cgstPercent || 0).toFixed(2)}%
+                        </td>
+                        <td style={tableBodyCell}>
+                          {(item.cgstAmt || 0).toFixed(2)}
+                        </td>
+                        <td style={tableBodyCell}>
+                          {(item.sgstPercent || 0).toFixed(2)}%
+                        </td>
+                        <td style={tableBodyCell}>
+                          {(item.sgstAmt || 0).toFixed(2)}
+                        </td>
+                        <td style={tableBodyCell}>
+                          {(item.amount || 0).toFixed(2)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td
+                      colSpan={10}
+                      style={{
+                        ...tableBodyCell,
+                        textAlign: 'right',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      GRAND TOTAL
+                    </td>
+                    <td
+                      style={{
+                        ...tableBodyCell,
+                        textAlign: 'right',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {grandTotal}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td colSpan={2} style={{ padding: 0, border: '1px solid #000' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <tbody>
+                  <tr>
+                    <td
+                      style={{
+                        position: 'relative',
+                        textAlign: 'center',
+                        borderRight: '1px solid #000',
+                        height: '120px',
+                        width: '33.33%',
+                      }}
+                    >
+                      <img
+                        src="/QR.png"
+                        alt="QR Code"
+                        style={{
+                          display: 'block',
+                          margin: '0 auto',
+                          width: '140px',
+                          height: '140px',
+                          marginBottom: '5px',
+                        }}
+                      />
+                      <div>Scan QR Code</div>
+                    </td>
+                    <td
+                      style={{
+                        position: 'relative',
+                        borderRight: '1px solid #000',
+                        height: '120px',
+                        width: '33.33%',
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: '5px',
+                          left: 0,
+                          right: 0,
+                          textAlign: 'center',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        Customer Signature Thumb
+                      </div>
+                    </td>
+
+                    <td
+                      style={{
+                        position: 'relative',
+                        height: '120px',
+                        width: '33.33%',
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '5px',
+                          left: 0,
+                          right: 0,
+                          textAlign: 'center',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        Auto Car Care Point
+                      </div>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: '5px',
+                          left: 0,
+                          right: 0,
+                          textAlign: 'center',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        Authorized Signature
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td
+              colSpan={2}
+              style={{
+                border: '1px solid #000',
+                padding: '6px',
+                textAlign: 'center',
+              }}
+            >
+              Thank You For Visit.... This is a Computer Generated Invoice
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   );
 };
 
-export default CounterSalesReportPDF;
+export default CounterSaleRepostPDF;
+
+const tableHeaderCell: React.CSSProperties = {
+  border: '1px solid #000',
+  padding: '6px',
+  textAlign: 'center',
+  verticalAlign: 'middle',
+};
+
+const tableBodyCell: React.CSSProperties = {
+  border: '1px solid #000',
+  padding: '6px',
+  textAlign: 'center',
+  verticalAlign: 'middle',
+};
