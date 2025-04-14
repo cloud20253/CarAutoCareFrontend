@@ -71,14 +71,22 @@ const JobCardPDF: React.FC = () => {
   const coolant = "null";
   const ramLock = "null";
   const documentReq = "null";
-  const serviceBooklet = "No";
-  const fuelLevel = "Full Level";
   const costOfRepairs = "Estimated Cost";
   const washType = "Exterior Wash";
   const tyreAir = "Yes";
   const interiorWash = "Yes";
   const termsAndConditions =
     "I do agree the owner is any scratch, workshop for repair, but the parts need to repair or any can be chargeable...";
+
+  // State for form fields
+  const [serviceBooklet, setServiceBooklet] = useState<string>("");
+  const [rimLock, setRimLock] = useState<string>("");
+  const [documentReg, setDocumentReg] = useState<string>("");
+  const [toolKit, setToolKit] = useState<string>("");
+  const [fuelLevel, setFuelLevel] = useState<string>("");
+  const [carWash, setCarWash] = useState<string>("Yes");
+  const [engineWash, setEngineWash] = useState<string>("Yes");
+  const [interiorWashOption, setInteriorWashOption] = useState<string>("Yes");
 
   const handleSave = () => {
     alert("Save clicked!");
@@ -101,7 +109,9 @@ const JobCardPDF: React.FC = () => {
     const storedVehicleDataDetails = localStorage.getItem("vehicleData");
 
     if (storedJobCardDetails) {
-      setJobCardDetails(JSON.parse(storedJobCardDetails));
+      const parsedJobCardDetails = JSON.parse(storedJobCardDetails);
+      console.log("Job Card Details:", parsedJobCardDetails);
+      setJobCardDetails(parsedJobCardDetails);
     }
     if (storedVehicleDataDetails) {
       setVehicleData(JSON.parse(storedVehicleDataDetails));
@@ -230,307 +240,285 @@ const JobCardPDF: React.FC = () => {
             </Grid>
           </Grid>
         </Box>
-
-        {/* <Box sx={{ mt: 2 }}>
-          <Grid container spacing={1}>
-            <Grid item xs={12} sm={4}>
-              <LabelText>Oil Type:</LabelText>
-              <ValueText>{oilType}</ValueText>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <LabelText>Coolant:</LabelText>
-              <ValueText>{coolant}</ValueText>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <LabelText>Ram Lock:</LabelText>
-              <ValueText>{ramLock}</ValueText>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <LabelText>Document Req:</LabelText>
-              <ValueText>{documentReq}</ValueText>
-            </Grid>
-          </Grid>
-        </Box> */}
         <Divider />
-
-
-
         <Box sx={{ mt: 2 }}>
-          <Grid container spacing={1}>
-            <Grid item xs={12} sm={4}>
-              <FormControl>
-                <RadioGroup
-                  row
-                  value={serviceBooklet}
-                  aria-labelledby="demo-row-radio-buttons-group-label"
-                  name="row-radio-buttons-group"
-                >
-                  <Box>
-                    <Box display="flex" alignItems="center">
-                      <FormLabel
-                        sx={{
-                          marginTop: 2,
-                          marginRight: 2,
-                          fontWeight: "bold", // Make text bold
-                          color: "text.primary",
-                        }}
+          <TableContainer component={Paper} sx={{ border: '1px solid #000' }}>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000', width: '20%' }}>
+                    Service Booklet:
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #000', width: '15%' }}>
+                    <FormControl component="fieldset">
+                      <RadioGroup 
+                        row 
+                        value={serviceBooklet}
+                        onChange={(e) => setServiceBooklet(e.target.value)}
                       >
-                        {" "}
-                        Service Booklet :
-                      </FormLabel>
-
-                      <FormControlLabel
-                        value="Yes"
-                        control={<Radio size="small" />}
-                        label="Yes"
-                        disabled
-                      />
-                      <FormControlLabel
-                        value="No"
-                        control={<Radio size="small" />}
-                        label="No"
-                        disabled
-                      />
-                    </Box>
-                  </Box>
-                  <Box>
-                    <Box display="flex" alignItems="center">
-                      <FormLabel
-                        sx={{
-                          marginTop: 2,
-                          marginRight: 2,
-                          fontWeight: "bold", // Make text bold
-                          color: "text.primary",
-                        }}
+                        <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
+                        <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
+                      </RadioGroup>
+                    </FormControl>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000', width: '20%' }}>
+                    Fuel Level
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #000', width: '15%' }}>
+                    <FormControl component="fieldset">
+                      <RadioGroup 
+                        row 
+                        value={fuelLevel}
+                        onChange={(e) => setFuelLevel(e.target.value)}
                       >
-                        {" "}
-                        Rim Lock :
-                      </FormLabel>
-
-                      <FormControlLabel
-                        value="Yes"
-                        control={<Radio size="small" />}
-                        label="Yes"
-                        disabled
-                      />
-                      <FormControlLabel
-                        value="No"
-                        control={<Radio size="small" />}
-                        label="No"
-                        disabled
-                      />
-                    </Box>
-                  </Box>
-
-                  <Box>
-                    <Box display="flex" alignItems="center">
-                      <FormLabel
-                        sx={{
-                          marginTop: 2,
-                          marginRight: 2,
-                          fontWeight: "bold", // Make text bold
-                          color: "text.primary",
-                        }}
+                        <FormControlLabel value="1/4" control={<Radio size="small" />} label="1/4" />
+                        <FormControlLabel value="1/2" control={<Radio size="small" />} label="1/2" />
+                        <FormControlLabel value="3/4" control={<Radio size="small" />} label="3/4" />
+                        <FormControlLabel value="Full" control={<Radio size="small" />} label="Full" />
+                      </RadioGroup>
+                    </FormControl>
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000', width: '20%' }}>
+                    Estimated Cost Of Repairs:
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000' }}>
+                    Rim Lock:
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #000' }}>
+                    <FormControl component="fieldset">
+                      <RadioGroup 
+                        row 
+                        value={rimLock}
+                        onChange={(e) => setRimLock(e.target.value)}
                       >
-                        {" "}
-                        Document Reg.Papers:
-                      </FormLabel>
-
-                      <FormControlLabel
-                        value="Yes"
-                        control={<Radio size="small" />}
-                        label="Yes"
-                        disabled
-                      />
-                      <FormControlLabel
-                        value="No"
-                        control={<Radio size="small" />}
-                        label="No"
-                        disabled
-                      />
-                    </Box>
-                  </Box>
-
-                  <Box>
-                    <Box display="flex" alignItems="center">
-                      <FormLabel
-                        sx={{
-                          marginTop: 2,
-                          marginRight: 2,
-                          fontWeight: "bold", // Make text bold
-                          color: "text.primary",
-                        }}
+                        <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
+                        <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
+                      </RadioGroup>
+                    </FormControl>
+                  </TableCell>
+                  <TableCell colSpan={2} sx={{ border: '1px solid #000' }}></TableCell>
+                  <TableCell sx={{ border: '1px solid #000' }}>
+                    <LabelText>Car Wash:</LabelText>
+                    <select 
+                      style={{ padding: '2px', marginLeft: '5px' }}
+                      value={carWash}
+                      onChange={(e) => setCarWash(e.target.value)}
+                    >
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000' }}>
+                    Document Reg.Papers:
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #000' }}>
+                    <FormControl component="fieldset">
+                      <RadioGroup 
+                        row 
+                        value={documentReg}
+                        onChange={(e) => setDocumentReg(e.target.value)}
                       >
-                        {" "}
-                        Tool Kit:
-                      </FormLabel>
-
-                      <FormControlLabel
-                        value="Yes"
-                        control={<Radio size="small" />}
-                        label="Yes"
-                        disabled
-                      />
-                      <FormControlLabel
-                        value="No"
-                        control={<Radio size="small" />}
-                        label="No"
-                        disabled
-                      />
-                    </Box>
-                  </Box>
-                </RadioGroup>
-
-                <LabelText  sx={{
-                          marginTop: 2,
-                          marginRight: 2,
-                          fontWeight: "bold", // Make text bold
-                          color: "text.primary",
-                        }}>Fuel Level:  <ValueText>{fuelLevel}</ValueText></LabelText>
-               
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-             
-
-              <Box sx={{ mt: 2 }}>
-          <LabelText>Estimated Cost Of Repairs:</LabelText>
-          <ValueText>{costOfRepairs}</ValueText>
-          <br />
-          <LabelText>Wash Type:</LabelText>
-          <ValueText>{washType}</ValueText>
-          <br />
-          <LabelText>Tyre Air:</LabelText>
-          <ValueText>{tyreAir}</ValueText>
-          <br />
-          <LabelText>Interior Wash:</LabelText>
-          <ValueText>{interiorWash}</ValueText>
-        </Box>
-
-            </Grid>
-          </Grid>
+                        <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
+                        <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
+                      </RadioGroup>
+                    </FormControl>
+                  </TableCell>
+                  <TableCell colSpan={2} sx={{ border: '1px solid #000' }}></TableCell>
+                  <TableCell sx={{ border: '1px solid #000' }}>
+                    <LabelText>Engine Wash:</LabelText>
+                    <select 
+                      style={{ padding: '2px', marginLeft: '5px' }}
+                      value={engineWash}
+                      onChange={(e) => setEngineWash(e.target.value)}
+                    >
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000' }}>
+                    Tool Kit:
+                  </TableCell>
+                  <TableCell sx={{ border: '1px solid #000' }}>
+                    <FormControl component="fieldset">
+                      <RadioGroup 
+                        row 
+                        value={toolKit}
+                        onChange={(e) => setToolKit(e.target.value)}
+                      >
+                        <FormControlLabel value="Yes" control={<Radio size="small" />} label="Yes" />
+                        <FormControlLabel value="No" control={<Radio size="small" />} label="No" />
+                      </RadioGroup>
+                    </FormControl>
+                  </TableCell>
+                  <TableCell colSpan={2} sx={{ border: '1px solid #000' }}></TableCell>
+                  <TableCell sx={{ border: '1px solid #000' }}>
+                    <LabelText>Interior Wash:</LabelText>
+                    <select 
+                      style={{ padding: '2px', marginLeft: '5px' }}
+                      value={interiorWashOption}
+                      onChange={(e) => setInteriorWashOption(e.target.value)}
+                    >
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Box>
         <Divider sx={{ width: '100%', backgroundColor: 'black', height: 2, marginY: 2 }} />
 
+        {/* Inspection box with checkboxes for service types */}
+        <TableContainer component={Paper} sx={{ width: "100%", mb: 0, border: "1px solid black" }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell 
+                  colSpan={4} 
+                  sx={{ 
+                    fontWeight: 'bold', 
+                    borderBottom: "1px solid black", 
+                    backgroundColor: "#f5f5f5",
+                    p: 1
+                  }}
+                >
+                  Inspection
+                  <Typography sx={{ float: "right", fontWeight: "bold" }}>Present</Typography>
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell sx={{ border: "1px solid #ddd", p: 1 }}>
+                  <FormControlLabel
+                    control={<Checkbox size="small" />}
+                    label="Paid Service/Running Repair"
+                  />
+                </TableCell>
+                <TableCell sx={{ border: "1px solid #ddd", p: 1 }}>
+                  <FormControlLabel
+                    control={<Checkbox size="small" />}
+                    label="Body Shop/Paint"
+                  />
+                </TableCell>
+                <TableCell sx={{ border: "1px solid #ddd", p: 1 }}>
+                  <FormControlLabel
+                    control={<Checkbox size="small" />}
+                    label="A.C/Accessories"
+                  />
+                </TableCell>
+                <TableCell sx={{ border: "1px solid #ddd", p: 1 }}>
+                  <FormControlLabel
+                    control={<Checkbox size="small" />}
+                    label="Car Detailing"
+                  />
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-        <SectionTitle variant="body1">Terms & Conditions:</SectionTitle>
-        <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
-          {termsAndConditions}
-        </Typography>
-        <Box
-      display="flex"
-      justifyContent="space-between" // Space between to push items to the edges
-      alignItems="center" // Center items vertically
-      padding={2} // Optional padding
-      marginTop={4}
-      width="100%" // Full width of the container
-   
-    >
-      <Typography variant="h6"> Customer Signature / Thumb</Typography>
-      <Typography variant="h6"> Service Advisor Signature</Typography>
+        {/* Customer Complaint and Workshop Work table */}
+        <TableContainer component={Paper} sx={{ width: "100%", mt: 0, border: "1px solid black", borderTop: "none" }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold', border: "1px solid black", width: "5%" }}>Sr.</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: "1px solid black", width: "25%" }}>Customer Complaint/ Work Desc.</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: "1px solid black", width: "25%" }}>Actual Workshop Finding</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: "1px solid black", width: "25%" }}>Action Taken</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', border: "1px solid black", width: "20%" }}>Cost Of Part & Labour</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell sx={{ border: "1px solid black", p: 1 }}>1</TableCell>
+                <TableCell sx={{ border: "1px solid black", p: 1 }}>{jobCardDetails?.jobName || "OIL /OIL FILTER REPLYS'ENT"}</TableCell>
+                <TableCell sx={{ border: "1px solid black", p: 1 }}></TableCell>
+                <TableCell sx={{ border: "1px solid black", p: 1 }}></TableCell>
+                <TableCell sx={{ border: "1px solid black", p: 1 }}></TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell sx={{ border: "1px solid black", p: 1 }}></TableCell>
+                <TableCell sx={{ border: "1px solid black", p: 1 }}></TableCell>
+                <TableCell sx={{ border: "1px solid black", p: 1 }}></TableCell>
+                <TableCell sx={{ border: "1px solid black", p: 1 }}></TableCell>
+                <TableCell sx={{ border: "1px solid black", p: 1 }}></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-    </Box>
+        {/* Workshop Note */}
+        <TableContainer component={Paper} sx={{ width: "100%", mt: 0, border: "1px solid black", borderTop: "none" }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold', borderBottom: "1px solid black", p: 1 }}>
+                  Workshop Note:
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell sx={{ p: 1, minHeight: "30px" }}>
+                  {jobCardDetails?.workShopNote || jobCardDetails?.workshopNote || jobCardDetails?.workshop_note || "No workshop notes available"}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-    <Divider sx={{ width: '100%', backgroundColor: 'black', height: 2, marginY: 2 }} />
+        {/* Terms and Conditions */}
+        <TableContainer component={Paper} sx={{ width: "100%", mt: 3, border: "1px solid black" }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold', borderBottom: "1px solid black", p: 1 }}>
+                  Terms & Conditions:
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell sx={{ p: 1 }}>
+                  <Typography variant="body2">
+                    1)- I have given my car to my swatch workshop for repair, but the parts used to repair my car have no complaints, and all expenses for the car will be billed without bargaining, I will stand by the bill.
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    2)-If there is any damage to my vehicle while working or parked in the garage, I will not ask for compensation or make any complaint.
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    3)-I have ensured that the insurance is valid before taking my car to the workshop, which will not hold the workshop and staff responsible for any accident while working on my car.
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-
-{/* //****** */}
-    <FormControl component="fieldset">
-      <FormGroup aria-label="position" row>
-        <FormControlLabel
-          value="end"
-          control={<Checkbox />}
-          label="Paid Service/Running Repair"
-          labelPlacement="end"
-        />
-          <FormControlLabel
-          value="end"
-          control={<Checkbox />}
-          label="Body Shop/Paint"
-          labelPlacement="end"
-        />
-          <FormControlLabel
-          value="end"
-          control={<Checkbox />}
-          label=" A.C/Accessories"
-          labelPlacement="end"
-        />
-          <FormControlLabel
-          value="end"
-          control={<Checkbox />}
-          label="Car Detailing"
-          labelPlacement="end"
-        />
-      </FormGroup>
-    </FormControl>
-    <Divider sx={{ width: '100%', backgroundColor: 'black', height: 2, marginY: 2 }} />
-
-    <TableContainer component={Paper}>
-      <Table sx={{ minWidth: 650 }} aria-label="simple table">
-        <TableHead>
-          <TableRow >
-            <TableCell align="left" sx={{ color: '#333',fontWeight : 'bold' }}>Sr No</TableCell>
-            <TableCell align="left" sx={{ color: '#333',fontWeight : 'bold' }}> Customer Complaint/ Work Desc.</TableCell>
-            <TableCell align="left" sx={{ color: '#333',fontWeight : 'bold' }}>Actual Workshop Finding</TableCell>
-            <TableCell align="left" sx={{ color: '#333',fontWeight : 'bold' }}>Action Taken</TableCell>
-            <TableCell align="left" sx={{ color: '#333',fontWeight : 'bold' }}>Cost Of Part & Labour</TableCell>
-          </TableRow>
-        </TableHead>
-        {/* <TableBody>
-          {rows.map((row) => (
-            <TableRow
-              key={row.name}
-              sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-            >
-              <TableCell component="th" scope="row">
-                {row.name}
-              </TableCell>
-              <TableCell align="right">{row.calories}</TableCell>
-              <TableCell align="right">{row.fat}</TableCell>
-              <TableCell align="right">{row.carbs}</TableCell>
-              <TableCell align="right">{row.protein}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody> */}
-      </Table>
-    </TableContainer>
-
-
-    <Divider sx={{ width: '100%', backgroundColor: 'black', height: 2, marginY: 2 }} />
-
-
-
-    {/* ****************** */}
-
-    <Box sx={{ padding: 2 }}>
-      <Typography variant="h6" gutterBottom>
-      Workshop Note:
-      </Typography>
-    
-    </Box>
-
-    <Divider sx={{ width: '100%', backgroundColor: 'black', height: 2, marginY: 2 }} />
-
-    <Box sx={{ padding: 2 }}>
-      <Typography variant="h6" gutterBottom>
-       Note:
-      </Typography>
-    
-      <Box
-      display="flex"
-      justifyContent="space-between" // Space between to push items to the edges
-      alignItems="center" // Center items vertically
-      padding={2} // Optional padding
-      marginTop={4}
-      width="100%" // Full width of the container
-      >
-      <Typography variant="h6"> Customer Signature / Thumb</Typography>
-      <Typography variant="h6"> Service Advisor Signature</Typography>
-
-    </Box>
-
-    </Box>
-
+        {/* Signature section */}
+        <TableContainer component={Paper} sx={{ width: "100%", mt: 0, border: "1px solid black", borderTop: "none" }}>
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableCell sx={{ width: "50%", p: 2, borderRight: "1px solid black" }}>
+                  <Typography sx={{ fontWeight: "bold" }}>Customer Signature / Thumb</Typography>
+                </TableCell>
+                <TableCell sx={{ width: "50%", p: 2 }}>
+                  <Typography sx={{ fontWeight: "bold" }}>Service Advisor Signature</Typography>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Paper>
     </Box>
   );

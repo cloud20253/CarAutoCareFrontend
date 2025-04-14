@@ -1,769 +1,867 @@
-// import React, { FC, useRef } from 'react';
-// import { useLocation } from 'react-router-dom';
-// import { useTheme } from '@mui/material/styles';
-// import { jsPDF } from 'jspdf';
-// import html2canvas from 'html2canvas';
-// // import { InvoiceFormData } from './InvoiceFormData';
-// import  { useEffect, useState } from 'react';
-// import { useParams } from 'react-router-dom';
-// interface BillRow {
-//   id?: number;
-//   sNo: number;
-//   spareNo: string;
-//   spareName: string;
-//   qty?: number;
-//   rate: number;
-//   discountPercent: number;
-//   discountAmt: number;
-//   cgstPercent: number;
-//   cgstAmt: number;
-//   sgstPercent: number;
-//   sgstAmt: number;
-//   taxable?: number;
-//   total?: number;
-//   quantity?: number;
-//   amount?: number;
-// }
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Grid,
+  CircularProgress
+} from '@mui/material';
+import apiClient from 'Services/apiService';
 
-// interface LocationState {
-// //   invoiceData: InvoiceFormData;
-//   invoiceNumber: string;
-//   jobCardNumber: string;
-//   invDate: string;
-//   customerName: string;
-//   customerAddress: string;
-//   customerMobile: string;
-//   adharNo: string;
-//   gstin: string;
-//   vehicleNo: string;
-//   items?: BillRow[];
-//   billRows?: BillRow[];
-//   vehicleRegId: string;
-//   customerAadharNo: string;
-//   customerGstin: string;
-//   transactionDate: string;
-//   regNo: string;
-//   model: string;
-//   kmsDriven: string;
-//   comments: string;
-//   parts: {
-//     partName: string;
-//     quantity: string; 
-//     unitPrice: string;
-//     discountPercent: string;
-//     cgstPercent: string;
-//     sgstPercent: string;
-//     igstPercent: string;
-//   }[];
-//   labours: {
-//     description: string;
-//     quantity: string;
-//     unitPrice: string;
-//     discountPercent: string;
-//     cgstPercent: string;
-//     sgstPercent: string;
-//     igstPercent: string;
-//   }[];
-//   globalDiscount : number;
-//   subTotal: number;
-//   partsSubtotal:number;
-//   laboursSubtotal:number;
-//   totalAmount: number;
-//   advanceAmount: string;
-//   totalInWords: string;
-// }
-
-
-// interface PartLine {
-//     id: number;
-//     lineNo: number;
-//     partName: string;
-//     quantity: number;
-//     unitPrice: number;
-//     discountPercent: number;
-//     discountAmt: number;
-//     finalAmount: number;
-// }
-
-// interface LabourLine {
-//     id: number;
-//     lineNo: number;
-//     name: string;
-//     quantity: number;
-//     unitPrice: number;
-//     discountPercent: number;
-//     discountAmt: number;
-//     finalAmount: number;
-// }
-
-// interface Quotation {
-//     id: number;
-//     quotationNumber: string | null;
-//     quotationDate: string;
-//     customerName: string;
-//     customerAddress: string;
-//     customerMobile: string;
-//     vehicleNumber: string;
-//     customerEmail: string;
-//     partLines: PartLine[];
-//     labourLines: LabourLine[];
-// }
-
-// const CounterBillPDF: FC = () => {
-//   const theme = useTheme();
-//   const location = useLocation();
-//   const state = location.state as LocationState;
-
-//   const invoiceRef = useRef<HTMLDivElement>(null); 
-
-//   const { id } = useParams(); // Get the quotation ID from the URL
-// //   const [quotation, setQuotation] = useState(null);
-// const [quotation, setQuotation] = useState<Quotation | null>(null); // Initialize with null
-
-//   const [globalDiscount, setGlobalDiscount] = useState(0); // Example global discount state
-
-//   useEffect(() => {
-//     const fetchQuotation = async () => {
-//       try {
-//         const response = await fetch(`http://localhost:8080/api/quotations/${id}`);
-//         const data = await response.json();
-//         setQuotation(data);
-//       } catch (error) {
-//         console.error('Error fetching quotation:', error);
-//       }
-//     };
-
-//     fetchQuotation();
-//     computeTotals();
-//   }, [id]);
-  
-// //   const computeTotals = () => {
-// //     const computeItemTotal = (item: {
-// //         quantity: string;
-// //         unitPrice: string;
-// //         discountPercent: string;
-// //     }) => {
-// //         const quantity = Number(item.quantity) || 0;
-// //         const unitPrice = Number(item.unitPrice) || 0;
-// //         const discountPercent = Number(item.discountPercent) || 0;
-
-// //         const baseAmount = quantity * unitPrice;
-// //         const discount = (baseAmount * discountPercent) / 100;
-// //         const taxableAmount = baseAmount - discount;
-
-// //         return { total: taxableAmount, discount, baseAmount }; // Return discount and baseAmount if needed
-// //     };
-
-// //     // Assuming partLines and labourLines are arrays of items
-// //     const partsTotals = partLines.map(computeItemTotal); // Adjusted to directly use partLines
-// //     const laboursTotals = labourLines.map(computeItemTotal); // Adjusted to directly use labourLines
-
-// //     const partsSubtotal = partsTotals.reduce((acc, item) => acc + item.total, 0);
-// //     const laboursSubtotal = laboursTotals.reduce((acc, item) => acc + item.total, 0);
-// //     const subTotal = partsSubtotal + laboursSubtotal;
-// //     const totalAmount = subTotal; // You can add taxes or other calculations here if needed
-
-// //     return { partsTotals, laboursTotals, partsSubtotal, laboursSubtotal, subTotal, totalAmount };
-// // };
-
-
-// // Assuming you have these in your component's state or props
-// const partLines: PartLine[] = quotation?.partLines || []; // Replace with your actual data source
-// const labourLines: LabourLine[] = quotation?.labourLines || []; // Replace with your actual data source
-
-// const computeTotals = () => {
-//     const computeItemTotal = (item: PartLine | LabourLine) => {
-//         const quantity = Number(item.quantity) || 0;
-//         const unitPrice = Number(item.unitPrice) || 0;
-//         const discountPercent = Number(item.discountPercent) || 0;
-
-//         const baseAmount = quantity * unitPrice;
-//         const discount = (baseAmount * discountPercent) / 100;
-//         const taxableAmount = baseAmount - discount;
-
-//         return { total: taxableAmount, discount, baseAmount }; // Return discount and baseAmount if needed
-//     };
-
-//     // Use the defined partLines and labourLines
-//     const partsTotals = partLines.map(computeItemTotal);
-//     const laboursTotals = labourLines.map(computeItemTotal);
-
-//     // Provide explicit types for the reduce function parameters
-//     const partsSubtotal = partsTotals.reduce((acc: number, item) => acc + item.total, 0);
-//     const laboursSubtotal = laboursTotals.reduce((acc: number, item) => acc + item.total, 0);
-//     const subTotal = partsSubtotal + laboursSubtotal;
-//     const totalAmount = subTotal; // You can add taxes or other calculations here if needed
-
-//     return { partsTotals, laboursTotals, partsSubtotal, laboursSubtotal, subTotal, totalAmount };
-// };
-
-// const totals = computeTotals();
-//   if (!quotation) {
-//     return <div>Loading...</div>; // Loading state
-//   }
-
-//   const generatePDF = async () => {
-//     const invoiceElement = invoiceRef.current;
-//     if (!invoiceElement) {
-//       console.error("Invoice element not found!");
-//       return;
-//     }
-
-//     const options = { scale: 2 };
-//         const canvas = await html2canvas(invoiceElement, options as any);
-//     const imgData = canvas.toDataURL("image/png",0.7);
-
-//     const pageWidth = 210; 
-//     const pageHeight = 297; 
-
-//     const imgWidth = pageWidth;
-//     const imgHeight = (canvas.height * imgWidth) / canvas.width; 
-
-//     let finalHeight = imgHeight;
-//     let scaleFactor = 1;
-
-//     if (finalHeight > pageHeight) {
-//       scaleFactor = pageHeight / imgHeight; 
-//       finalHeight = pageHeight;
-//     }
-
-//     const pdf = new jsPDF({
-//       orientation: "p",
-//       unit: "mm",
-//       format: "a4",
-//       compress: true,  // Enable compression
-//     });    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, finalHeight);
-//     pdf.save("invoice.pdf");
-//   };
-  
-
-  
-//   const numberToWords = (num: number): string => {
-//     const ones = [
-//       '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
-//       'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen' ];
-//     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-//     if (num === 0) return 'Zero';
-//     const convert = (n: number): string => {
-//       if (n < 20) return ones[n];
-//       if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
-//       if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + convert(n % 100) : '');
-//       if (n < 100000) return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + convert(n % 1000) : '');
-//       if (n < 10000000) return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convert(n % 100000) : '');
-//       return convert(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + convert(n % 10000000) : '');
-//     };
-//     return convert(num);
-//   };
-//   return (
-//     <div
-//       ref={invoiceRef}
-//        id="invoice-container"
-//       style={{
-//         width: '100%',
-//         minHeight: '297mm',
-//         margin: '0 auto',
-//         padding: '5mm',
-//         fontFamily: 'Arial, sans-serif',
-//         fontSize: '0.6rem',
-//         backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff',
-//         color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-//       }}>
-//       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-//         <tbody>
-//           <tr>
-//             <td
-//               style={{
-//                 border: '1px solid #000',
-//                 padding: '6px',
-//                 textAlign: 'center',
-//                 verticalAlign: 'top',
-//                 width: '70%',
-//               }}>
-//               <h2 style={{ margin: 0, fontWeight: 'bold' }}>AUTO CAR CARE POINT</h2>
-//               <p style={{ margin: 0 }}>
-//                 Buvasaheb Nagar, Shingnapur Road, Kolki, Tal.Phaltan(415523), Dist.Satara.
-//               </p>
-//               <p style={{ margin: 0 }}>
-//                 Ph : 9595054555 / 7758817766   Email : autocarcarepoint@gmail.com
-//               </p>
-//               <p style={{ margin: '5px 0 0 0', fontSize: '0.9rem' }}>GSTIN : 27GLYPS9891C1ZV</p>
-//             </td>
-//             <td
-//               style={{
-//                 border: '1px solid #000',
-//                 padding: '6px',
-//                 textAlign: 'center',
-//                 verticalAlign: 'middle',
-//                 width: '30%',
-//               }}
-//             >
-//               <strong style={{ fontSize: '1.2rem' }}>QUOTATION</strong>
-            
-             
-            
-//             </td>
-//           </tr>
-//          <tr>
-//   <td colSpan={2} style={{ padding: '0' }}>
-//     <div style={{ display: 'flex', width: '100%' }}>
-//       <div style={{ width: '50%', border: '1px solid #000', padding: '6px', fontWeight: 'bold' }}>
-//         CUSTOMER DETAILS
-//       </div>
-//       <div style={{ width: '50%', border: '1px solid #000', padding: '6px', fontWeight: 'bold' }}>
-//         QUOTATION DETAILS
-//       </div>
-//     </div>
-//   </td>
-// </tr>
-
-
-//            <tr>
-//             <td
-//              colSpan={2} style={{ padding: '0' }}
-//             >
-//                <div style={{ display: 'flex', width: '100%' }}>
-//                <div style={{ width: '50%', border: '1px solid #000', padding: '6px', }}>
-//               <p style={{ margin: 0 }}>Name: {quotation.customerName || "NA"}</p>
-//               <p style={{ margin: 0 }}>Address: {quotation.customerAddress || "NA"}</p>
-//               <p style={{ margin: 0 }}>Mobile: {quotation.customerMobile || "NA"}</p>
-              
-//               <p style={{ margin: 0 }}>Email: {quotation.customerEmail || "NA"}</p>
-//               </div>
-//               <div style={{ width: '50%', border: '1px solid #000', padding: '6px',}}>
-// <div
-//     style={{
-//       display: 'grid',
-//       gridTemplateColumns: 'repeat(2, 1fr)', // Two equal columns
-//       gap: '4px', // Space between columns
-//     }}
-//   >
-//               <div>
-//               <p style={{ margin: 0, textAlign: 'left' }}>
-//               Quotation No : {quotation.quotationNumber || "NA"}
-//               </p>
-//               <p style={{ margin: 0, textAlign: 'left' }}>
-//               Quotation Date : {quotation.quotationDate || "NA"}
-//               </p>
-//               <p style={{ margin: 0, textAlign: 'left' }}>
-//               Vehicle No : {quotation.vehicleNumber || "NA"}
-//               </p>
-//               </div>
-//               </div>
-//               </div>
-//               </div>
-//             </td>
-//           </tr> 
-
-//           <tr>
-//             <td colSpan={2} style={{ border: '1px solid #000', padding: '6px', textAlign: 'center' }}>
-//               <strong>SPARES / ITEMS</strong>
-//             </td>
-//           </tr>
-
-//           <tr>
-//             <td colSpan={2} style={{ padding: 0, border: '1px solid #000' }}>
-//               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-//                 <thead>
-//           <tr>
-//           <td 
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               fontWeight: 'bold',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
-//               color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-//             }}
-//           >
-//             S.No
-//           </td>
-//           <td 
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               fontWeight: 'bold',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
-//               color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-//             }}
-//           >
-//             Particulars Of Parts
-//           </td>
-//           <td 
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               fontWeight: 'bold',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
-//               color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-//             }}
-//           >
-//             Qty
-//           </td>
-//           <td 
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               fontWeight: 'bold',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
-//               color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-//             }}
-//           >
-//             Unit <br /> Price
-//           </td>
-//           <td 
-//             colSpan={2}
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               fontWeight: 'bold',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
-//               color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-//             }}
-//           >
-//             Discount
-//           </td>
-//           <td 
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               fontWeight: 'bold',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
-//               color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-//             }}
-//           >
-//             Amout 
-//           </td>
-//         </tr>
-
-//         <tr>
-//           <td colSpan={4}
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#444' : '#fff',
-//               color: theme.palette.mode === 'dark' ? '#ddd' : '#000',
-//             }}
-//           ></td>
-//           <td colSpan={1}
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//             }}
-//           >
-//             %
-//           </td>
-//           <td colSpan={1}
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//             }}
-//           >
-//             Amt
-//           </td>
-        
-      
-       
-//         </tr>
-//                 </thead>
-//                 <tbody>
-//                   {quotation.partLines.map((part, index) => {
-//                     const quantity = Number(part.quantity) || 0;
-//                     const unitPrice = Number(part.unitPrice) || 0;
-                 
-//                         const discountPercent = part.discountPercent || 0;
-//                         const discount = (quantity * unitPrice * discountPercent) / 100;
-//                         const amount = (quantity * unitPrice) - discount;
-//                     return (
-//                       <tr key={index}>
-//                         <td style={tableBodyCell}>{index + 1}</td>
-//                         <td style={tableBodyCell}>{part.partName}</td>
-//                         <td style={tableBodyCell}>{quantity}</td>
-//                         <td style={tableBodyCell}>{unitPrice.toFixed(2)}</td>
-//                         <td style={tableBodyCell}>{discountPercent.toFixed(2)}</td>
-//                         <td style={tableBodyCell}>{discount.toFixed(2)}</td>
-//                         <td style={tableBodyCell}>{amount.toFixed(2)}</td>
-               
-
-//                       </tr>
-//                     );
-//                   })}
-//                 </tbody>
-//                 <tfoot>
-//                   <tr>
-//                     <td colSpan={6} style={{ ...tableBodyCell, textAlign: 'right', fontWeight: 'bold' }}>
-//                       SUB TOTAL
-//                     </td>
-//                     <td style={{ ...tableBodyCell, textAlign: 'right', fontWeight: 'bold' }}>
-//                     {totals.partsSubtotal?.toFixed(2) || "0.00"}
-//                     </td>
-//                   </tr>
-//                 </tfoot>
-//               </table>
-//             </td>
-//           </tr>
-// <tr>
-//             <td colSpan={2} style={{ border: '1px solid #000', padding: '6px', textAlign: 'center' }}>
-//               <strong>LABOUR WORK</strong>
-//             </td>
-//           </tr>
-//           <tr>
-//             <td colSpan={2} style={{ padding: 0, border: '1px solid #000' }}>
-//               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-//                 <thead>
-//           <tr>
-//           <td 
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               fontWeight: 'bold',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
-//               color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-//             }}
-//           >
-//             S.No
-//           </td>
-//           <td 
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               fontWeight: 'bold',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
-//               color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-//             }}
-//           >
-//             Particulars Of Services
-//           </td>
-//           <td 
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               fontWeight: 'bold',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
-//               color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-//             }}
-//           >
-//             Qty
-//           </td>
-//           <td 
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               fontWeight: 'bold',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
-//               color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-//             }}
-//           >
-//             Unit <br /> Price
-//           </td>
-//           <td 
-//             colSpan={2}
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               fontWeight: 'bold',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
-//               color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-//             }}
-//           >
-//             Discount
-//           </td>
-//           <td 
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               fontWeight: 'bold',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#f5f5f5',
-//               color: theme.palette.mode === 'dark' ? '#fff' : '#000',
-//             }}
-//           >
-//            Amount
-//           </td>
-         
-       
-      
-//         </tr>
-
-//         <tr>
-//           <td colSpan={4}
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//               backgroundColor: theme.palette.mode === 'dark' ? '#444' : '#fff',
-//               color: theme.palette.mode === 'dark' ? '#ddd' : '#000',
-//             }}
-//           ></td>
-//           <td colSpan={1}
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//             }}
-//           >
-//             %
-//           </td>
-//           <td colSpan={1}
-//             style={{
-//               border: '1px solid grey',
-//               textAlign: 'center',
-//               padding: '8px',
-//             }}
-//           >
-//             Amt
-//           </td>
-       
-     
-       
-      
-//         </tr>
-          
-          
-//                 </thead>
-//                 <tbody>
-//                   {quotation.labourLines.map((part, index) => {        
-//                     // const quantity = Number(part.quantity) || 0;
-//                     // const unitPrice = Number(part.unitPrice) || 0;
-//                     // const globalDiscountPercent = state.globalDiscount || 0;
-//                     // const discountPercent = globalDiscountPercent > 0 ? globalDiscountPercent : Number(part.discountPercent) || 0;
-//                     // const base = quantity * unitPrice;
-//                     // const discount = base * discountPercent / 100;
-//                     // const taxableAmount = base - discount;
-
-//                     // const cgstPercent=Number(part.cgstPercent)
-//                     // const sgstPercent=Number(part.sgstPercent)
-//                     // const igstPercent=Number(part.igstPercent)
-
-//                     // const cgst = (taxableAmount *Number(part.cgstPercent)) / 100;
-//                     // const sgst = (taxableAmount *Number(part.sgstPercent)) / 100;
-//                     // const igst = (taxableAmount *Number(part.igstPercent)) / 100;
-//                     // console.log(sgst,cgst,igst)
-//                     // const amount = taxableAmount;
-//                     const quantity = Number(part.quantity) || 0;
-//                     const unitPrice = Number(part.unitPrice) || 0;
-                 
-//                         const discountPercent = part.discountPercent || 0;
-//                         const discount = (quantity * unitPrice * discountPercent) / 100;
-//                         const amount = (quantity * unitPrice) - discount;
-//                     return (
-//                       <tr key={index}>
-//                         <td style={tableBodyCell}>{index + 1}</td>
-//                         <td style={tableBodyCell}>{part.name}</td>
-//                         <td style={tableBodyCell}>{quantity}</td>
-//                         <td style={tableBodyCell}>{unitPrice.toFixed(2)}</td>
-//                         <td style={tableBodyCell}>{discountPercent.toFixed(2)}</td>
-//                         <td style={tableBodyCell}>{discount.toFixed(2)}</td>
-//                         <td style={tableBodyCell}>{amount.toFixed(2)}</td>
-//                         {/* <td style={tableBodyCell}>{cgstPercent.toFixed(2)}</td>
-//                         <td style={tableBodyCell}>{cgst.toFixed(2)}</td>   
-//                         <td style={tableBodyCell}>{sgstPercent.toFixed(2)}</td>
-//                         <td style={tableBodyCell}>{sgst.toFixed(2)}</td>  
-//                          <td style={tableBodyCell}>{igstPercent.toFixed(2)}</td>
-//                         <td style={tableBodyCell}>{igst.toFixed(2)}</td>
-//                         <td style={tableBodyCell}>{amount.toFixed(2)}</td> */}
-
-//                       </tr>
-//                     );
-//                   })}
-//                 </tbody>
-//                 <tfoot>
-//                   <tr>
-//                     <td colSpan={6} style={{ ...tableBodyCell, textAlign: 'right', fontWeight: 'bold' }}>
-//                       SUB TOTAL
-//                     </td>
-                    
-//                     <td style={{ ...tableBodyCell, textAlign: 'right', fontWeight: 'bold' }}>
-//                       {totals.laboursSubtotal.toFixed(2) || 0} 
-//                     </td>
-//                   </tr>
-//                   <tr>
-//                     <td colSpan={6} style={{ ...tableBodyCell, textAlign: 'right', fontWeight: 'bold' }}>
-//                       GRAND TOTAL
-//                     </td>
-                    
-//                     <td style={{ ...tableBodyCell, textAlign: 'right', fontWeight: 'bold' }}>
-//                       {/* {((Number(state?.totalAmount) || 0) - (Number(state?.advanceAmount) || 0)).toFixed(2)} */}
-//                       {totals.totalAmount.toFixed(2) || 0} 
-
-//                     </td>
-//                   </tr> 
-//                 </tfoot>
-//               </table>
-//             </td>
-//           </tr>
-//           <tr>
-//             <td colSpan={14} style={{ border: '2px solid #000', padding: '6px', textAlign: 'left' }}>
-//               <strong>Total Amount Of Invoice In Words:  {numberToWords((Number(totals?.totalAmount) || 0) )} Only</strong>
-//             </td>
-//           </tr>
-      
-          
-
-//           <tr>
-//             <td
-//               colSpan={2}
-//               style={{
-//                 border: '1px solid #000',
-//                 padding: '6px',
-//                 textAlign: 'center',
-//               }}
-//             >
-//               Thank You For Visit.... This is a Computer Generated Document.
-//             </td>
-//           </tr>
-//         </tbody>
-//       </table>
-
-//       <div style={{
-//     display: 'flex',
-//     justifyContent: 'center', 
-//     alignItems: 'center',      
-//     padding: '10px 20px',     
-// }}>
-//   <button 
-//     style={{
-//       border: '1px solid #000',
-//       padding: '10px 20px',
-//       textAlign: 'center',
-//       color: 'red',
-//       cursor: 'pointer'
-//     }} 
-//     onClick={generatePDF}
-//   >
-//     Download PDF
-//   </button>
-// </div>
-//     </div>
-//   );
-// };
-// const tableBodyCell: React.CSSProperties = {
-//   border: '1px solid #000',
-//   padding: '6px',
-//   textAlign: 'center',
-//   verticalAlign: 'middle',
-// };
-
-// export default CounterBillPDF;
-
-
-import React from 'react';
-
-function App() {
-  const greeting = 'Hello Function Component!';
-
-  return <h1>{greeting}</h1>;
+interface Vehicle {
+  vehicleRegId: string;
+  vehicleModel: string;
+  chasisNo: string;
+  engineNo: string;
+  fuelType: string;
+  numberPlateColor: string;
 }
-export default App;
+
+interface Customer {
+  id: number;
+  name: string;
+  mobileNumber: string;
+  address: string;
+}
+
+interface SpareItem {
+  partName: string;
+  quantity: number;
+  rate: number;
+  cgst: number;
+  sgst: number;
+  total: number;
+}
+
+interface ServiceItem {
+  serviceName: string;
+  quantity: number;
+  rate: number;
+  cgst: number;
+  sgst: number;
+  total: number;
+}
+
+interface ServiceEntry {
+  date: string;
+  kmDriven: number;
+  spareItems: SpareItem[];
+  serviceItems: ServiceItem[];
+}
+
+interface VehicleHistory {
+  vehicle: Vehicle;
+  customer: Customer;
+  serviceEntries: ServiceEntry[];
+}
+
+const VehicalHistoryWithPDF: React.FC = () => {
+  const [vehicleId, setVehicleId] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [vehicleHistory, setVehicleHistory] = useState<VehicleHistory | null>(null);
+
+  const fetchVehicleHistory = async () => {
+    if (!vehicleId.trim()) {
+      alert('Please enter a vehicle number');
+      return;
+    }
+    
+    setLoading(true);
+    console.log(`Attempting to fetch data for vehicle: ${vehicleId}`);
+    
+    try {
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      };
+      
+      const apiUrl = `/api/vehicle-invoices/search/vehicle-no/${encodeURIComponent(vehicleId)}`;
+      console.log(`Making API request to: ${apiUrl}`);
+      
+      const response = await apiClient.get(apiUrl, config);
+      console.log('API Response:', response);
+      
+      if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+        console.log('Transforming API data:', response.data);
+        
+        const regNo = response.data[0].regNo;
+        
+        try {
+          const vehicleDetailsUrl = `http://localhost:8080/vehicle-reg/details/${encodeURIComponent(regNo)}`;
+          console.log(`Fetching vehicle details from: ${vehicleDetailsUrl}`);
+          
+          const vehicleDetailsResponse = await apiClient.get(vehicleDetailsUrl, config);
+          console.log('Vehicle Details Response:', vehicleDetailsResponse);
+          
+          const history = transformApiData(response.data, vehicleDetailsResponse.data);
+          setVehicleHistory(history);
+          console.log('Vehicle history set:', history);
+        } catch (detailsError) {
+          console.error('Error fetching vehicle details:', detailsError);
+          const history = transformApiData(response.data);
+          setVehicleHistory(history);
+        }
+      } else {
+        console.error('API returned empty data');
+        alert('No data found for this vehicle');
+      }
+    } catch (error) {
+      console.error('Error fetching vehicle history:', error);
+      alert(`Failed to fetch vehicle history: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      fetchVehicleHistory();
+    }
+  };
+
+  const transformApiData = (apiData: any, vehicleDetails?: any): VehicleHistory => {
+    // API returns an array of invoices
+    const invoices = Array.isArray(apiData) ? apiData : [];
+    
+    if (invoices.length === 0) {
+      return {
+        vehicle: {
+          vehicleRegId: '',
+          vehicleModel: '',
+          chasisNo: '',
+          engineNo: '',
+          fuelType: '',
+          numberPlateColor: ''
+        },
+        customer: {
+          id: 0,
+          name: '',
+          mobileNumber: '',
+          address: ''
+        },
+        serviceEntries: []
+      };
+    }
+
+    // Get vehicle details from the first invoice
+    const firstInvoice = invoices[0];
+    const vehicle: Vehicle = {
+      vehicleRegId: firstInvoice.regNo || '',
+      vehicleModel: firstInvoice.model || '',
+      chasisNo: vehicleDetails?.chasisNumber || '',
+      engineNo: vehicleDetails?.engineNumber || '',
+      fuelType: vehicleDetails?.vehicleVariant || '',
+      numberPlateColor: vehicleDetails?.numberPlateColour || ''
+    };
+
+    // Get customer details from the first invoice
+    const customer: Customer = {
+      id: 0, // Not available in the response
+      name: firstInvoice.customerName || '',
+      mobileNumber: firstInvoice.customerMobile || '',
+      address: firstInvoice.customerAddress || ''
+    };
+
+    // Transform each invoice into a service entry
+    const serviceEntries: ServiceEntry[] = invoices.map((invoice: any) => {
+      // Transform parts to spare items
+      const spareItems: SpareItem[] = (invoice.parts || []).map((part: any) => ({
+        partName: part.partName || '',
+        quantity: part.quantity || 0,
+        rate: part.unitPrice || 0,
+        cgst: part.cgstAmount || 0,
+        sgst: part.sgstAmount || 0,
+        total: part.totalAmount || 0
+      }));
+
+      // Transform labours to service items
+      const serviceItems: ServiceItem[] = (invoice.labours || []).filter((labour: any) => 
+        labour.description && labour.description.trim() !== ''
+      ).map((labour: any) => ({
+        serviceName: labour.description || '',
+        quantity: labour.quantity || 0,
+        rate: labour.unitPrice || 0,
+        cgst: labour.cgstAmount || 0,
+        sgst: labour.sgstAmount || 0,
+        total: labour.totalAmount || 0
+      }));
+
+      return {
+        date: invoice.invoiceDate || '',
+        kmDriven: parseInt(invoice.kmsDriven || '0', 10),
+        spareItems,
+        serviceItems
+      };
+    });
+
+    console.log('Transformed data:', { vehicle, customer, serviceEntries });
+    return { vehicle, customer, serviceEntries };
+  };
+
+  const handlePrint = () => {
+    // Focus on just the vehicle data section
+    const printContent = document.getElementById('printable-content');
+    if (printContent) {
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Vehicle History: ${vehicleHistory?.vehicle.vehicleRegId || ''}</title>
+              <style>
+                @page {
+                  size: A4 landscape;
+                  margin: 0.5in;
+                }
+                body {
+                  font-family: Arial, sans-serif;
+                  font-size: 10px;
+                  margin: 0;
+                  padding: 5px;
+                  background-color: white;
+                  width: 100%;
+                }
+                .print-container {
+                  width: 100%;
+                  margin: 0;
+                  padding: 0;
+                }
+                table {
+                  width: 100%;
+                  border-collapse: collapse;
+                  margin-bottom: 10px;
+                  table-layout: fixed;
+                }
+                tr {
+                  page-break-inside: avoid;
+                }
+                td, th {
+                  padding: 3px;
+                  font-size: 10px;
+                  border: 1px solid #000;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                }
+                th, .header-cell {
+                  background-color: #f5f5f5;
+                  font-weight: bold;
+                }
+                td[align="right"] {
+                  text-align: right;
+                }
+                td[align="center"] {
+                  text-align: center;
+                }
+                h6 {
+                  font-size: 12px;
+                  font-weight: bold;
+                  text-align: center;
+                  background-color: #f5f5f5;
+                  padding: 4px;
+                  margin: 5px 0;
+                  border: 1px solid #000;
+                }
+                .sr-col { width: 30px; }
+                .name-col { width: auto; min-width: 180px; }
+                .qty-col { width: 35px; text-align: center; }
+                .price-col { width: 60px; text-align: right; }
+                .date-row {
+                  font-weight: bold;
+                  background-color: #f5f5f5;
+                }
+                .total-row {
+                  font-weight: bold;
+                  background-color: #f8f8f8;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="print-container">
+                ${printContent.innerHTML}
+              </div>
+              <script>
+                window.onload = function() {
+                  window.print();
+                  window.onafterprint = function() {
+                    window.close();
+                  };
+                };
+              </script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+    } else {
+      console.error("Print content not found");
+      window.print(); // Fallback to standard print
+    }
+  };
+
+  const calculateSpareTotal = () => {
+    if (!vehicleHistory) return { qty: 0, rate: 0, cgst: 0, sgst: 0, total: 0 };
+    
+    return vehicleHistory.serviceEntries.reduce(
+      (acc, entry) => {
+        const entryTotals = entry.spareItems.reduce(
+          (subAcc, item) => ({
+            qty: subAcc.qty + item.quantity,
+            rate: subAcc.rate + (item.rate * item.quantity),
+            cgst: subAcc.cgst + item.cgst,
+            sgst: subAcc.sgst + item.sgst,
+            total: subAcc.total + item.total
+          }),
+          { qty: 0, rate: 0, cgst: 0, sgst: 0, total: 0 }
+        );
+        
+        return {
+          qty: acc.qty + entryTotals.qty,
+          rate: acc.rate + entryTotals.rate,
+          cgst: acc.cgst + entryTotals.cgst,
+          sgst: acc.sgst + entryTotals.sgst,
+          total: acc.total + entryTotals.total
+        };
+      },
+      { qty: 0, rate: 0, cgst: 0, sgst: 0, total: 0 }
+    );
+  };
+
+  const calculateServiceTotal = () => {
+    if (!vehicleHistory) return { qty: 0, rate: 0, cgst: 0, sgst: 0, total: 0 };
+    
+    return vehicleHistory.serviceEntries.reduce(
+      (acc, entry) => {
+        const entryTotals = entry.serviceItems.reduce(
+          (subAcc, item) => ({
+            qty: subAcc.qty + item.quantity,
+            rate: subAcc.rate + (item.rate * item.quantity),
+            cgst: subAcc.cgst + item.cgst,
+            sgst: subAcc.sgst + item.sgst,
+            total: subAcc.total + item.total
+          }),
+          { qty: 0, rate: 0, cgst: 0, sgst: 0, total: 0 }
+        );
+        
+        return {
+          qty: acc.qty + entryTotals.qty,
+          rate: acc.rate + entryTotals.rate,
+          cgst: acc.cgst + entryTotals.cgst,
+          sgst: acc.sgst + entryTotals.sgst,
+          total: acc.total + entryTotals.total
+        };
+      },
+      { qty: 0, rate: 0, cgst: 0, sgst: 0, total: 0 }
+    );
+  };
+
+  const spareTotals = calculateSpareTotal();
+  const serviceTotals = calculateServiceTotal();
+
+  if (!vehicleHistory) {
+    return (
+      <Box sx={{ p: 3, maxWidth: '100%', overflowX: 'auto' }} className="print-container">
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <Typography variant="subtitle1" sx={{ mr: 2, minWidth: '120px' }}>
+            Vehicle No*
+          </Typography>
+          <TextField
+            value={vehicleId}
+            onChange={(e) => setVehicleId(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Enter Vehicle No"
+            sx={{ minWidth: 250 }}
+          />
+        </Box>
+
+        <Grid container spacing={0}>
+          <Grid item xs={6}>
+            <Paper sx={{ p: 2, border: '1px solid #ddd' }}>
+              <Typography variant="h6" gutterBottom sx={{ bgcolor: '#f5f5f5', p: 1 }}>
+                VEHICLE DETAILS
+              </Typography>
+              <Table size="small">
+                <TableBody>
+                  <TableRow>
+                    <TableCell component="th" sx={{ width: '50%', fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
+                      VEHICLE NO:
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
+                      VEHICLE MODEL:
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
+                      CHASIS NO:
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
+                      ENGINE NO:
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
+                      FUEL TYPE:
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
+                      NUMBER PLATE COLOR:
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </Paper>
+          </Grid>
+          
+          <Grid item xs={6}>
+            <Paper sx={{ p: 2, border: '1px solid #ddd', borderLeft: 'none' }}>
+              <Typography variant="h6" gutterBottom sx={{ bgcolor: '#f5f5f5', p: 1 }}>
+                CUSTOMER DETAILS
+              </Typography>
+              <Table size="small">
+                <TableBody>
+                  <TableRow>
+                    <TableCell component="th" sx={{ width: '50%', fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
+                      CUSTOMER NAME:
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
+                      CUSTOMER ADDRESS:
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
+                      CUSTOMER MOBILE:
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #ddd' }}></TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #ddd' }}></TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #ddd' }}></TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </Paper>
+          </Grid>
+        </Grid>
+
+        <Paper sx={{ mt: 3, border: '1px solid #ddd' }}>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              textAlign: 'center', 
+              bgcolor: '#f5f5f5', 
+              p: 1, 
+              borderBottom: '1px solid #ddd',
+              fontWeight: 'bold'
+            }}
+          >
+            *******************SPARE DETAILS*******************
+          </Typography>
+          
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>SR.No</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>SPARE NAME</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>QTY</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>RATE</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>CGST AMT</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>SGST AMT</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>TOTAL</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={2} sx={{ fontWeight: 'bold', textAlign: 'right', border: '1px solid #ddd' }}>Total</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>0</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>0.00</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>0.00</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>0.00</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>0.00</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+
+        <Paper sx={{ mt: 3, border: '1px solid #ddd' }}>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              textAlign: 'center', 
+              bgcolor: '#f5f5f5', 
+              p: 1, 
+              borderBottom: '1px solid #ddd',
+              fontWeight: 'bold'
+            }}
+          >
+            *******************SERVICE DETAILS*******************
+          </Typography>
+          
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>SR.No</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>SERVICE NAME</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>QTY</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>RATE</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>CGST AMT</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>SGST AMT</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>TOTAL</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={2} sx={{ fontWeight: 'bold', textAlign: 'right', border: '1px solid #ddd' }}>Total</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>0</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>0.00</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>0.00</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>0.00</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #ddd' }}>0.00</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+
+        <Box sx={{ textAlign: 'center', mt: 3 }}>
+          <Button
+            onClick={fetchVehicleHistory}
+            disabled={!vehicleId.trim() || loading}
+            variant="contained"
+            color="primary"
+            sx={{
+              borderRadius: '5px',
+              padding: '10px 30px',
+              bgcolor: '#60B5FF',
+              mr: 2,
+              '&:hover': {
+                bgcolor: '#AFDDFF',
+              },
+            }}
+          >
+            {loading ? <CircularProgress size={24} /> : 'Search'}
+          </Button>
+        </Box>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ p: 3, maxWidth: '100%', overflowX: 'auto' }} className="print-container">
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }} className="no-print">
+        <Typography variant="subtitle1" sx={{ mr: 2, minWidth: '120px' }}>
+          Vehicle No*
+        </Typography>
+        <TextField
+          value={vehicleId}
+          onChange={(e) => setVehicleId(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Enter Vehicle No"
+          sx={{ minWidth: 250 }}
+        />
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={() => {
+            console.log('Search button clicked');
+            fetchVehicleHistory();
+          }}
+          disabled={!vehicleId.trim() || loading}
+          sx={{ ml: 2 }}
+        >
+          {loading ? <CircularProgress size={24} /> : 'Search'}
+        </Button>
+      </Box>
+
+      <div id="printable-content" style={{ width: '100%', margin: '0 auto' }}>
+        <Grid container spacing={0}>
+          <Grid item xs={6}>
+            <Paper sx={{ p: 2, border: '1px solid #000' }}>
+              <Typography variant="h6" gutterBottom sx={{ bgcolor: '#f5f5f5', p: 1, fontSize: '14px', textAlign: 'center' }}>
+                VEHICLE DETAILS
+              </Typography>
+              <Table size="small">
+                <TableBody>
+                  <TableRow>
+                    <TableCell component="th" sx={{ width: '40%', fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}>
+                      VEHICLE NO:
+                    </TableCell>
+                    <TableCell sx={{ border: '1px solid #000' }}>{vehicleHistory.vehicle.vehicleRegId}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}>
+                      VEHICLE MODEL:
+                    </TableCell>
+                    <TableCell sx={{ border: '1px solid #000' }}>{vehicleHistory.vehicle.vehicleModel}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}>
+                      CHASIS NO:
+                    </TableCell>
+                    <TableCell sx={{ border: '1px solid #000' }}>{vehicleHistory.vehicle.chasisNo}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}>
+                      ENGINE NO:
+                    </TableCell>
+                    <TableCell sx={{ border: '1px solid #000' }}>{vehicleHistory.vehicle.engineNo}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}>
+                      FUEL TYPE:
+                    </TableCell>
+                    <TableCell sx={{ border: '1px solid #000' }}>{vehicleHistory.vehicle.fuelType}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}>
+                      NUMBER PLATE COLOR:
+                    </TableCell>
+                    <TableCell sx={{ border: '1px solid #000' }}>{vehicleHistory.vehicle.numberPlateColor}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </Paper>
+          </Grid>
+          
+          <Grid item xs={6}>
+            <Paper sx={{ p: 2, border: '1px solid #000', borderLeft: 'none' }}>
+              <Typography variant="h6" gutterBottom sx={{ bgcolor: '#f5f5f5', p: 1, fontSize: '14px', textAlign: 'center' }}>
+                CUSTOMER DETAILS
+              </Typography>
+              <Table size="small">
+                <TableBody>
+                  <TableRow>
+                    <TableCell component="th" sx={{ width: '40%', fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}>
+                      CUSTOMER NAME:
+                    </TableCell>
+                    <TableCell sx={{ border: '1px solid #000' }}>{vehicleHistory.customer.name}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}>
+                      CUSTOMER ADDRESS:
+                    </TableCell>
+                    <TableCell sx={{ border: '1px solid #000' }}>{vehicleHistory.customer.address}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}>
+                      CUSTOMER MOBILE:
+                    </TableCell>
+                    <TableCell sx={{ border: '1px solid #000' }}>{vehicleHistory.customer.mobileNumber}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}></TableCell>
+                    <TableCell sx={{ border: '1px solid #000' }}></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}></TableCell>
+                    <TableCell sx={{ border: '1px solid #000' }}></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell component="th" sx={{ fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}></TableCell>
+                    <TableCell sx={{ border: '1px solid #000' }}></TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </Paper>
+          </Grid>
+        </Grid>
+
+        {/* Spare Parts Section */}
+        <Paper sx={{ mt: 3, border: '1px solid #000' }}>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              textAlign: 'center', 
+              bgcolor: '#f5f5f5', 
+              p: 1, 
+              borderBottom: '1px solid #000',
+              fontWeight: 'bold',
+              fontSize: '14px'
+            }}
+          >
+            *******************SPARE DETAILS*******************
+          </Typography>
+          
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                  <TableCell className="sr-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '30px' }}>SR.No</TableCell>
+                  <TableCell className="name-col" sx={{ fontWeight: 'bold', border: '1px solid #000' }}>SPARE NAME</TableCell>
+                  <TableCell className="qty-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '35px', textAlign: 'center' }}>QTY</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>RATE</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>CGST AMT</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>SGST AMT</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>TOTAL</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {vehicleHistory.serviceEntries.map((entry, entryIndex) => (
+                  <React.Fragment key={`spare-entry-${entryIndex}`}>
+                    <TableRow className="date-row">
+                      <TableCell colSpan={7} sx={{ fontWeight: 'bold', border: '1px solid #000', bgcolor: '#f5f5f5' }}>
+                        {entryIndex + 1}. DATE: {entry.date} | KILOMETER DRIVEN : {entry.kmDriven}
+                      </TableCell>
+                    </TableRow>
+                    
+                    {entry.spareItems.map((item, itemIndex) => (
+                      <TableRow key={`spare-item-${entryIndex}-${itemIndex}`}>
+                        <TableCell sx={{ border: '1px solid #000' }}>{itemIndex + 1}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000' }}>{item.partName}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000', textAlign: 'center' }}>{item.quantity}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000', textAlign: 'right' }}>{item.rate.toFixed(2)}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000', textAlign: 'right' }}>{item.cgst.toFixed(2)}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000', textAlign: 'right' }}>{item.sgst.toFixed(2)}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000', textAlign: 'right' }}>{item.total.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </React.Fragment>
+                ))}
+                
+                <TableRow className="total-row">
+                  <TableCell colSpan={2} sx={{ fontWeight: 'bold', textAlign: 'right', border: '1px solid #000', bgcolor: '#f8f8f8' }}>Total</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000', textAlign: 'center', bgcolor: '#f8f8f8' }}>{spareTotals.qty}</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000', textAlign: 'right', bgcolor: '#f8f8f8' }}>{spareTotals.rate.toFixed(2)}</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000', textAlign: 'right', bgcolor: '#f8f8f8' }}>{spareTotals.cgst.toFixed(2)}</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000', textAlign: 'right', bgcolor: '#f8f8f8' }}>{spareTotals.sgst.toFixed(2)}</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000', textAlign: 'right', bgcolor: '#f8f8f8' }}>{spareTotals.total.toFixed(2)}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+
+        {/* Services Section */}
+        <Paper sx={{ mt: 3, border: '1px solid #000' }}>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              textAlign: 'center', 
+              bgcolor: '#f5f5f5', 
+              p: 1, 
+              borderBottom: '1px solid #000',
+              fontWeight: 'bold',
+              fontSize: '14px'
+            }}
+          >
+            *******************SERVICE DETAILS*******************
+          </Typography>
+          
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                  <TableCell className="sr-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '30px' }}>SR.No</TableCell>
+                  <TableCell className="name-col" sx={{ fontWeight: 'bold', border: '1px solid #000' }}>SERVICE NAME</TableCell>
+                  <TableCell className="qty-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '35px', textAlign: 'center' }}>QTY</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>RATE</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>CGST AMT</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>SGST AMT</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>TOTAL</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {vehicleHistory.serviceEntries.map((entry, entryIndex) => (
+                  <React.Fragment key={`service-entry-${entryIndex}`}>
+                    <TableRow className="date-row">
+                      <TableCell colSpan={7} sx={{ fontWeight: 'bold', border: '1px solid #000', bgcolor: '#f5f5f5' }}>
+                        {entryIndex + 1}. DATE: {entry.date} | KILOMETER DRIVEN : {entry.kmDriven}
+                      </TableCell>
+                    </TableRow>
+                    
+                    {entry.serviceItems.map((item, itemIndex) => (
+                      <TableRow key={`service-item-${entryIndex}-${itemIndex}`}>
+                        <TableCell sx={{ border: '1px solid #000' }}>{itemIndex + 1}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000' }}>{item.serviceName}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000', textAlign: 'center' }}>{item.quantity}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000', textAlign: 'right' }}>{item.rate.toFixed(2)}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000', textAlign: 'right' }}>{item.cgst.toFixed(2)}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000', textAlign: 'right' }}>{item.sgst.toFixed(2)}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000', textAlign: 'right' }}>{item.total.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </React.Fragment>
+                ))}
+                
+                <TableRow className="total-row">
+                  <TableCell colSpan={2} sx={{ fontWeight: 'bold', textAlign: 'right', border: '1px solid #000', bgcolor: '#f8f8f8' }}>Total</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000', textAlign: 'center', bgcolor: '#f8f8f8' }}>{serviceTotals.qty}</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000', textAlign: 'right', bgcolor: '#f8f8f8' }}>{serviceTotals.rate.toFixed(2)}</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000', textAlign: 'right', bgcolor: '#f8f8f8' }}>{serviceTotals.cgst.toFixed(2)}</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000', textAlign: 'right', bgcolor: '#f8f8f8' }}>{serviceTotals.sgst.toFixed(2)}</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', border: '1px solid #000', textAlign: 'right', bgcolor: '#f8f8f8' }}>{serviceTotals.total.toFixed(2)}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </div>
+
+      <Box sx={{ textAlign: 'center', mt: 3 }} className="no-print">
+        <Button
+          onClick={handlePrint}
+          variant="contained"
+          color="primary"
+          sx={{
+            borderRadius: '5px',
+            padding: '10px 30px',
+            bgcolor: '#60B5FF',
+            '&:hover': {
+              bgcolor: '#AFDDFF',
+            },
+          }}
+        >
+          Print
+        </Button>
+      </Box>
+
+      <style>
+        {`
+          @media print {
+            .no-print {
+              display: none !important;
+            }
+          }
+        `}
+      </style>
+    </Box>
+  );
+};
+
+export default VehicalHistoryWithPDF;

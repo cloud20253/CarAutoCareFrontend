@@ -16,13 +16,13 @@ import java.util.Map;
 @RequestMapping("/api/vehicle-invoices")
 @CrossOrigin(origins = "*")
 public class VehicleInvoiceController {
-    
+
     @Autowired
     private VehicleInvoiceService vehicleInvoiceService;
     
     @Autowired
     private InvoiceSequenceService sequenceService;
-    
+
     @PostMapping("/save")
     public ResponseEntity<VehicleInvoice> saveInvoice(@RequestBody VehicleInvoice invoice) {
         return ResponseEntity.ok(vehicleInvoiceService.saveInvoice(invoice));
@@ -37,35 +37,35 @@ public class VehicleInvoiceController {
     public ResponseEntity<List<VehicleInvoice>> getAllInvoicesWithoutDetails() {
         return ResponseEntity.ok(vehicleInvoiceService.getAllInvoicesWithoutDetails());
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<VehicleInvoice> getInvoiceById(@PathVariable Long id) {
         return ResponseEntity.ok(vehicleInvoiceService.getInvoiceById(id).orElseThrow(() -> new RuntimeException("Invoice not found with id: " + id)));
     }
-    
+
     @GetMapping("/number/{invoiceNumber}")
     public ResponseEntity<VehicleInvoice> getInvoiceByNumber(@PathVariable String invoiceNumber) {
         return ResponseEntity.ok(vehicleInvoiceService.getInvoiceByInvoiceNumber(invoiceNumber).orElseThrow(() -> new RuntimeException("Invoice not found with number: " + invoiceNumber)));
     }
-    
+
     @GetMapping("/search/date")
     public ResponseEntity<List<VehicleInvoice>> getInvoicesByDate(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ResponseEntity.ok(vehicleInvoiceService.getInvoicesByDate(date));
     }
-    
+
     @GetMapping("/search/vehicle-reg/{vehicleRegId}")
     public ResponseEntity<List<VehicleInvoice>> getInvoicesByVehicleRegId(@PathVariable String vehicleRegId) {
         return ResponseEntity.ok(vehicleInvoiceService.getInvoicesByVehicleRegId(vehicleRegId));
     }
-    
+
     @PatchMapping("/{id}")
     public ResponseEntity<VehicleInvoice> patchInvoice(
             @PathVariable Long id,
             @RequestBody Map<String, Object> updates) {
         return ResponseEntity.ok(vehicleInvoiceService.patchInvoice(id, updates));
     }
-    
+
     @GetMapping("/search/date-range")
     public ResponseEntity<List<VehicleInvoice>> getInvoicesBetweenDates(
             @RequestParam(required = false) String startDateStr,
