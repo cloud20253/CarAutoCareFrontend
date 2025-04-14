@@ -1,13 +1,9 @@
 
 import React, { useState } from 'react';
 import { FormControl, Stack, Button, TextField, Typography,IconButton, Divider } from '@mui/material';
-import CustomizedDataGrid from 'components/CustomizedDataGrid'; // Assuming you have a customized data grid component
-import Copyright from 'internals/components/Copyright'; // Assuming you have a copyright component
+import CustomizedDataGrid from 'components/CustomizedDataGrid'; 
+import Copyright from 'internals/components/Copyright'; 
 import { GridCellParams, GridRowsProp, GridColDef } from '@mui/x-data-grid';
-// import EditIcon from '@mui/icons-material/Edit';
-// import DeleteIcon from '@mui/icons-material/Delete';
-// import BuildIcon from '@mui/icons-material/Build';
-// import PreviewIcon from '@mui/icons-material/Preview';
 import { Print } from '@mui/icons-material';
 
 import { useNavigate } from 'react-router-dom';
@@ -86,9 +82,9 @@ const SuperTechServiceReport: React.FC = () => {
   const handlePrint = () => {
     navigate('/admin/supertechservicereportPdf', {
       state: {
-        fromDate, // Pass fromDate
-        toDate,   // Pass toDate
-        reportData: rows, // Pass the entire rows data
+        fromDate, 
+        toDate,   
+        reportData: rows, 
       },
     });
   };
@@ -154,11 +150,11 @@ const SuperTechServiceReport: React.FC = () => {
  <Stack
       direction="row"
       alignItems="center"
-      justifyContent="flex-start" // Align items to the left
-      spacing={1} // Reduce space between items
+      justifyContent="flex-start" 
+      spacing={1} 
       sx={{ mb: 2 }}
     >
-      <FormControl sx={{ flexGrow: 1 }}> {/* Allow TextField to grow */}
+      <FormControl sx={{ flexGrow: 1 }}> 
         <TextField
           type="date"
           value={fromDate}
@@ -167,10 +163,10 @@ const SuperTechServiceReport: React.FC = () => {
           InputLabelProps={{
             shrink: true,
           }}
-          fullWidth // Make TextField take full width
+          fullWidth 
         />
       </FormControl>
-      <FormControl sx={{ flexGrow: 1 }}> {/* Allow TextField to grow */}
+      <FormControl sx={{ flexGrow: 1 }}> 
         <TextField
           type="date"
           value={toDate}
@@ -179,7 +175,7 @@ const SuperTechServiceReport: React.FC = () => {
           InputLabelProps={{
             shrink: true,
           }}
-          fullWidth // Make TextField take full width
+          fullWidth 
         />
       </FormControl>
       <Button variant="contained" color="primary" onClick={fetchInvoices}>
@@ -190,27 +186,24 @@ const SuperTechServiceReport: React.FC = () => {
 
 
     <Stack
-      direction={{ xs: 'column', sm: 'row' }} // Stack vertically on small screens, horizontally on larger screens
-      spacing={2} // Space between items
-      sx={{ mb: 2 }} // Margin bottom
+      direction={{ xs: 'column', sm: 'row' }} 
+      spacing={2} 
+      sx={{ mb: 2 }} 
     >
       <TextField
         label="Search Supervisor"
         variant="outlined"
         fullWidth
-        // You can add onChange handler to filter/search logic
       />
       <TextField
         label="Search Technician"
         variant="outlined"
         fullWidth
-        // You can add onChange handler to filter/search logic
       />
       <TextField
         label="Search Worker"
         variant="outlined"
         fullWidth
-        // You can add onChange handler to filter/search logic
       />
     </Stack>
 
@@ -245,9 +238,6 @@ const SuperTechServiceReport: React.FC = () => {
 
 <Divider style={{ marginBottom: '20px', width: '100%', backgroundColor: 'black', height: 2, }}></Divider>
 
-
-
-
       <Grid container spacing={1} columns={12}>
       <Grid item xs={12}>
       <CustomizedDataGrid columns={columns} rows={rows} />
@@ -260,15 +250,15 @@ const SuperTechServiceReport: React.FC = () => {
         border: 'none',
         borderRadius: '5px',
         padding: '10px 20px',
-        backgroundColor: '#60B5FF', // Red background
-        color: '#fff', // White text
+        backgroundColor: '#60B5FF', 
+        color: '#fff', 
         fontSize: '1rem',
         fontWeight: 'bold',
         cursor: 'pointer',
         transition: 'background-color 0.3s ease',
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#AFDDFF')} // Darker red on hover
-      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#60B5FF')} // Original red on leave
+      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#AFDDFF')} 
+      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#60B5FF')} 
       onClick={handlePrint}
     >
     Print

@@ -136,7 +136,6 @@ const PurchaseReport: React.FC = () => {
     
       window.open(url, '_blank');
     } else {
-      // Direct print of the current page
       const printContent = document.createElement('div');
       printContent.innerHTML = `
         <div style="padding: 20px; font-family: Arial, sans-serif;">

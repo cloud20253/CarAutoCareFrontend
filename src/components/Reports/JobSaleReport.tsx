@@ -1,14 +1,11 @@
 import React, { useState ,useEffect, useMemo} from 'react';
 import { FormControl, Stack, Button, TextField, Typography, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableFooter } from '@mui/material';
-import CustomizedDataGrid from 'components/CustomizedDataGrid'; // Assuming you have a customized data grid component
-import Copyright from 'internals/components/Copyright'; // Assuming you have a copyright component
+import Copyright from 'internals/components/Copyright'; 
 import { GridCellParams, GridRowsProp, GridColDef } from '@mui/x-data-grid';
 import { Print } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 
-// Define the interfaces based on the JSON structure
 interface Part {
   id: number;
   partName: string;
@@ -65,7 +62,7 @@ interface Invoice {
   subTotal: number;
   partsSubtotal:number ;
   laboursSubtotal:number;
-  totalAmount: number | null; // Allow null if totalAmount is not provided
+  totalAmount: number | null; 
   advanceAmount: number;
   totalInWords: string;
 }
@@ -80,7 +77,7 @@ const JobSaleReport: React.FC = () => {
 
   const fetchInvoices = async () => {
     if (fromDate && toDate) {
-      setLoading(true); // Set loading to true before fetching
+      setLoading(true); 
       try {
         const response = await fetch(`http://localhost:8080/api/vehicle-invoices/search/date-range?startDate=${fromDate}&endDate=${toDate}`);
         const data = await response.json();
@@ -89,7 +86,7 @@ const JobSaleReport: React.FC = () => {
       } catch (error) {
         console.error('Error fetching invoices:', error);
       } finally {
-        setLoading(false); // Set loading to false after fetching
+        setLoading(false);
       }
     } else {
     }
@@ -99,7 +96,7 @@ const JobSaleReport: React.FC = () => {
     if (fromDate && toDate) {
       fetchInvoices();
     }
-  }, [fromDate, toDate]); // Dependency array includes both dates
+  }, [fromDate, toDate]);
 
   const handlePrint = () => {
     let dataToSend: {
@@ -111,7 +108,7 @@ const JobSaleReport: React.FC = () => {
     dataToSend = {
       fromDate,
       toDate,
-      reportData: gridRows, // Use gridRows instead of rows to ensure proper field mapping
+      reportData: gridRows,
     };
 
     const query = encodeURIComponent(JSON.stringify(dataToSend));
@@ -125,7 +122,6 @@ const JobSaleReport: React.FC = () => {
       <IconButton
         color="secondary"
         onClick={() => {
-          // Navigate to the invoice PDF generator with invoice number as parameter
           window.open(`/admin/invoicepdfgenerator?invoiceNumber=${params.row.invoiceNumber}`, '_blank');
         }}
       >
@@ -134,9 +130,7 @@ const JobSaleReport: React.FC = () => {
     );
   }
 
-  // Convert data for the grid display
   const gridRows = rows.map((invoice, index) => {
-    // Get the totalAmount directly from the invoice and ensure it's a number
     console.log(`Invoice ${invoice.invoiceNumber} total amount:`, invoice.totalAmount);
     const totalAmount = Number(invoice.totalAmount || 0);
     
@@ -149,12 +143,9 @@ const JobSaleReport: React.FC = () => {
     };
   });
 
-  // Calculate the grand total sum
   const grandTotalSum = useMemo(() => {
     return gridRows.reduce((sum, row) => sum + (row.grandTotal || 0), 0);
   }, [gridRows]);
-
-  // Use a custom table instead of CustomizedDataGrid to show the total row
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '1700px' } }}>
       <Typography variant="h4" gutterBottom>
@@ -174,14 +165,13 @@ const JobSaleReport: React.FC = () => {
             value={toDate}
             onChange={(e) => {
               setToDate(e.target.value);
-              fetchInvoices(); // Call fetchInvoices when toDate changes
+              fetchInvoices();
             }}
           />
         </FormControl>
         {loading && <p>Loading...</p>}
       </Stack>
       
-      {/* Replace CustomizedDataGrid with custom table */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
