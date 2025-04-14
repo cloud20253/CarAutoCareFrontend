@@ -131,7 +131,7 @@ const VehicalHistoryWithPDF: React.FC = () => {
   };
 
   const transformApiData = (apiData: any, vehicleDetails?: any): VehicleHistory => {
-    // API returns an array of invoices
+    
     const invoices = Array.isArray(apiData) ? apiData : [];
     
     if (invoices.length === 0) {
@@ -153,8 +153,6 @@ const VehicalHistoryWithPDF: React.FC = () => {
         serviceEntries: []
       };
     }
-
-    // Get vehicle details from the first invoice
     const firstInvoice = invoices[0];
     const vehicle: Vehicle = {
       vehicleRegId: firstInvoice.regNo || '',
@@ -165,17 +163,15 @@ const VehicalHistoryWithPDF: React.FC = () => {
       numberPlateColor: vehicleDetails?.numberPlateColour || ''
     };
 
-    // Get customer details from the first invoice
     const customer: Customer = {
-      id: 0, // Not available in the response
+      id: 0, 
       name: firstInvoice.customerName || '',
       mobileNumber: firstInvoice.customerMobile || '',
       address: firstInvoice.customerAddress || ''
     };
 
-    // Transform each invoice into a service entry
     const serviceEntries: ServiceEntry[] = invoices.map((invoice: any) => {
-      // Transform parts to spare items
+      
       const spareItems: SpareItem[] = (invoice.parts || []).map((part: any) => ({
         partName: part.partName || '',
         quantity: part.quantity || 0,
@@ -185,7 +181,6 @@ const VehicalHistoryWithPDF: React.FC = () => {
         total: part.totalAmount || 0
       }));
 
-      // Transform labours to service items
       const serviceItems: ServiceItem[] = (invoice.labours || []).filter((labour: any) => 
         labour.description && labour.description.trim() !== ''
       ).map((labour: any) => ({
@@ -210,7 +205,6 @@ const VehicalHistoryWithPDF: React.FC = () => {
   };
 
   const handlePrint = () => {
-    // Focus on just the vehicle data section
     const printContent = document.getElementById('printable-content');
     if (printContent) {
       const printWindow = window.open('', '_blank');
@@ -318,7 +312,7 @@ const VehicalHistoryWithPDF: React.FC = () => {
       }
     } else {
       console.error("Print content not found");
-      window.print(); // Fallback to standard print
+      window.print();
     }
   };
 
@@ -714,7 +708,6 @@ const VehicalHistoryWithPDF: React.FC = () => {
           </Grid>
         </Grid>
 
-        {/* Spare Parts Section */}
         <Paper sx={{ mt: 3, border: '1px solid #000' }}>
           <Typography 
             variant="h6" 
@@ -779,8 +772,6 @@ const VehicalHistoryWithPDF: React.FC = () => {
             </Table>
           </TableContainer>
         </Paper>
-
-        {/* Services Section */}
         <Paper sx={{ mt: 3, border: '1px solid #000' }}>
           <Typography 
             variant="h6" 

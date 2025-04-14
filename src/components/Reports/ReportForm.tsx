@@ -369,7 +369,6 @@ const ReportForm: React.FC = () => {
           }
         });
 
-        // Create one row per invoice
         Object.values(invoiceMap).forEach((invoiceData) => {
           const { invoice, totalAmount, totalTaxable, totalCGST, totalSGST, totalIGST, 
                   gst5, gst12, gst18, gst28 } = invoiceData;

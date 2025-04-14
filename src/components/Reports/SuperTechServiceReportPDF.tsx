@@ -1,4 +1,3 @@
-
 import React, { FC, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
@@ -7,13 +6,13 @@ import html2canvas from 'html2canvas';
 
 interface BillRow {
   id?: number;
-  invoiceNumber: string; // Invoice number
-  invDate: string; // Invoice date
-  customerName: string; // Customer name
-  totalQuantity: number; // Total quantity
-  taxable: number; // Taxable amount
-  grandTotal: number; // Grand total
-  vehicleNo: string; // Vehicle number
+  invoiceNumber: string; 
+  invDate: string; 
+  customerName: string; 
+  totalQuantity: number; 
+  taxable: number;
+  grandTotal: number; 
+  vehicleNo: string; 
 }
 
 interface LocationState {
@@ -24,8 +23,8 @@ interface LocationState {
 
 const SuperTechServiceReportPDF: FC = () => {
   const theme = useTheme();
-  const location = useLocation(); // Use without type argument
-  const { fromDate, toDate, reportData } = location.state as LocationState || {}; // Type assertion
+  const location = useLocation(); 
+  const { fromDate, toDate, reportData } = location.state as LocationState || {}; 
 
   console.log("Counter sale report data>>>", JSON.stringify(reportData, null, 2));
   
@@ -118,7 +117,6 @@ const SuperTechServiceReportPDF: FC = () => {
     </tr>
   ))}
 
-  {/* Calculate sums */}
   {reportData && reportData.length > 0 && (
     (() => {
       let totalQuantity = 0;
@@ -163,15 +161,15 @@ const SuperTechServiceReportPDF: FC = () => {
         border: 'none',
         borderRadius: '5px',
         padding: '10px 20px',
-        backgroundColor: '#60B5FF', // Red background
-        color: '#fff', // White text
+        backgroundColor: '#60B5FF', 
+        color: '#fff', 
         fontSize: '1rem',
         fontWeight: 'bold',
         cursor: 'pointer',
         transition: 'background-color 0.3s ease',
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#AFDDFF')} // Darker red on hover
-      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#60B5FF')} // Original red on leave
+      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#AFDDFF')} 
+      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#60B5FF')} 
       onClick={generatePDF}
     >
     Print

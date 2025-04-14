@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { FormControl, Stack, Button, TextField, Typography, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableFooter } from '@mui/material';
-import CustomizedDataGrid from 'components/CustomizedDataGrid'; // Assuming you have a customized data grid component
-import Copyright from 'internals/components/Copyright'; // Assuming you have a copyright component
+import Copyright from 'internals/components/Copyright'; 
 import { GridCellParams, GridRowsProp, GridColDef } from '@mui/x-data-grid';
 import { Print } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 
 interface InvoiceItem {
@@ -60,26 +58,20 @@ const CounterSaleReport: React.FC = () => {
         const data: Invoice[] = await response.json();
         console.log("Fetched invoice data:", data);
   
-        // Map over the data to calculate totalQuantity and totalTaxable
         const formattedRows: InvoiceWithTotals[] = data.map((invoice) => {
-          // Calculate exact taxable value by calculating from amount and GST
           let totalTaxable = 0;
           
           invoice.items.forEach(item => {
             let itemTaxable = 0;
-            // If amount exists, calculate taxable from amount and GST
             if (item.amount) {
               const totalGstPercent = (item.cgstPercent || 0) + (item.sgstPercent || 0);
               if (totalGstPercent > 0) {
-                // Formula: taxable = amount / (1 + (totalGstPercent/100))
                 itemTaxable = Number(item.amount) / (1 + (totalGstPercent / 100));
                 itemTaxable = Number(itemTaxable.toFixed(2));
               } else {
-                // If no GST, then taxable equals amount
                 itemTaxable = Number(item.amount);
               }
             } else {
-              // Fallback to taxableValue if available
               itemTaxable = Number(item.taxableValue) || 0;
             }
             
@@ -89,20 +81,18 @@ const CounterSaleReport: React.FC = () => {
 
           const totalQuantity = invoice.items.reduce((sum, item) => sum + item.quantity, 0);
           
-          // Round to 2 decimal places for display
           totalTaxable = Number(totalTaxable.toFixed(2));
           console.log(`Invoice ${invoice.invoiceNumber} final calculated taxable: ${totalTaxable}`);
           
           return {
-            ...invoice, // Spread the original invoice properties
-            totalQuantity, // Add the calculated totalQuantity
-            taxable: totalTaxable, // Add the calculated taxable
+            ...invoice, 
+            totalQuantity, 
+            taxable: totalTaxable, 
           };
         });
 
         console.log("Formatted rows with taxable amounts:", formattedRows);
   
-        // Set the rows with the formatted data
         setRows(formattedRows);
       } catch (error) {
         console.error('Error fetching invoices:', error);
@@ -118,9 +108,8 @@ const CounterSaleReport: React.FC = () => {
       if (fromDate && toDate) {
         fetchInvoices();
       }
-    }, [fromDate, toDate]); // Dependency array includes both dates
+    }, [fromDate, toDate]); 
   
-  // Function to handle printing a specific invoice or all invoices
   const handlePrint = (invoiceId?: number, invoiceNumber?: string) => {
     let dataToSend: {
       fromDate: string;
@@ -129,10 +118,8 @@ const CounterSaleReport: React.FC = () => {
     };
 
     if (invoiceId && invoiceNumber) {
-      // Print a specific invoice
       console.log(`Printing individual invoice: ${invoiceNumber} with ID: ${invoiceId}`);
       
-      // Find the specific invoice in the existing rows
       const invoice = rows.find(row => row.id === invoiceId);
       
       if (!invoice) {
@@ -147,7 +134,6 @@ const CounterSaleReport: React.FC = () => {
         reportData: [invoice]
       };
     } else {
-      // Print all invoices
     dataToSend = {
       fromDate,
       toDate,
@@ -170,8 +156,6 @@ const CounterSaleReport: React.FC = () => {
       </IconButton>
     );
   }
-
-  // Calculate total sums for display in footer
   const totals = useMemo(() => {
     return rows.reduce(
       (sums, row) => {
@@ -204,14 +188,13 @@ const CounterSaleReport: React.FC = () => {
             value={toDate}
             onChange={(e) => {
               setToDate(e.target.value);
-              fetchInvoices(); // Call fetchInvoices when toDate changes
+              fetchInvoices(); 
             }}
           />
         </FormControl>
         {loading && <p>Loading...</p>}
       </Stack>
       
-      {/* Replace CustomizedDataGrid with custom table to show totals */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>

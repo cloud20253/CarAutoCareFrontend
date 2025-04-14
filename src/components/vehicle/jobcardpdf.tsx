@@ -78,7 +78,6 @@ const JobCardPDF: React.FC = () => {
   const termsAndConditions =
     "I do agree the owner is any scratch, workshop for repair, but the parts need to repair or any can be chargeable...";
 
-  // State for form fields
   const [serviceBooklet, setServiceBooklet] = useState<string>("");
   const [rimLock, setRimLock] = useState<string>("");
   const [documentReg, setDocumentReg] = useState<string>("");
@@ -97,8 +96,8 @@ const JobCardPDF: React.FC = () => {
     alert("Close clicked!");
   };
 
-  const [jobCardDetails, setJobCardDetails] = useState<any | null>(null); // Use appropriate type instead of 'any'
-  const [vehicledata, setVehicleData] = useState<any | null>(null); // Use appropriate type instead of 'any'
+  const [jobCardDetails, setJobCardDetails] = useState<any | null>(null); 
+  const [vehicledata, setVehicleData] = useState<any | null>(null); 
 
   const storedJobCardDetails = localStorage.getItem("jobCardDetails");
 
@@ -118,9 +117,8 @@ const JobCardPDF: React.FC = () => {
     }
   }, []);
 
-  // Check if jobCardDetails is null and display a loading message
   if (!jobCardDetails || !vehicledata ) {
-    return <div>Loading job card details...</div>; // Or any other loading state
+    return <div>Loading job card details...</div>; 
   }
   const generatePDF = async () => {
     const invoiceElement = invoiceRef.current;
@@ -151,7 +149,7 @@ const JobCardPDF: React.FC = () => {
       orientation: "p",
       unit: "mm",
       format: "a4",
-      compress: true, // Enable compression
+      compress: true, 
     });
     pdf.addImage(imgData, "PNG", 0, 0, imgWidth, finalHeight);
     pdf.save("invoice.pdf");
@@ -190,7 +188,7 @@ const JobCardPDF: React.FC = () => {
             </Box>
             <SubTitle sx={{
                           
-                          fontWeight: "bold", // Make text bold
+                          fontWeight: "bold", 
                           color: "text.primary",
                         }}>Job Card No: {jobCardDetails.vehicleJobCardId || "N/A"}</SubTitle>
             <SubTitle>Superwiser Name: {vehicledata.superwiser || "N/A"}</SubTitle>
@@ -375,7 +373,6 @@ const JobCardPDF: React.FC = () => {
         </Box>
         <Divider sx={{ width: '100%', backgroundColor: 'black', height: 2, marginY: 2 }} />
 
-        {/* Inspection box with checkboxes for service types */}
         <TableContainer component={Paper} sx={{ width: "100%", mb: 0, border: "1px solid black" }}>
           <Table>
             <TableHead>
@@ -425,7 +422,6 @@ const JobCardPDF: React.FC = () => {
           </Table>
         </TableContainer>
 
-        {/* Customer Complaint and Workshop Work table */}
         <TableContainer component={Paper} sx={{ width: "100%", mt: 0, border: "1px solid black", borderTop: "none" }}>
           <Table>
             <TableHead>
@@ -456,7 +452,6 @@ const JobCardPDF: React.FC = () => {
           </Table>
         </TableContainer>
 
-        {/* Workshop Note */}
         <TableContainer component={Paper} sx={{ width: "100%", mt: 0, border: "1px solid black", borderTop: "none" }}>
           <Table>
             <TableHead>
@@ -476,7 +471,6 @@ const JobCardPDF: React.FC = () => {
           </Table>
         </TableContainer>
 
-        {/* Terms and Conditions */}
         <TableContainer component={Paper} sx={{ width: "100%", mt: 3, border: "1px solid black" }}>
           <Table>
             <TableHead>
@@ -504,7 +498,6 @@ const JobCardPDF: React.FC = () => {
           </Table>
         </TableContainer>
 
-        {/* Signature section */}
         <TableContainer component={Paper} sx={{ width: "100%", mt: 0, border: "1px solid black", borderTop: "none" }}>
           <Table>
             <TableBody>

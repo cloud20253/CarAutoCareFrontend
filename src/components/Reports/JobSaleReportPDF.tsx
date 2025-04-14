@@ -5,11 +5,11 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
 interface BillRow {
-  id?: number; // Sr.No
-  invoiceNumber: string; // ID
-  vehicleNo: string; // Veh No
-  invDate: string; // Invoice Date
-  grandTotal: number; // Grand Total
+  id?: number;
+  invoiceNumber: string; 
+  vehicleNo: string; 
+  invDate: string; 
+  grandTotal: number; 
 }
 
 interface LocationState {

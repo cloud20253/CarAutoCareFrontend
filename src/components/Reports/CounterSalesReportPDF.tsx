@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 
@@ -21,6 +21,23 @@ interface BillRow {
   amount?: number;
 }
 
+interface Invoice {
+  id: number;
+  invoiceNumber: string;
+  invDate: string;
+  customerName: string;
+  customerAddress: string;
+  customerMobile: string;
+  adharNo: string;
+  gstin: string;
+  vehicleNo: string;
+  totalAmount: number;
+  totalQuantity?: number;
+  taxable?: number;
+  items?: BillRow[];
+  billRows?: BillRow[];
+}
+
 interface LocationState {
   invoiceNumber: string; 
   invDate: string;
@@ -34,13 +51,70 @@ interface LocationState {
   billRows?: BillRow[];
 }
 
+interface ReportData {
+  fromDate: string;
+  toDate: string;
+  reportData: Invoice[];
+}
+
 const CounterSaleRepostPDF: FC = () => {
   const theme = useTheme();
   const location = useLocation();
-  const state = location.state as LocationState;
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [isSummaryView, setIsSummaryView] = useState(false);
+  const [singleInvoice, setSingleInvoice] = useState<Invoice | null>(null);
 
-  const invoiceItems = state.items || state.billRows || [];
+  // For single invoice view
+  const state = location.state as LocationState || {
+    invoiceNumber: '',
+    invDate: '',
+    customerName: '',
+    customerAddress: '',
+    customerMobile: '',
+    adharNo: '',
+    gstin: '',
+    vehicleNo: '',
+    items: [],
+    billRows: []
+  };
 
+  useEffect(() => {
+    // Parse the query parameter if it exists
+    const query = new URLSearchParams(location.search).get('data');
+    if (query) {
+      try {
+        const data = JSON.parse(decodeURIComponent(query)) as ReportData;
+        setReportData(data);
+        
+        // If there's only one invoice in the reportData, it's a single invoice view
+        if (data.reportData.length === 1) {
+          setSingleInvoice(data.reportData[0]);
+          setIsSummaryView(false);
+        } else {
+          setIsSummaryView(true);
+        }
+      } catch (error) {
+        console.error('Error parsing report data:', error);
+      }
+    }
+  }, [location.search]);
+
+  // Add useEffect to trigger print dialog when component renders
+  useEffect(() => {
+    if ((isSummaryView && reportData) || singleInvoice) {
+      const timer = setTimeout(() => {
+        window.print();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isSummaryView, reportData, singleInvoice]);
+
+  // Get invoice items - either from location.state or from the query parameter
+  const invoiceItems = singleInvoice 
+    ? (singleInvoice.items || singleInvoice.billRows || [])
+    : (state.items || state.billRows || []);
+
+  // Calculate grand total
   const grandTotal = invoiceItems
     .reduce((acc, row) => {
       const qty = row.qty ?? row.quantity ?? 0;
@@ -49,6 +123,109 @@ const CounterSaleRepostPDF: FC = () => {
     }, 0)
     .toFixed(2);
 
+  // For summary report view
+  const renderSummaryReport = () => {
+    if (!reportData) return null;
+
+    const { fromDate, toDate, reportData: invoices } = reportData;
+
+    // Calculate totals
+    const totals = invoices.reduce(
+      (acc, invoice) => {
+        return {
+          quantity: acc.quantity + (invoice.totalQuantity || 0),
+          taxable: acc.taxable + (invoice.taxable || 0),
+          total: acc.total + (invoice.totalAmount || 0)
+        };
+      },
+      { quantity: 0, taxable: 0, total: 0 }
+    );
+
+    return (
+      <div style={{ 
+        width: '100%', 
+        maxWidth: '100%', 
+        padding: '10px',
+        fontFamily: 'Arial, sans-serif', 
+        pageBreakInside: 'avoid'
+      }}>
+        <h2 style={{ textAlign: 'center', margin: '10px 0', fontWeight: 'bold' }}>Counter Sale Report</h2>
+        <p style={{ textAlign: 'center', margin: '5px 0', fontWeight: 'bold' }}>
+          From {fromDate} To {toDate}
+        </p>
+
+        <table style={{ 
+          width: '100%', 
+          borderCollapse: 'collapse', 
+          marginTop: '10px',
+          tableLayout: 'fixed' 
+        }}>
+          <thead>
+            <tr style={{ backgroundColor: '#f2f2f2' }}>
+              <th style={{...headerCellStyle, width: '5%'}}>Sr.No</th>
+              <th style={{...headerCellStyle, width: '10%'}}>Invoice No</th>
+              <th style={{...headerCellStyle, width: '15%'}}>Invoice Date</th>
+              <th style={{...headerCellStyle, width: '15%'}}>Total Quantity</th>
+              <th style={{...headerCellStyle, width: '25%'}}>Taxable</th>
+              <th style={{...headerCellStyle, width: '30%'}}>Grand Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoices.map((invoice, index) => (
+              <tr key={invoice.id}>
+                <td style={cellStyle}>{index + 1}</td>
+                <td style={cellStyle}>{invoice.invoiceNumber}</td>
+                <td style={cellStyle}>{invoice.invDate}</td>
+                <td style={cellStyle}>{invoice.totalQuantity || 0}</td>
+                <td style={cellStyle}>{Number(invoice.taxable || 0).toFixed(2)}</td>
+                <td style={cellStyle}>{Number(invoice.totalAmount || 0).toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr style={{ backgroundColor: '#f2f2f2' }}>
+              <td colSpan={3} style={{ ...cellStyle, textAlign: 'right', fontWeight: 'bold' }}>Total</td>
+              <td style={{ ...cellStyle, fontWeight: 'bold' }}>{totals.quantity}</td>
+              <td style={{ ...cellStyle, fontWeight: 'bold' }}>{totals.taxable.toFixed(2)}</td>
+              <td style={{ ...cellStyle, fontWeight: 'bold' }}>{totals.total.toFixed(2)}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <style>{`
+          @media print {
+            body { 
+              width: 100%; 
+              margin: 0;
+              padding: 0;
+            }
+            @page {
+              size: landscape;
+              margin: 0.5cm;
+            }
+          }
+        `}</style>
+      </div>
+    );
+  };
+
+  // Render the appropriate view
+  if (isSummaryView) {
+    return renderSummaryReport();
+  }
+
+  // Get customer and invoice details from either singleInvoice or state
+  const invoiceData = singleInvoice || state;
+  const customerName = singleInvoice ? singleInvoice.customerName : state.customerName;
+  const customerAddress = singleInvoice ? singleInvoice.customerAddress : state.customerAddress;
+  const customerMobile = singleInvoice ? singleInvoice.customerMobile : state.customerMobile;
+  const vehicleNo = singleInvoice ? singleInvoice.vehicleNo : state.vehicleNo;
+  const invoiceNumber = singleInvoice ? singleInvoice.invoiceNumber : state.invoiceNumber;
+  const invDate = singleInvoice ? singleInvoice.invDate : state.invDate;
+  const adharNo = singleInvoice ? singleInvoice.adharNo : state.adharNo;
+  const gstin = singleInvoice ? singleInvoice.gstin : state.gstin;
+
+  // Single invoice view
   return (
     <div
       style={{
@@ -130,12 +307,12 @@ const CounterSaleRepostPDF: FC = () => {
                 width: '50%',
               }}
             >
-              <p style={{ margin: 0 }}>Name: {state.customerName}</p>
-              <p style={{ margin: 0 }}>Address: {state.customerAddress}</p>
-              <p style={{ margin: 0 }}>Mobile: {state.customerMobile}</p>
-              <p style={{ margin: 0 }}>Vehicle No: {state.vehicleNo}</p>
-              {state.adharNo && <p style={{ margin: 0 }}>Aadhaar No: {state.adharNo}</p>}
-              {state.gstin && <p style={{ margin: 0 }}>GSTIN: {state.gstin}</p>}
+              <p style={{ margin: 0 }}>Name: {customerName}</p>
+              <p style={{ margin: 0 }}>Address: {customerAddress}</p>
+              <p style={{ margin: 0 }}>Mobile: {customerMobile}</p>
+              <p style={{ margin: 0 }}>Vehicle No: {vehicleNo}</p>
+              {adharNo && <p style={{ margin: 0 }}>Aadhaar No: {adharNo}</p>}
+              {gstin && <p style={{ margin: 0 }}>GSTIN: {gstin}</p>}
             </td>
             <td
               style={{
@@ -146,10 +323,10 @@ const CounterSaleRepostPDF: FC = () => {
               }}
             >
               <p style={{ margin: 0, textAlign: 'right' }}>
-                Invoice No: {state.invoiceNumber}
+                Invoice No: {invoiceNumber}
               </p>
               <p style={{ margin: 0, textAlign: 'right' }}>
-                Invoice Date: {state.invDate}
+                Invoice Date: {invDate}
               </p>
             </td>
           </tr>
@@ -375,8 +552,36 @@ const CounterSaleRepostPDF: FC = () => {
           </tr>
         </tbody>
       </table>
+      
+      <style>{`
+        @media print {
+          body { 
+            width: 100%; 
+            margin: 0;
+            padding: 0;
+          }
+          @page {
+            margin: 0.5cm;
+          }
+        }
+      `}</style>
     </div>
   );
+};
+
+// Styles for the summary report
+const headerCellStyle: React.CSSProperties = {
+  border: '1px solid #000',
+  padding: '8px',
+  textAlign: 'center',
+  fontWeight: 'bold',
+  backgroundColor: '#f2f2f2',
+};
+
+const cellStyle: React.CSSProperties = {
+  border: '1px solid #000',
+  padding: '8px',
+  textAlign: 'center',
 };
 
 export default CounterSaleRepostPDF;
