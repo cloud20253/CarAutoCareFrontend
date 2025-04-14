@@ -221,38 +221,38 @@ const VehicalHistoryWithPDF: React.FC = () => {
               <title>Vehicle History: ${vehicleHistory?.vehicle.vehicleRegId || ''}</title>
               <style>
                 @page {
-                  size: A4 landscape;
-                  margin: 0.5in;
+                  size: A4;
+                  margin: 2cm 1.5cm;
                 }
                 body {
                   font-family: Arial, sans-serif;
                   font-size: 10px;
                   margin: 0;
-                  padding: 5px;
+                  padding: 12px;
                   background-color: white;
-                  width: 100%;
                 }
                 .print-container {
                   width: 100%;
-                  margin: 0;
-                  padding: 0;
+                  max-width: 95%;
+                  margin: 0 auto;
+                  padding: 10px 0;
                 }
                 table {
                   width: 100%;
-                  border-collapse: collapse;
-                  margin-bottom: 10px;
                   table-layout: fixed;
+                  border-collapse: collapse;
+                  margin-bottom: 15px;
+                  border: 1px solid #000;
                 }
                 tr {
                   page-break-inside: avoid;
                 }
                 td, th {
-                  padding: 3px;
+                  padding: 4px 5px;
                   font-size: 10px;
                   border: 1px solid #000;
                   overflow: hidden;
-                  text-overflow: ellipsis;
-                  white-space: nowrap;
+                  word-wrap: break-word;
                 }
                 th, .header-cell {
                   background-color: #f5f5f5;
@@ -265,18 +265,18 @@ const VehicalHistoryWithPDF: React.FC = () => {
                   text-align: center;
                 }
                 h6 {
-                  font-size: 12px;
+                  font-size: 14px;
                   font-weight: bold;
                   text-align: center;
                   background-color: #f5f5f5;
-                  padding: 4px;
-                  margin: 5px 0;
+                  padding: 6px;
+                  margin: 10px 0;
                   border: 1px solid #000;
                 }
-                .sr-col { width: 30px; }
-                .name-col { width: auto; min-width: 180px; }
-                .qty-col { width: 35px; text-align: center; }
-                .price-col { width: 60px; text-align: right; }
+                .sr-col { width: 7%; }
+                .name-col { width: 36%; }
+                .qty-col { width: 8%; text-align: center; }
+                .price-col { width: 12.25%; text-align: right; }
                 .date-row {
                   font-weight: bold;
                   background-color: #f5f5f5;
@@ -284,6 +284,15 @@ const VehicalHistoryWithPDF: React.FC = () => {
                 .total-row {
                   font-weight: bold;
                   background-color: #f8f8f8;
+                }
+                .section-title {
+                  margin: 20px 0 10px 0;
+                  padding: 8px;
+                  text-align: center;
+                  background-color: #f5f5f5;
+                  border: 1px solid #000;
+                  font-weight: bold;
+                  font-size: 12px;
                 }
               </style>
             </head>
@@ -293,10 +302,13 @@ const VehicalHistoryWithPDF: React.FC = () => {
               </div>
               <script>
                 window.onload = function() {
-                  window.print();
-                  window.onafterprint = function() {
-                    window.close();
-                  };
+                  // Wait a moment for styles to apply before printing
+                  setTimeout(function() {
+                    window.print();
+                    window.onafterprint = function() {
+                      window.close();
+                    };
+                  }, 500);
                 };
               </script>
             </body>
@@ -619,7 +631,7 @@ const VehicalHistoryWithPDF: React.FC = () => {
               <Table size="small">
                 <TableBody>
                   <TableRow>
-                    <TableCell component="th" sx={{ width: '40%', fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}>
+                    <TableCell component="th" sx={{ width: '50%', fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}>
                       VEHICLE NO:
                     </TableCell>
                     <TableCell sx={{ border: '1px solid #000' }}>{vehicleHistory.vehicle.vehicleRegId}</TableCell>
@@ -667,7 +679,7 @@ const VehicalHistoryWithPDF: React.FC = () => {
               <Table size="small">
                 <TableBody>
                   <TableRow>
-                    <TableCell component="th" sx={{ width: '40%', fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}>
+                    <TableCell component="th" sx={{ width: '50%', fontWeight: 'bold', borderRight: '1px solid #000', border: '1px solid #000' }}>
                       CUSTOMER NAME:
                     </TableCell>
                     <TableCell sx={{ border: '1px solid #000' }}>{vehicleHistory.customer.name}</TableCell>
@@ -714,21 +726,22 @@ const VehicalHistoryWithPDF: React.FC = () => {
               fontWeight: 'bold',
               fontSize: '14px'
             }}
+            className="section-title"
           >
             *******************SPARE DETAILS*******************
           </Typography>
           
           <TableContainer>
-            <Table size="small">
+            <Table size="small" sx={{ tableLayout: 'fixed' }}>
               <TableHead>
                 <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                  <TableCell className="sr-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '30px' }}>SR.No</TableCell>
-                  <TableCell className="name-col" sx={{ fontWeight: 'bold', border: '1px solid #000' }}>SPARE NAME</TableCell>
-                  <TableCell className="qty-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '35px', textAlign: 'center' }}>QTY</TableCell>
-                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>RATE</TableCell>
-                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>CGST AMT</TableCell>
-                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>SGST AMT</TableCell>
-                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>TOTAL</TableCell>
+                  <TableCell className="sr-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '7%' }}>SR.No</TableCell>
+                  <TableCell className="name-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '36%' }}>SPARE NAME</TableCell>
+                  <TableCell className="qty-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '8%', textAlign: 'center' }}>QTY</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '12.25%', textAlign: 'right' }}>RATE</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '12.25%', textAlign: 'right' }}>CGST AMT</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '12.25%', textAlign: 'right' }}>SGST AMT</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '12.25%', textAlign: 'right' }}>TOTAL</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -743,7 +756,7 @@ const VehicalHistoryWithPDF: React.FC = () => {
                     {entry.spareItems.map((item, itemIndex) => (
                       <TableRow key={`spare-item-${entryIndex}-${itemIndex}`}>
                         <TableCell sx={{ border: '1px solid #000' }}>{itemIndex + 1}</TableCell>
-                        <TableCell sx={{ border: '1px solid #000' }}>{item.partName}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.partName}</TableCell>
                         <TableCell sx={{ border: '1px solid #000', textAlign: 'center' }}>{item.quantity}</TableCell>
                         <TableCell sx={{ border: '1px solid #000', textAlign: 'right' }}>{item.rate.toFixed(2)}</TableCell>
                         <TableCell sx={{ border: '1px solid #000', textAlign: 'right' }}>{item.cgst.toFixed(2)}</TableCell>
@@ -779,21 +792,22 @@ const VehicalHistoryWithPDF: React.FC = () => {
               fontWeight: 'bold',
               fontSize: '14px'
             }}
+            className="section-title"
           >
             *******************SERVICE DETAILS*******************
           </Typography>
           
           <TableContainer>
-            <Table size="small">
+            <Table size="small" sx={{ tableLayout: 'fixed' }}>
               <TableHead>
                 <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                  <TableCell className="sr-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '30px' }}>SR.No</TableCell>
-                  <TableCell className="name-col" sx={{ fontWeight: 'bold', border: '1px solid #000' }}>SERVICE NAME</TableCell>
-                  <TableCell className="qty-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '35px', textAlign: 'center' }}>QTY</TableCell>
-                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>RATE</TableCell>
-                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>CGST AMT</TableCell>
-                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>SGST AMT</TableCell>
-                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '60px', textAlign: 'right' }}>TOTAL</TableCell>
+                  <TableCell className="sr-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '7%' }}>SR.No</TableCell>
+                  <TableCell className="name-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '36%' }}>SERVICE NAME</TableCell>
+                  <TableCell className="qty-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '8%', textAlign: 'center' }}>QTY</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '12.25%', textAlign: 'right' }}>RATE</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '12.25%', textAlign: 'right' }}>CGST AMT</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '12.25%', textAlign: 'right' }}>SGST AMT</TableCell>
+                  <TableCell className="price-col" sx={{ fontWeight: 'bold', border: '1px solid #000', width: '12.25%', textAlign: 'right' }}>TOTAL</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -808,7 +822,7 @@ const VehicalHistoryWithPDF: React.FC = () => {
                     {entry.serviceItems.map((item, itemIndex) => (
                       <TableRow key={`service-item-${entryIndex}-${itemIndex}`}>
                         <TableCell sx={{ border: '1px solid #000' }}>{itemIndex + 1}</TableCell>
-                        <TableCell sx={{ border: '1px solid #000' }}>{item.serviceName}</TableCell>
+                        <TableCell sx={{ border: '1px solid #000', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.serviceName}</TableCell>
                         <TableCell sx={{ border: '1px solid #000', textAlign: 'center' }}>{item.quantity}</TableCell>
                         <TableCell sx={{ border: '1px solid #000', textAlign: 'right' }}>{item.rate.toFixed(2)}</TableCell>
                         <TableCell sx={{ border: '1px solid #000', textAlign: 'right' }}>{item.cgst.toFixed(2)}</TableCell>
