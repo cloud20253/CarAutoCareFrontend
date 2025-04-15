@@ -88,7 +88,6 @@ const InsuranceList: React.FC = () => {
     setSearchTerm(event.target.value.toLowerCase());
   };
 
-  // Helper function to filter data based on searchTerm
   const filterData = (data: VehicleRegDto[]) => {
     if (!searchTerm) return data;
     return data.filter((item) => {

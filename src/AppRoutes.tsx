@@ -58,7 +58,7 @@ import ServiceTab from "components/vehicle/ServiceTab";
 import QuatationServiceTab from "components/Quatation/QuatationServiceTab";
 import SpareTab from "components/Quatation/SpareTab";
 import CustomerList from "components/Customer/CustomerList";
-
+import InsuranceList from "components/InsuranceList";
 import VendorManagementGrid from "components/Vendor/VendorManagementGrid";
 // import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
 import InvoicePDFGenerator from "components/vehicle/InvoicePDFGenerator";
@@ -117,6 +117,7 @@ const AppRoutes = () => {
                 <Route path="manage-customer" element={<CustomerList />} />
                 <Route path="AddCustomer" element={<AddCustomerForm />} />  
                 <Route path="manage-reports" element={<ReportForm />} />
+                <Route path="insuranceList" element={<InsuranceList />} />
 
                 <Route path="ServiceTable" element={<InvoiceTable />} />
                 <Route path="serviceManage" element={<AddService />} />

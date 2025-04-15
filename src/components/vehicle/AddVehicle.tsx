@@ -78,7 +78,6 @@ export interface VehicleFormData {
   technician: string;
   worker: string;
   vehicleInspection: string;
-  jobCard: string;
   kmsDriven: number | string;
   status: "Waiting" | "In Progress" | "Complete";
   userId: string;
@@ -111,7 +110,6 @@ const initialFormData: VehicleFormData = {
   technician: "",
   worker: "",
   vehicleInspection: "",
-  jobCard: "",
   kmsDriven: 0,
   status: "Waiting",
   userId: "",
@@ -254,7 +252,6 @@ export default function AddVehicle() {
             technician: response.technician || "",
             worker: response.worker || "",
             vehicleInspection: response.vehicleInspection || "",
-            jobCard: response.jobcard || "",
             kmsDriven: response.kmsDriven || "",
             status: response.status || "Waiting",
             userId: response.userId || "",
@@ -293,35 +290,26 @@ export default function AddVehicle() {
   const handleVehicleSelect = (event: any, value: VehicleRegDto | null) => {
     setSelectedVehicle(value);
     if (value) {
-      setFormData((prev) => ({
-        ...prev,
-        vehicleRegId: value.vehicleRegId || "",
-        appointmentId: value.appointmentId || "",
+      setFormData({
+        ...initialFormData,
         vehicleNumber: value.vehicleNumber || "",
         vehicleBrand: value.vehicleBrand || "",
         vehicleModelName: value.vehicleModelName || "",
         engineNumber: value.engineNumber || "",
         chasisNumber: value.chasisNumber || "",
         numberPlateColour: value.numberPlateColour || "",
-        customerId: value.customerId || "",
         customerName: value.customerName || "",
         customerAddress: value.customerAddress || "",
         customerMobileNumber: value.customerMobileNumber || "",
         customerAadharNo: value.customerAadharNo || "",
         customerGstin: value.customerGstin || "",
         email: value.email || "",
-        vehicleInspection: value.vehicleInspection || "",
-        jobCard: value.jobcard || "",
-        status: value.status || "Waiting",
-        userId: value.userId || "",
-        date: value.date || "",
-        insuranceStatus: value.insuranceStatus || "Expired",
-        insuranceFrom: value.insuranceFrom || "",
-        insuranceTo: value.insuranceTo || "",
         fuelType: value.vehicleVariant || "",
         manufactureYear: value.manufactureYear ? String(value.manufactureYear) : "",
-        advancePayment: value.advancePayment || 0,
-      }));
+        date: new Date().toISOString().split('T')[0]
+      });
+    } else {
+      setFormData(initialFormData);
     }
   };
 
@@ -617,18 +605,6 @@ export default function AddVehicle() {
               onChange={handleChange}
               placeholder="Enter Vehicle Inspection details"
               required
-              size="small"
-            />
-          </FormGrid>
-          <FormGrid item xs={12} md={6}>
-            <FormLabel htmlFor="jobCard">Jobcard</FormLabel>
-            <OutlinedInput
-              id="jobCard"
-              name="jobCard"
-              value={formData.jobCard}
-              onChange={handleChange}
-              placeholder="Enter Jobcard details"
-              required={!id}
               size="small"
             />
           </FormGrid>
