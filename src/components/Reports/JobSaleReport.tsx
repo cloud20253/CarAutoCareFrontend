@@ -63,7 +63,7 @@ interface Invoice {
   partsSubtotal:number ;
   laboursSubtotal:number;
   totalAmount: number | null; 
-  advanceAmount: number;
+advanceAmount: number;
   totalInWords: string;
 }
 
@@ -99,31 +99,149 @@ const JobSaleReport: React.FC = () => {
   }, [fromDate, toDate]);
 
   const handlePrint = () => {
-    let dataToSend: {
-      fromDate: string;
-      toDate: string;
-      reportData: any[];
+    if (gridRows.length === 0) {
+      alert('No data to print');
+      return;
+    }
+
+    // Get the first invoice number from the grid rows
+    const firstInvoiceNumber = gridRows[0].invoiceNumber;
+    
+    // Open in new window instead of navigating
+    window.open(`/admin/jobsalereportPdf?invoiceNumber=${firstInvoiceNumber}`, '_blank');
+  };
+
+  const handleSafePrint = (invoiceNumber: string) => {
+    // Open in new window instead of navigating
+    window.open(`/admin/jobsalereportPdf?invoiceNumber=${invoiceNumber}`, '_blank');
+  };
+
+  const handlePrintAll = () => {
+    if (gridRows.length === 0) {
+      alert('No data to print');
+      return;
+    }
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow popups to print the report');
+      return;
+    }
+
+    // Calculate total
+    const total = gridRows.reduce((sum, row) => sum + row.grandTotal, 0);
+
+    // Create the print content
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Job Sale Report</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 20px;
+            }
+            .report-header {
+              text-align: center;
+              margin-bottom: 20px;
+            }
+            .report-header h2 {
+              margin: 0 0 5px 0;
+              font-size: 16pt;
+            }
+            .report-header p {
+              margin: 0;
+              font-size: 10pt;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 10pt;
+            }
+            th, td {
+              border: 1px solid black;
+              padding: 4px 8px;
+              text-align: left;
+            }
+            th {
+              font-weight: bold;
+              border-bottom: 2px solid black;
+            }
+            .total-row td {
+              font-weight: bold;
+            }
+            .amount {
+              text-align: right;
+            }
+            @media print {
+              @page {
+                size: A4;
+                margin: 10mm;
+              }
+              body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="report-header">
+            <h2>Job Sale Report</h2>
+            <p>From ${fromDate} To ${toDate}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Sr.No</th>
+                <th>ID</th>
+                <th>Vehicle No</th>
+                <th>Invoice Date</th>
+                <th>Grand Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${gridRows.map((row, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${row.invoiceNumber}</td>
+                  <td>${row.vehicleNo}</td>
+                  <td>${new Date(row.invDate).toLocaleDateString('en-GB')}</td>
+                  <td class="amount">₹${row.grandTotal.toFixed(2)}</td>
+                </tr>
+              `).join('')}
+              <tr class="total-row">
+                <td colspan="4" style="text-align: right;">Total</td>
+                <td class="amount">₹${total.toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    // Write the content to the new window
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+
+    // Wait for content to load then print
+    printWindow.onload = function() {
+      printWindow.print();
+      // Close the window after printing (optional)
+      printWindow.onafterprint = function() {
+        printWindow.close();
+      };
     };
-
-    dataToSend = {
-      fromDate,
-      toDate,
-      reportData: gridRows,
-    };
-
-    const query = encodeURIComponent(JSON.stringify(dataToSend));
-    const url = `/admin/jobsalereportPdf?data=${query}`;
-
-    window.open(url, '_blank');
   };
 
   function renderActionButtons(params: GridCellParams) {
     return (
       <IconButton
         color="secondary"
-        onClick={() => {
-          window.open(`/admin/invoicepdfgenerator?invoiceNumber=${params.row.invoiceNumber}`, '_blank');
-        }}
+        onClick={() => handleSafePrint(params.row.invoiceNumber)}
       >
         <Print />
       </IconButton>
@@ -146,6 +264,7 @@ const JobSaleReport: React.FC = () => {
   const grandTotalSum = useMemo(() => {
     return gridRows.reduce((sum, row) => sum + (row.grandTotal || 0), 0);
   }, [gridRows]);
+
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '1700px' } }}>
       <Typography variant="h4" gutterBottom>
@@ -195,9 +314,7 @@ const JobSaleReport: React.FC = () => {
                 <TableCell>
                   <IconButton
                     color="secondary"
-                    onClick={() => {
-                      window.open(`/admin/invoicepdfgenerator?invoiceNumber=${row.invoiceNumber}`, '_blank');
-                    }}
+                    onClick={() => handleSafePrint(row.invoiceNumber)}
                   >
                     <Print />
                   </IconButton>
@@ -230,9 +347,9 @@ const JobSaleReport: React.FC = () => {
           }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#AFDDFF')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#60B5FF')}
-          onClick={() => handlePrint()}
+          onClick={handlePrintAll}
         >
-          Print 
+          Print All
         </button>
       </div>
       <Copyright />

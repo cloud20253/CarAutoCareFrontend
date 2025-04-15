@@ -1,9 +1,10 @@
-import React, { FC, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { FC, useRef, useEffect, useState } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { InvoiceFormData } from './InvoiceFormData';
+import apiClient from 'Services/apiService';
 
 interface BillRow {
   id?: number;
@@ -25,7 +26,7 @@ interface BillRow {
 }
 
 interface LocationState {
-  invoiceData: InvoiceFormData;
+  invoiceData?: any; // Make this property optional
   invoiceNumber: string;
   jobCardNumber: string;
   invDate: string;
@@ -75,9 +76,122 @@ interface LocationState {
 const CounterBillPDF: FC = () => {
   const theme = useTheme();
   const location = useLocation();
-  const state = location.state as LocationState;
+  const [searchParams] = useSearchParams();
+  const invoiceNumber = searchParams.get('invoiceNumber');
+  const [invoiceData, setInvoiceData] = useState<LocationState | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const invoiceItems = state.items || state.billRows || [];
+  useEffect(() => {
+    const fetchInvoiceData = async () => {
+      const vehicleRegId = searchParams.get('vehicleRegId');
+      
+      if (invoiceNumber) {
+        // Fetch by invoice number
+        try {
+          setIsLoading(true);
+          const response = await apiClient.get(`/api/vehicle-invoices/search/invoice/${invoiceNumber}`);
+          console.log('Fetched invoice data by invoice number:', response.data);
+          
+          if (response.data) {
+            // Transform API response to match the LocationState structure
+            const invoice = response.data;
+            setInvoiceData({
+              invoiceData: invoice,
+              invoiceNumber: invoice.invoiceNumber,
+              jobCardNumber: invoice.jobCardNumber || '',
+              invDate: invoice.invoiceDate || '',
+              transactionDate: invoice.invoiceDate || '',
+              customerName: invoice.customerName || '',
+              customerAddress: invoice.customerAddress || '',
+              customerMobile: invoice.customerMobile || '',
+              adharNo: invoice.customerAadharNo || '',
+              gstin: invoice.customerGstin || '',
+              vehicleNo: invoice.vehicleNo || '',
+              vehicleRegId: invoice.vehicleRegId || '',
+              customerAadharNo: invoice.customerAadharNo || '',
+              customerGstin: invoice.customerGstin || '',
+              regNo: invoice.regNo || '',
+              model: invoice.model || '',
+              kmsDriven: invoice.kmsDriven || '',
+              comments: invoice.comments || '',
+              parts: invoice.parts || [],
+              labours: invoice.labours || [],
+              globalDiscount: invoice.globalDiscount || 0,
+              subTotal: invoice.subTotal || 0,
+              partsSubtotal: invoice.partsSubtotal || 0,
+              laboursSubtotal: invoice.laboursSubtotal || 0,
+              totalAmount: invoice.totalAmount || 0,
+              advanceAmount: invoice.advanceAmount || '0',
+              totalInWords: invoice.totalInWords || '',
+              billRows: [],
+              items: []
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching invoice data by invoice number:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else if (vehicleRegId) {
+        // Fetch by vehicle registration ID
+        try {
+          setIsLoading(true);
+          const response = await apiClient.get(`/api/vehicle-invoices/search/vehicle-reg/${vehicleRegId}`);
+          console.log('Fetched invoice data by vehicle ID:', response.data);
+          
+          if (response.data && response.data.length > 0) {
+            // Use the most recent invoice if multiple exist
+            const invoice = Array.isArray(response.data) ? response.data[0] : response.data;
+            
+            setInvoiceData({
+              invoiceData: invoice,
+              invoiceNumber: invoice.invoiceNumber,
+              jobCardNumber: invoice.jobCardNumber || '',
+              invDate: invoice.invoiceDate || '',
+              transactionDate: invoice.invoiceDate || '',
+              customerName: invoice.customerName || '',
+              customerAddress: invoice.customerAddress || '',
+              customerMobile: invoice.customerMobile || '',
+              adharNo: invoice.customerAadharNo || '',
+              gstin: invoice.customerGstin || '',
+              vehicleNo: invoice.vehicleNo || '',
+              vehicleRegId: invoice.vehicleRegId || '',
+              customerAadharNo: invoice.customerAadharNo || '',
+              customerGstin: invoice.customerGstin || '',
+              regNo: invoice.regNo || '',
+              model: invoice.model || '',
+              kmsDriven: invoice.kmsDriven || '',
+              comments: invoice.comments || '',
+              parts: invoice.parts || [],
+              labours: invoice.labours || [],
+              globalDiscount: invoice.globalDiscount || 0,
+              subTotal: invoice.subTotal || 0,
+              partsSubtotal: invoice.partsSubtotal || 0,
+              laboursSubtotal: invoice.laboursSubtotal || 0,
+              totalAmount: invoice.totalAmount || 0,
+              advanceAmount: invoice.advanceAmount || '0',
+              totalInWords: invoice.totalInWords || '',
+              billRows: [],
+              items: []
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching invoice data by vehicle ID:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else if (location.state) {
+        // If we have location state, use it directly
+        setInvoiceData(location.state as LocationState);
+        setIsLoading(false);
+      } else {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInvoiceData();
+  }, [invoiceNumber, searchParams, location.state]);
+
   const invoiceRef = useRef<HTMLDivElement>(null); 
 
   const generatePDF = async () => {
@@ -121,6 +235,15 @@ const CounterBillPDF: FC = () => {
     };
     return convert(num);
   };
+
+  if (isLoading) {
+    return <div>Loading invoice data...</div>;
+  }
+
+  if (!invoiceData) {
+    return <div>No invoice data found. Please check the invoice number and try again.</div>;
+  }
+
   return (
     <div
       ref={invoiceRef} 
@@ -164,19 +287,19 @@ const CounterBillPDF: FC = () => {
               }}
             >
               <strong style={{ fontSize: '1.2rem' }}>TAX INVOICE</strong>
-              {state.invoiceNumber && (
+              {invoiceData.invoiceNumber && (
                 <p style={{ margin: '5px 0 0 0' }}>
-                  <strong>Invoice No:</strong> {state.invoiceNumber}
+                  <strong>Invoice No:</strong> {invoiceData.invoiceNumber}
                 </p>
               )}
-              {state.transactionDate && (
+              {invoiceData.transactionDate && (
                 <p style={{ margin: '5px 0 0 0' }}>
-                  <strong>Invoice Date:</strong> {new Date(state.transactionDate).toLocaleDateString('en-GB')}
+                  <strong>Invoice Date:</strong> {new Date(invoiceData.transactionDate).toLocaleDateString('en-GB')}
                 </p>
               )}
-              {state.jobCardNumber && (
+              {invoiceData.jobCardNumber && (
                 <p style={{ margin: '5px 0 0 0' }}>
-                  <strong>Job Card No:</strong> {state.jobCardNumber}
+                  <strong>Job Card No:</strong> {invoiceData.jobCardNumber}
                 </p>
               )}
             </td>
@@ -216,12 +339,12 @@ const CounterBillPDF: FC = () => {
                 width: '50%',
               }}
             >
-              <p style={{ margin: 0 }}>Name: {state.customerName}</p>
-              <p style={{ margin: 0 }}>Address: {state.customerAddress}</p>
-              <p style={{ margin: 0 }}>Mobile: {state.customerMobile}</p>
-              <p style={{ margin: 0 }}>Vehicle No: {state.vehicleRegId}</p>
-              {state.customerAadharNo && <p style={{ margin: 0 }}>Aadhaar No: {state.customerAadharNo}</p>}
-              {state.customerGstin && <p style={{ margin: 0 }}>GSTIN: {state.customerGstin}</p>}
+              <p style={{ margin: 0 }}>Name: {invoiceData.customerName}</p>
+              <p style={{ margin: 0 }}>Address: {invoiceData.customerAddress}</p>
+              <p style={{ margin: 0 }}>Mobile: {invoiceData.customerMobile}</p>
+              <p style={{ margin: 0 }}>Vehicle No: {invoiceData.vehicleRegId}</p>
+              {invoiceData.customerAadharNo && <p style={{ margin: 0 }}>Aadhaar No: {invoiceData.customerAadharNo}</p>}
+              {invoiceData.customerGstin && <p style={{ margin: 0 }}>GSTIN: {invoiceData.customerGstin}</p>}
             </td>
             <td
               style={{
@@ -232,22 +355,22 @@ const CounterBillPDF: FC = () => {
               }}
             >
               <p style={{ margin: 0, textAlign: 'left' }}>
-                    Invoice No: {state.invoiceNumber}
+                    Invoice No: {invoiceData.invoiceNumber}
                   </p>
               <p style={{ margin: 0, textAlign: 'left' }}>
-                Invoice Date: {state.transactionDate}
+                Invoice Date: {invoiceData.transactionDate}
               </p>
               <p style={{ margin: 0, textAlign: 'left' }}>
-                    Jobcard No: {state.jobCardNumber}
+                    Jobcard No: {invoiceData.jobCardNumber}
                   </p>
               <p style={{ margin: 0, textAlign: 'left' }}>
-                Reg No: {state.regNo}
+                Reg No: {invoiceData.regNo}
               </p><p style={{ margin: 0, textAlign: 'left' }}>
-                Engine No: {state.vehicleNo}
+                Engine No: {invoiceData.vehicleNo}
               </p><p style={{ margin: 0, textAlign: 'left' }}>
-                KMs Driven: {state.kmsDriven}
+                KMs Driven: {invoiceData.kmsDriven}
               </p><p style={{ margin: 0, textAlign: 'left' }}>
-                Model: {state.model}
+                Model: {invoiceData.model}
               </p>
              
             </td>
@@ -489,10 +612,10 @@ const CounterBillPDF: FC = () => {
         </tr>
                 </thead>
                 <tbody>
-                  {state.parts.map((part, index) => {
+                  {invoiceData.parts.map((part, index) => {
                     const quantity = Number(part.quantity) || 0;
                     const unitPrice = Number(part.unitPrice) || 0;
-                    const globalDiscountPercent = state.globalDiscount || 0;
+                    const globalDiscountPercent = invoiceData.globalDiscount || 0;
                     const discountPercent = globalDiscountPercent > 0 ? globalDiscountPercent : Number(part.discountPercent) || 0;
                     const base = quantity * unitPrice;
                     const discount = base * discountPercent / 100;
@@ -531,7 +654,7 @@ const CounterBillPDF: FC = () => {
                       SUB TOTAL
                     </td>
                     <td style={{ ...tableBodyCell, textAlign: 'right', fontWeight: 'bold' }}>
-                    {state?.partsSubtotal?.toFixed(2) || "0.00"}
+                    {invoiceData?.partsSubtotal?.toFixed(2) || "0.00"}
                     </td>
                   </tr>
                 </tfoot>
@@ -774,10 +897,10 @@ const CounterBillPDF: FC = () => {
           
                 </thead>
                 <tbody>
-                  {state.labours.map((part, index) => {        
+                  {invoiceData.labours.map((part, index) => {        
                     const quantity = Number(part.quantity) || 0;
                     const unitPrice = Number(part.unitPrice) || 0;
-                    const globalDiscountPercent = state.globalDiscount || 0;
+                    const globalDiscountPercent = invoiceData.globalDiscount || 0;
                     const discountPercent = globalDiscountPercent > 0 ? globalDiscountPercent : Number(part.discountPercent) || 0;
                     const base = quantity * unitPrice;
                     const discount = base * discountPercent / 100;
@@ -820,7 +943,7 @@ const CounterBillPDF: FC = () => {
                     </td>
                     
                     <td style={{ ...tableBodyCell, textAlign: 'right', fontWeight: 'bold' }}>
-                      {state.laboursSubtotal.toFixed(2)}
+                      {invoiceData.laboursSubtotal.toFixed(2)}
                     </td>
                   </tr>
                   <tr>
@@ -829,7 +952,7 @@ const CounterBillPDF: FC = () => {
                     </td>
                     
                     <td style={{ ...tableBodyCell, textAlign: 'right', fontWeight: 'bold' }}>
-                      {((Number(state?.totalAmount) || 0) - (Number(state?.advanceAmount) || 0)).toFixed(2)}
+                      {((Number(invoiceData?.totalAmount) || 0) - (Number(invoiceData?.advanceAmount) || 0)).toFixed(2)}
 
                     </td>
                   </tr> <tr>
@@ -838,7 +961,7 @@ const CounterBillPDF: FC = () => {
                     </td>
                     
                     <td style={{ ...tableBodyCell, textAlign: 'right', fontWeight: 'bold' }}>
-                      {state.advanceAmount}
+                      {invoiceData.advanceAmount}
                     </td>
                   </tr>
                 </tfoot>
@@ -847,7 +970,7 @@ const CounterBillPDF: FC = () => {
           </tr>
           <tr>
             <td colSpan={14} style={{ border: '2px solid #000', padding: '6px', textAlign: 'left' }}>
-              <strong>Total Amount Of Invoice In Words:  {numberToWords((Number(state?.totalAmount) || 0) - (Number(state?.advanceAmount) || 0))} Only</strong>
+              <strong>Total Amount Of Invoice In Words:  {numberToWords((Number(invoiceData?.totalAmount) || 0) - (Number(invoiceData?.advanceAmount) || 0))} Only</strong>
             </td>
           </tr>
           <tr>

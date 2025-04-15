@@ -194,14 +194,104 @@ const CounterSaleRepostPDF: FC = () => {
 
         <style>{`
           @media print {
-            body { 
-              width: 100%; 
-              margin: 0;
-              padding: 0;
+            /* Hide all navigation and menu elements */
+            .MuiDrawer-root, 
+            .MuiAppBar-root,
+            .sidebar,
+            #sidebar,
+            nav,
+            aside,
+            .navigation,
+            .menu,
+            .dashboard-text,
+            .MuiListItem-root,
+            .MuiList-root,
+            [role="navigation"],
+            [role="menu"],
+            .header-nav,
+            .nav-menu,
+            .nav-links,
+            .menu-items,
+            .side-nav,
+            .dashboard-menu,
+            .dashboard-sidebar,
+            .main-sidebar,
+            .main-menu,
+            .app-sidebar,
+            .app-menu,
+            .sidebar-wrapper,
+            .sidebar-menu {
+              display: none !important;
             }
+
+            /* Hide specific text elements that might contain "Dashboard" */
+            *[class*="dashboard"],
+            *[id*="dashboard"],
+            *[class*="menu"],
+            *[id*="menu"],
+            *[class*="sidebar"],
+            *[id*="sidebar"] {
+              display: none !important;
+            }
+
+            /* Ensure main content takes full width */
+            body,
+            #root,
+            .app-content,
+            .main-content,
+            .content-wrapper,
+            main,
+            .MuiContainer-root,
+            .MuiBox-root {
+              padding: 0 !important;
+              margin: 0 !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              position: absolute !important;
+              left: 0 !important;
+            }
+
+            /* Basic print settings */
             @page {
-              size: landscape;
+              size: A4;
               margin: 0.5cm;
+            }
+
+            /* Ensure white background and black text */
+            * {
+              background-color: white !important;
+              color: black !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+
+            /* Table specific styles */
+            table {
+              width: 100% !important;
+              font-size: 10pt !important;
+              page-break-inside: avoid !important;
+            }
+
+            th, td {
+              padding: 4px !important;
+            }
+
+            /* Hide print button */
+            button {
+              display: none !important;
+            }
+
+            /* Optimize QR code size */
+            img[alt="QR Code"] {
+              width: 100px !important;
+              height: 100px !important;
+            }
+
+            /* Hide Copyright component */
+            footer, 
+            .copyright,
+            .MuiBox-root > .MuiTypography-root:last-child {
+              display: none !important;
             }
           }
         `}</style>
@@ -555,13 +645,104 @@ const CounterSaleRepostPDF: FC = () => {
       
       <style>{`
         @media print {
-          body { 
-            width: 100%; 
-            margin: 0;
-            padding: 0;
+          /* Hide all navigation and menu elements */
+          .MuiDrawer-root, 
+          .MuiAppBar-root,
+          .sidebar,
+          #sidebar,
+          nav,
+          aside,
+          .navigation,
+          .menu,
+          .dashboard-text,
+          .MuiListItem-root,
+          .MuiList-root,
+          [role="navigation"],
+          [role="menu"],
+          .header-nav,
+          .nav-menu,
+          .nav-links,
+          .menu-items,
+          .side-nav,
+          .dashboard-menu,
+          .dashboard-sidebar,
+          .main-sidebar,
+          .main-menu,
+          .app-sidebar,
+          .app-menu,
+          .sidebar-wrapper,
+          .sidebar-menu {
+            display: none !important;
           }
+
+          /* Hide specific text elements that might contain "Dashboard" */
+          *[class*="dashboard"],
+          *[id*="dashboard"],
+          *[class*="menu"],
+          *[id*="menu"],
+          *[class*="sidebar"],
+          *[id*="sidebar"] {
+            display: none !important;
+          }
+
+          /* Ensure main content takes full width */
+          body,
+          #root,
+          .app-content,
+          .main-content,
+          .content-wrapper,
+          main,
+          .MuiContainer-root,
+          .MuiBox-root {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            position: absolute !important;
+            left: 0 !important;
+          }
+
+          /* Basic print settings */
           @page {
+            size: A4;
             margin: 0.5cm;
+          }
+
+          /* Ensure white background and black text */
+          * {
+            background-color: white !important;
+            color: black !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          /* Table specific styles */
+          table {
+            width: 100% !important;
+            font-size: 10pt !important;
+            page-break-inside: avoid !important;
+          }
+
+          th, td {
+            padding: 4px !important;
+          }
+
+          /* Hide print button */
+          button {
+            display: none !important;
+          }
+
+          /* Optimize QR code size */
+          img[alt="QR Code"] {
+            width: 100px !important;
+            height: 100px !important;
+          }
+
+          /* Hide Copyright component */
+          footer, 
+          .copyright,
+          .MuiBox-root > .MuiTypography-root:last-child {
+            display: none !important;
           }
         }
       `}</style>
