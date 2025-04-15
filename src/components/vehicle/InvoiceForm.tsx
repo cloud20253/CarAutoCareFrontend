@@ -462,8 +462,8 @@ export default function InvoiceForm() {
       if (checkResponse.data && checkResponse.data.length > 0) {
         const existingInvoice = checkResponse.data[0];
         
-        const submissionData = {
-          ...formData,
+    const submissionData = {
+      ...formData,
           invoiceNumber: existingInvoice.invoiceNumber,
           jobCardNumber: existingInvoice.jobCardNumber,
           subTotal: existingInvoice.subTotal,
@@ -485,14 +485,14 @@ export default function InvoiceForm() {
           ...formData,
           invoiceNumber: response.data.invoiceNumber,
           jobCardNumber: response.data.jobCardNumber,
-          subTotal: totals.subTotal,
-          totalAmount: totals.totalAmount,
-          partsSubtotal: totals.partsSubtotal,
-          laboursSubtotal: totals.laboursSubtotal,
-          advanceAmount: advanceAmount,
-          transactionDate: formData.date
-        };
-        navigate('/admin/invoicepdfgenerator', { state: submissionData });
+      subTotal: totals.subTotal,
+      totalAmount: totals.totalAmount,
+      partsSubtotal: totals.partsSubtotal,
+      laboursSubtotal: totals.laboursSubtotal,
+      advanceAmount: advanceAmount,
+      transactionDate: formData.date
+    };
+    navigate('/admin/invoicepdfgenerator', { state: submissionData });
       }
     } catch (error: any) {
       setDialogTitle("Error");

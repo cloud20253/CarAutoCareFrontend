@@ -99,8 +99,6 @@ const CounterSaleReport: React.FC = () => {
       } finally {
         setLoading(false);
       }
-    } else {
-      alert('Please select both dates.');
     }
   };
   

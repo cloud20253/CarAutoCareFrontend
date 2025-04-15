@@ -46,7 +46,7 @@ const data = [
   {
     value: "Insurance",
     icon: <GarageIcon sx={{ color: "secondary.dark", fontSize: 40 }} />,
-    url: "/admin/vehicle",
+    url: "/admin/insuranceList",
   },
 ];
 

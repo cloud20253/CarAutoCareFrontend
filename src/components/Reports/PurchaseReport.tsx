@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FormControl, Stack, Button, TextField, Typography, IconButton } from '@mui/material';
 import CustomizedDataGrid from 'components/CustomizedDataGrid';
 import Copyright from 'internals/components/Copyright';
@@ -47,11 +47,13 @@ const PurchaseReport: React.FC = () => {
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
   const [rows, setRows] = useState<ReportRow[]>([]);
+  const [loading, setLoading] = useState(false);
   const [allTransactions, setAllTransactions] = useState<SparePartTransaction[]>([]);
   const navigate = useNavigate();
 
   const fetchTransactions = async () => {
     if (fromDate && toDate) {
+      setLoading(true);
       try {
         const startDate = `${fromDate}T00:00:00`;
         const endDate = `${toDate}T23:59:59`;
@@ -106,18 +108,27 @@ const PurchaseReport: React.FC = () => {
               transactions: billTransactions
             };
             return row;
-        });
-        setRows(formattedRows);
+          });
+          setRows(formattedRows);
         } else {
           alert('Invalid response format from server');
         }
       } catch (error) {
-        alert('Failed to fetch transactions. Please try again.');
+        console.error('Failed to fetch transactions:', error);
+      } finally {
+        setLoading(false);
       }
     } else {
       alert('Please select both dates.');
     }
   };
+
+  // Add useEffect to trigger fetch when dates change
+  useEffect(() => {
+    if (fromDate && toDate) {
+      fetchTransactions();
+    }
+  }, [fromDate, toDate]);
 
   const handlePrint = (billNo?: string) => {
     if (billNo) {
@@ -269,7 +280,7 @@ const PurchaseReport: React.FC = () => {
       <Typography variant="h4" gutterBottom>
       Purchase Report
       </Typography>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+      <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
         <FormControl>
           <TextField
             type="date"
@@ -292,9 +303,7 @@ const PurchaseReport: React.FC = () => {
             }}
           />
         </FormControl>
-        <Button variant="contained" color="primary" onClick={fetchTransactions}>
-          Search
-        </Button>
+        {loading && <Typography>Loading...</Typography>}
       </Stack>
       {rows.length > 0 && (
         <div style={{ marginBottom: '10px' }}>
