@@ -18,7 +18,7 @@ import {
   Tooltip,
   Badge,
 } from '@mui/material';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { GridCellParams, GridRowsProp, GridColDef, GridValueFormatter, GridValidRowModel } from '@mui/x-data-grid';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -36,7 +36,7 @@ import VehicleDeleteModal from './VehicleDeleteModal';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import PreviewIcon from '@mui/icons-material/Preview';
-import { Print, Receipt, ReceiptLong } from '@mui/icons-material';
+import { Print } from '@mui/icons-material';
 import { filter } from 'types/SparePart';
 import { Theme } from '@mui/material/styles';
 import apiClient from 'Services/apiService';
@@ -69,7 +69,6 @@ export default function VehicleList() {
   const [textInput, setTextInput] = React.useState<string>("");
 
   const [localSearchTerm, setLocalSearchTerm] = useState<string>("");
-
   const [invoiceStatus, setInvoiceStatus] = useState<{ [key: string]: boolean }>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -179,14 +178,27 @@ export default function VehicleList() {
       minWidth: 100,
       type: 'number',
       valueFormatter: ((params: { value: number | null | undefined }) => {
-        return params.value ? `₹${params.value.toLocaleString('en-IN')}` : '₹0';
+        console.log('Formatting advance value:', params.value, 'Type:', typeof params.value);
+        // Handle various value scenarios
+        if (params.value === null || params.value === undefined) {
+          return '₹0';
+        }
+        // Force conversion to number if it's a string
+        const numericValue = typeof params.value === 'string' ? parseFloat(params.value) : params.value;
+        // Check if we have a valid number after conversion
+        if (isNaN(numericValue)) {
+          console.warn('Invalid advance value after conversion:', params.value);
+          return '₹0';
+        }
+        return `₹${numericValue.toLocaleString('en-IN')}`;
       }) as GridValueFormatter<GridValidRowModel>
     },
+    
     { field: 'superwiser', headerName: 'Supervisor', flex: 1, minWidth: 100 },
     { field: 'technician', headerName: 'Technician', flex: 1, minWidth: 100 },
     { field: 'worker', headerName: 'Worker', flex: 1, minWidth: 100 },
     { field: 'kilometer', headerName: 'Kilometer', flex: 1, minWidth: 100 },
-    { field: 'Action', headerName: 'Action', flex: 1, minWidth: 250, renderCell: (params) => renderActionButtons(params) },
+    { field: 'Action', headerName: 'Action', flex: 1, minWidth: 250, renderCell: renderActionButtons },
   ];
 
   const handleSearch = async () => {
@@ -232,6 +244,7 @@ export default function VehicleList() {
       setRows([]);
     }
   };
+
   React.useEffect(() => {
     const getVehicleList = async () => {
       try {
@@ -302,7 +315,7 @@ export default function VehicleList() {
           console.log(`Processing vehicle ${vehicleId}...`);
           console.log('Vehicle data:', vehicle);
           console.log('Advance payment:', vehicle.advancePayment);
-          
+
           const hasInvoice = await checkInvoiceStatus(vehicleId);
           
           const processedVehicle = {
@@ -314,7 +327,10 @@ export default function VehicleList() {
               ? `${vehicle.customerName} - ${vehicle.customerMobileNumber ?? ''}`
               : '',
             status: vehicle.status ?? '',
-            advance: Number(vehicle.advancePayment) || 0,
+            // Modification: Explicitly check for undefined or null before converting
+            advance: vehicle.advancePayment !== undefined && vehicle.advancePayment !== null
+                      ? Number(vehicle.advancePayment)
+                      : 0,
             superwiser: vehicle.superwiser ?? '',
             technician: vehicle.technician ?? '',
             worker: vehicle.worker ?? '',
@@ -414,8 +430,6 @@ export default function VehicleList() {
           <Button variant="contained" color="primary" sx={{ alignSelf: 'start' }} onClick={handleSearch}>
             Search
           </Button>
-
-          
         </Grid>
         <VehicleDeleteModal open={open} onClose={() => setOpen(false)} deleteItemId={Number(selectedId)} />
       </Grid>

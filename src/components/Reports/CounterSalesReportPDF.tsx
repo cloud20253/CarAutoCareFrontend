@@ -238,8 +238,8 @@ const CounterSaleRepostPDF: FC = () => {
         color: theme.palette.mode === 'dark' ? '#fff' : '#000',
       }}
     >
-         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-         <tbody>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <tbody>
          <tr>
           <td
          style={{
@@ -393,7 +393,7 @@ const CounterSaleRepostPDF: FC = () => {
                 <tbody>
                   {invoiceItems.map((item: BillRow, idx: number) => {
                     const quantity = item.qty ?? item.quantity ?? 0;
-                    return (
+      return (
                       <tr key={idx}>
                         <td style={tableBodyCell}>{idx + 1}</td>
                         <td style={tableBodyCell}>{item.spareName}</td>
@@ -410,20 +410,20 @@ const CounterSaleRepostPDF: FC = () => {
                         </td>
                         <td style={tableBodyCell}>
                           {(item.cgstAmt || 0).toFixed(2)}
-                        </td>
+          </td>
                         <td style={tableBodyCell}>
                           {(item.sgstPercent || 0).toFixed(2)}%
-                        </td>
+          </td>
                         <td style={tableBodyCell}>
                           {(item.sgstAmt || 0).toFixed(2)}
-                        </td>
+          </td>
                         <td style={tableBodyCell}>
                           {(item.amount || 0).toFixed(2)}
-                        </td>
-                      </tr>
-                    );
+          </td>
+        </tr>
+      );
                   })}
-                </tbody>
+</tbody>
                 <tfoot>
                   <tr>
                     <td
