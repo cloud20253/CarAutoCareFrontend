@@ -48,7 +48,6 @@ interface VehicleFormData {
     insuranceFrom: string;
     insuranceTo: string;
     vehicleInspection: string;
-    jobCard: string;
     kmsDriven: number;
     advancePayment: number;
     manufactureYear: string;
@@ -82,7 +81,6 @@ export default function VehicleDetailsView() {
         insuranceFrom: "",
         insuranceTo: "",
         vehicleInspection: "",
-        jobCard: "",
         kmsDriven: 0,
         advancePayment: 0,
         manufactureYear: "",
@@ -168,10 +166,9 @@ export default function VehicleDetailsView() {
                         userId: response.userId,
                         date: response.date,
                         insuranceStatus: response.insuranceStatus || "Expired",
-                        insuranceFrom: response.insuranceFrom || "",
-                        insuranceTo: response.insuranceTo || "",
+                        insuranceFrom: response.insuredFrom || "",
+                        insuranceTo: response.insuredTo || "",
                         vehicleInspection: response.vehicleInspection || "",
-                        jobCard: response.jobCard || response.jobcard || "",
                         kmsDriven: response.kmsDriven || 0,
                         advancePayment: response.advancePayment || 0,
                         manufactureYear: response.manufactureYear ? response.manufactureYear.toString() : "",
@@ -312,10 +309,6 @@ export default function VehicleDetailsView() {
                 <FormGrid item xs={12} md={6}>
                     <Typography>Vehicle Inspection :</Typography>
                     <FormLabel>{formData.vehicleInspection}</FormLabel>
-                </FormGrid>
-                <FormGrid item xs={12} md={6}>
-                    <Typography>Jobcard :</Typography>
-                    <FormLabel>{formData.jobCard}</FormLabel>
                 </FormGrid>
 
                 <FormGrid item xs={12} md={6}>
