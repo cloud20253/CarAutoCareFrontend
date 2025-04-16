@@ -90,7 +90,7 @@ const CounterSaleReport: React.FC = () => {
             taxable: totalTaxable, 
           };
         });
-
+  
         console.log("Formatted rows with taxable amounts:", formattedRows);
   
         setRows(formattedRows);

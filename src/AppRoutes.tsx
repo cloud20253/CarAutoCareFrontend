@@ -21,6 +21,7 @@ import VehicleByAppointmentId from 'pages/VehicleByAppointmentId';
 import ManageRepairPage from "components/RepairsComponent/ManageRepairPage";
 import VehicleList from "components/vehicle/VehicleList";
 import QuatationList from "components/Quatation/QuatationList";
+import PurchaseAccountReport from "components/Reports/PurchaseAccountRepost";
 
 import AddVehicle from "components/vehicle/AddVehicle";
 import TransactionAdd from "pages/TransactionManagement/TransactionAdd";
@@ -118,6 +119,7 @@ const AppRoutes = () => {
                 <Route path="AddCustomer" element={<AddCustomerForm />} />  
                 <Route path="manage-reports" element={<ReportForm />} />
                 <Route path="insuranceList" element={<InsuranceList />} />
+                <Route path="manage-purchaseaccountreport" element={<PurchaseAccountReport />} />
 
                 <Route path="ServiceTable" element={<InvoiceTable />} />
                 <Route path="serviceManage" element={<AddService />} />
