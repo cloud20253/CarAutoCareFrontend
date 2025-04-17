@@ -124,7 +124,7 @@ const PurchaseAccountReport: React.FC = () => {
         const tbody = document.getElementById('counter_tableBody') as HTMLTableSectionElement;
         if (!tbody) return;
 
-        tbody.innerHTML = ''; 
+      tbody.innerHTML = ''; 
         let rowIndex = 1;
 
         const transactionMap: Record<string, {
@@ -215,7 +215,7 @@ const PurchaseAccountReport: React.FC = () => {
                   gst5, gst12, gst18, gst28 } = data;
           
           const row = document.createElement('tr');
-          row.innerHTML = `
+        row.innerHTML = `
             <td>${rowIndex}</td>
             <td>${date}</td>
             <td>${vendorName}</td>
@@ -228,7 +228,7 @@ const PurchaseAccountReport: React.FC = () => {
             <td>${parseFloat(totalCGST.toFixed(2))}</td>
             <td>${parseFloat(totalSGST.toFixed(2))}</td>
             <td>${parseFloat(totalIGST.toFixed(2))}</td>
-            <td>0.00</td>
+          <td>0.00</td>
             <td>${parseFloat(gst5.amount.toFixed(2))}</td>
             <td>${parseFloat(gst5.taxable.toFixed(2))}</td>
             <td>${parseFloat(gst5.cgst.toFixed(2))}</td>
@@ -249,8 +249,8 @@ const PurchaseAccountReport: React.FC = () => {
             <td>${parseFloat(gst28.cgst.toFixed(2))}</td>
             <td>${parseFloat(gst28.sgst.toFixed(2))}</td>
             <td>0.00</td>
-          `;
-          tbody.appendChild(row);
+        `;
+        tbody.appendChild(row);
           rowIndex++;
         });
         

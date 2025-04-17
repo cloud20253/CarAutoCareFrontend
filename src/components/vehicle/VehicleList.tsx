@@ -14,12 +14,10 @@ import {
   MenuItem,
   OutlinedInput,
   Select,
-  Chip,
   Tooltip,
-  Badge,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { GridCellParams, GridRowsProp, GridColDef, GridValueFormatter, GridValidRowModel } from '@mui/x-data-grid';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { GridCellParams, GridRowsProp, GridColDef } from '@mui/x-data-grid';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import InputAdornment from '@mui/material/InputAdornment';
 import {
@@ -37,23 +35,42 @@ import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import PreviewIcon from '@mui/icons-material/Preview';
 import { Print } from '@mui/icons-material';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { filter } from 'types/SparePart';
 import { Theme } from '@mui/material/styles';
 import apiClient from 'Services/apiService';
-import ReceiptIcon from '@mui/icons-material/Receipt';
 
 interface Vehicle {
   vehicleRegId: string;
   vehicleNumber?: string;         
   customerName?: string;           
   customerMobileNumber?: string;    
-  advancePayment: number;          
+  advancePayment?: number;          
   kmsDriven?: number;               
   superwiser?: string;
   technician?: string;
   worker?: string;
   status?: string;
   date?: string;
+  hasInvoice?: boolean;
+}
+
+export async function checkInvoiceStatus(vehicleRegId: string): Promise<boolean> {
+  try {
+    console.log(`Checking invoice status for vehicle ${vehicleRegId}...`);
+    const response = await apiClient.get(`/api/vehicle-invoices/search/vehicle-reg/${vehicleRegId}`);
+    console.log(`Invoice response for vehicle ${vehicleRegId}:`, response.data);
+
+    const hasInvoice = Array.isArray(response.data) && response.data.length > 0;
+    console.log(`Vehicle ${vehicleRegId} has invoice:`, hasInvoice);
+    
+    return hasInvoice;
+  } catch (error) {
+    console.error(`Error checking invoice status for vehicle ${vehicleRegId}:`, error);
+    return false;
+  }
 }
 
 export default function VehicleList() {
@@ -67,16 +84,17 @@ export default function VehicleList() {
   const [dateValue, setDateValue] = React.useState<[Date | null, Date | null]>([null, null]);
   const [selectedType, setSelectedType] = React.useState<string>("");
   const [textInput, setTextInput] = React.useState<string>("");
+  const [loading, setLoading] = React.useState<boolean>(false);
 
+  // New local search state for filtering the data grid rows
   const [localSearchTerm, setLocalSearchTerm] = useState<string>("");
-  const [invoiceStatus, setInvoiceStatus] = useState<{ [key: string]: boolean }>({});
-  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const handleDelete = (id: string) => {
     setSelectedId(id);
     setOpen(true);
   };
 
+  // Renders the action buttons in the last column
   function renderActionButtons(params: GridCellParams) {
     return (
       <>
@@ -116,91 +134,64 @@ export default function VehicleList() {
     );
   }
 
-  const checkInvoiceStatus = async (vehicleRegId: number): Promise<boolean> => {
-    try {
-      console.log(`Checking invoice status for vehicle ${vehicleRegId}...`);
-      const response = await apiClient.get(`/api/vehicle-invoices/search/vehicle-reg/${vehicleRegId}`);
-      console.log(`Invoice response for vehicle ${vehicleRegId}:`, response.data);
-      
-      const hasInvoice = Array.isArray(response.data) && response.data.length > 0;
-      console.log(`Vehicle ${vehicleRegId} has invoice:`, hasInvoice);
-      
-      setInvoiceStatus(prev => {
-        const newStatus = {
-          ...prev,
-          [vehicleRegId.toString()]: hasInvoice
-        };
-        console.log('Updated invoice status:', newStatus);
-        return newStatus;
-      });
-
-      return hasInvoice;
-    } catch (error) {
-      console.error(`Error checking invoice status for vehicle ${vehicleRegId}:`, error);
-      setInvoiceStatus(prev => ({
-        ...prev,
-        [vehicleRegId.toString()]: false
-      }));
-      return false;
-    }
-  };
-
-  const renderInvoiceStatus = (params: GridCellParams) => {
-    const key = params.row.vehicleRegId.toString();
-    const hasInvoice = invoiceStatus[key] ?? false;
-    console.log(`Rendering invoice status for vehicle ${key}:`, hasInvoice);
-    
+  // Function to render the invoice status column
+  function renderInvoiceStatus(params: GridCellParams) {
     return (
-      <Tooltip title={hasInvoice ? "Invoice Generated" : "Invoice Not Generated"}>
-        <Badge color="error" variant="dot" invisible={hasInvoice}>
-          <ReceiptIcon color={hasInvoice ? "success" : "error"} />
-        </Badge>
-      </Tooltip>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {params.row.hasInvoice ? (
+          <Tooltip title="Invoice generated">
+            <CheckCircleIcon color="success" />
+          </Tooltip>
+        ) : (
+          <Tooltip title="No invoice">
+            <CancelIcon color="error" />
+          </Tooltip>
+        )}
+      </div>
     );
-  };
+  }
 
+  // Updated columns: removed estimate and due, added invoiceStatus
   const columns: GridColDef[] = [
-    {
-      field: 'invoiceStatus',
-      headerName: 'Invoice',
-      flex: 1,
-      minWidth: 100,
-      renderCell: renderInvoiceStatus,
-    },
     { field: 'date', headerName: 'Date', flex: 1, minWidth: 100 },
     { field: 'vehicleNoName', headerName: 'Veh No/Name', flex: 1, minWidth: 150 },
     { field: 'customerMobile', headerName: 'Customer & Mobile', flex: 1, minWidth: 150 },
     { field: 'status', headerName: 'Ready', flex: 1, minWidth: 100 },
-    { 
-      field: 'advance', 
-      headerName: 'Advance', 
-      flex: 1, 
-      minWidth: 100,
-      type: 'number',
-      valueFormatter: ((params: { value: number | null | undefined }) => {
-        console.log('Formatting advance value:', params.value, 'Type:', typeof params.value);
-        // Handle various value scenarios
-        if (params.value === null || params.value === undefined) {
-          return '₹0';
-        }
-        // Force conversion to number if it's a string
-        const numericValue = typeof params.value === 'string' ? parseFloat(params.value) : params.value;
-        // Check if we have a valid number after conversion
-        if (isNaN(numericValue)) {
-          console.warn('Invalid advance value after conversion:', params.value);
-          return '₹0';
-        }
-        return `₹${numericValue.toLocaleString('en-IN')}`;
-      }) as GridValueFormatter<GridValidRowModel>
-    },
-    
+    { field: 'advance', headerName: 'Advance', flex: 1, minWidth: 100 },
+    { field: 'hasInvoice', headerName: 'Invoice', flex: 1, minWidth: 80, renderCell: renderInvoiceStatus },
     { field: 'superwiser', headerName: 'Supervisor', flex: 1, minWidth: 100 },
     { field: 'technician', headerName: 'Technician', flex: 1, minWidth: 100 },
     { field: 'worker', headerName: 'Worker', flex: 1, minWidth: 100 },
     { field: 'kilometer', headerName: 'Kilometer', flex: 1, minWidth: 100 },
-    { field: 'Action', headerName: 'Action', flex: 1, minWidth: 250, renderCell: renderActionButtons },
+    { field: 'Action', headerName: 'Action', flex: 1, minWidth: 250, renderCell: (params) => renderActionButtons(params) },
   ];
 
+  // Function to check invoice status for all vehicles
+  const checkInvoiceStatusForVehicles = async (vehicles: any[]) => {
+    const updatedVehicles = [];
+    setLoading(true);
+    
+    for (const vehicle of vehicles) {
+      try {
+        const hasInvoice = await checkInvoiceStatus(vehicle.vehicleRegId);
+        updatedVehicles.push({
+          ...vehicle,
+          hasInvoice
+        });
+      } catch (error) {
+        console.error(`Error checking invoice for vehicle ${vehicle.vehicleRegId}:`, error);
+        updatedVehicles.push({
+          ...vehicle,
+          hasInvoice: false
+        });
+      }
+    }
+    
+    setLoading(false);
+    return updatedVehicles;
+  };
+
+  // Search logic with invoice status check
   const handleSearch = async () => {
     let requestData: filter = {};
     let response;
@@ -233,22 +224,63 @@ export default function VehicleList() {
         response = res.data;
       }
 
-      if (response) {
-        const vehicleList = Array.isArray(response) ? response : [response];
-        await processVehicleData(vehicleList);
+      if (response && Array.isArray(response)) {
+        const formattedRows = response.map((vehicle: Vehicle, index: number) => ({
+          id: index + 1,
+          date: vehicle.date ?? '',
+          vehicleNoName: vehicle.vehicleNumber ?? '',
+          customerMobile: vehicle.customerName 
+            ? `${vehicle.customerName} - ${vehicle.customerMobileNumber ?? ''}`
+            : '',
+          status: vehicle.status ?? '',
+          advance: vehicle.advancePayment ?? 0,
+          superwiser: vehicle.superwiser ?? '',
+          technician: vehicle.technician ?? '',
+          worker: vehicle.worker ?? '',
+          kilometer: vehicle.kmsDriven ?? 0,
+          vehicleRegId: vehicle.vehicleRegId,
+          hasInvoice: false, // Default value, will be updated
+        }));
+        
+        // Check invoice status for all vehicles
+        const rowsWithInvoiceStatus = await checkInvoiceStatusForVehicles(formattedRows);
+        setRows(rowsWithInvoiceStatus);
+      } else if (response && typeof response === 'object') {
+        const singleRow = {
+          id: 1,
+          date: response.date ?? '',
+          vehicleNoName: response.vehicleNumber ?? '',
+          customerMobile: response.customerName
+            ? `${response.customerName} - ${response.customerMobileNumber ?? ''}`
+            : '',
+          status: response.status ?? '',
+          advance: response.advancePayment ?? 0,
+          superwiser: response.superwiser ?? '',
+          technician: response.technician ?? '',
+          worker: response.worker ?? '',
+          kilometer: response.kmsDriven ?? 0,
+          vehicleRegId: response.vehicleRegId,
+          hasInvoice: false, // Default value, will be updated
+        };
+        
+        // Check invoice status for single vehicle
+        const hasInvoice = await checkInvoiceStatus(response.vehicleRegId);
+        setRows([{ ...singleRow, hasInvoice }]);
       } else {
         setRows([]);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
-      setRows([]);
     }
   };
 
-  React.useEffect(() => {
+  // On mount, load the list with invoice status
+  useEffect(() => {
     const getVehicleList = async () => {
       try {
-        let response;
+        setLoading(true);
+        let data;
+        
         if (listType) {
           let statusFilter = '';
           if (listType === 'serviceQueue') {
@@ -257,28 +289,44 @@ export default function VehicleList() {
             statusFilter = 'complete';
           }
           const res = await GetVehicleByStatus({ status: statusFilter });
-          response = res.data;
+          data = res.data;
         } else {
           const res = await VehicleListData();
-          response = res.data;
+          data = res.data;
         }
         
-        if (response) {
-          const vehicleList = Array.isArray(response) ? response : [response];
-          await processVehicleData(vehicleList);
-        } else {
-          setRows([]);
-          setInvoiceStatus({});
+        if (data && Array.isArray(data)) {
+          const formattedRows = data.map((vehicle: Vehicle, index: number) => ({
+            id: index + 1,
+            date: vehicle.date ?? '',
+            vehicleNoName: vehicle.vehicleNumber ?? '',
+            customerMobile: vehicle.customerName
+              ? `${vehicle.customerName} - ${vehicle.customerMobileNumber ?? ''}`
+              : '',
+            status: vehicle.status ?? '',
+            advance: vehicle.advancePayment ?? 0,
+            superwiser: vehicle.superwiser ?? '',
+            technician: vehicle.technician ?? '',
+            worker: vehicle.worker ?? '',
+            kilometer: vehicle.kmsDriven ?? 0,
+            vehicleRegId: vehicle.vehicleRegId,
+            hasInvoice: false, // Default value, will be updated
+          }));
+          
+          // Check invoice status for all vehicles
+          const rowsWithInvoiceStatus = await checkInvoiceStatusForVehicles(formattedRows);
+          setRows(rowsWithInvoiceStatus);
         }
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching vehicle data:', error);
-        setRows([]);
-        setInvoiceStatus({});
+        setLoading(false);
       }
     };
     getVehicleList();
   }, [listType]);
 
+  // Client-side filtering using the local search term:
   const filteredRows = rows.filter((row) => {
     const search = localSearchTerm.toLowerCase();
     return (
@@ -291,68 +339,6 @@ export default function VehicleList() {
     );
   });
 
-  const processVehicleData = async (vehicleList: any[]) => {
-    if (!vehicleList || vehicleList.length === 0) {
-      console.log('No vehicles found');
-      setRows([]);
-      setInvoiceStatus({});
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      console.log('Processing vehicles:', vehicleList);
-      
-      const initialStatus = vehicleList.reduce((acc, vehicle) => {
-        acc[vehicle.vehicleRegId.toString()] = false;
-        return acc;
-      }, {} as { [key: string]: boolean });
-      setInvoiceStatus(initialStatus);
-      
-      const processedVehicles = await Promise.all(
-        vehicleList.map(async (vehicle) => {
-          const vehicleId = vehicle.vehicleRegId;
-          console.log(`Processing vehicle ${vehicleId}...`);
-          console.log('Vehicle data:', vehicle);
-          console.log('Advance payment:', vehicle.advancePayment);
-
-          const hasInvoice = await checkInvoiceStatus(vehicleId);
-          
-          const processedVehicle = {
-            id: vehicleId.toString(),
-            vehicleRegId: vehicleId,
-            date: vehicle.date ?? '',
-            vehicleNoName: vehicle.vehicleNumber ?? '',
-            customerMobile: vehicle.customerName
-              ? `${vehicle.customerName} - ${vehicle.customerMobileNumber ?? ''}`
-              : '',
-            status: vehicle.status ?? '',
-            // Modification: Explicitly check for undefined or null before converting
-            advance: vehicle.advancePayment !== undefined && vehicle.advancePayment !== null
-                      ? Number(vehicle.advancePayment)
-                      : 0,
-            superwiser: vehicle.superwiser ?? '',
-            technician: vehicle.technician ?? '',
-            worker: vehicle.worker ?? '',
-            kilometer: vehicle.kmsDriven ?? 0,
-          };
-          
-          console.log('Processed vehicle:', processedVehicle);
-          return processedVehicle;
-        })
-      );
-      
-      console.log('All processed vehicles:', processedVehicles);
-      setRows(processedVehicles);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error processing vehicle data:', error);
-      setRows([]);
-      setInvoiceStatus({});
-      setIsLoading(false);
-    }
-  };
-
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '1700px' } }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
@@ -363,6 +349,8 @@ export default function VehicleList() {
           Add Vehicle
         </Button>
       </Stack>
+
+      {/* New Search Box Above the Data Grid */}
       <Box sx={{ mb: 2 }}>
         <FormControl fullWidth>
           <OutlinedInput
@@ -436,7 +424,13 @@ export default function VehicleList() {
 
       <Grid container spacing={2} columns={12}>
         <Grid item xs={12} component="div">
-          <CustomizedDataGrid columns={columns} rows={filteredRows} />
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              <Typography variant="body1">Loading vehicle invoice status...</Typography>
+            </Box>
+          ) : (
+            <CustomizedDataGrid columns={columns} rows={filteredRows} />
+          )}
         </Grid>
       </Grid>
       <Copyright sx={{ my: 4 }} />
