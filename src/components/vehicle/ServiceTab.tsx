@@ -1,6 +1,49 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from 'Services/apiService';
+import {
+  Box,
+  Paper,
+  Grid,
+  Typography,
+  styled,
+  TextField,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  InputAdornment,
+  Container,
+  IconButton
+} from '@mui/material';
+import { Task, Description, NoteAdd, Search as SearchIcon, Delete as DeleteIcon } from '@mui/icons-material';
+
+// HeaderCard styled component for navigation
+const HeaderCard = styled(Paper)(({ theme }) => ({
+  padding: 24,
+  textAlign: "center",
+  cursor: "pointer",
+  borderRadius: 4,
+  transition: "transform 0.3s, box-shadow 0.3s",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+  height: 120, // Fixed height for consistency
+  width: '100%', // Use full width of the grid item
+  boxShadow: "0px 2px 4px -1px rgba(0,0,0,0.2),0px 4px 5px 0px rgba(0,0,0,0.14),0px 1px 10px 0px rgba(0,0,0,0.12)",
+  "&:hover": {
+    transform: "scale(1.03)",
+    boxShadow: "0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12)",
+  },
+}));
 
 interface Service {
   serviceId: number;
@@ -28,6 +71,7 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 
 const ServiceTab = () => {
   const { vehicleId } = useParams<{ vehicleId: string }>();
+  const navigate = useNavigate();
   console.log('Vehicle ID:', vehicleId);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,6 +81,53 @@ const ServiceTab = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Function to render header cards
+  const renderHeaderCards = () => {
+    const headerCards = [
+      {
+        label: "Job Card",
+        icon: <Task fontSize="large" style={{ color: "#1976d2" }} />,
+        value: "jobCard",
+        onClick: () => navigate(`/admin/job-card/${vehicleId}`),
+      },
+      {
+        label: "Spare",
+        icon: <Description fontSize="large" style={{ color: "#1976d2" }} />,
+        value: "spare",
+        onClick: () => navigate(`/admin/add-vehicle-part-service/${vehicleId}`),
+      },
+      {
+        label: "Service",
+        icon: <NoteAdd fontSize="large" style={{ color: "#1976d2" }} />,
+        value: "service",
+        onClick: () => {}, // already on service tab
+      },
+    ];
+
+    return (
+      <Box sx={{ width: '100%', mb: 3 }}>
+        <Grid container spacing={3} justifyContent="center" sx={{ maxWidth: '900px', mx: 'auto' }}>
+          {headerCards.map((card) => (
+            <Grid item xs={12} sm={4} md={4} key={card.value}>
+              <HeaderCard 
+                onClick={card.onClick}
+                sx={{
+                  border: card.value === 'service' ? '2px solid #1976d2' : 'none',
+                  backgroundColor: card.value === 'service' ? 'rgba(25, 118, 210, 0.08)' : 'white',
+                }}
+              >
+                <Box sx={{ mb: 1 }}>{card.icon}</Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1rem' }}>
+                  {card.label}
+                </Typography>
+              </HeaderCard>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+    );
+  };
 
   useEffect(() => {
     if (debouncedSearchQuery) {
@@ -187,7 +278,15 @@ const ServiceTab = () => {
   };
   
   return (
-    <div className="min-h-screen p-4 bg-gray-50">
+    <div className="min-h-screen p-4 bg-gray-50" style={{ overflow: 'hidden' }}>
+      <div className="mb-4">
+        <Typography variant="subtitle1" style={{ color: 'rgba(0, 0, 0, 0.6)' }}>
+          Vehicle Registration ID: {vehicleId}
+        </Typography>
+      </div>
+      
+      {renderHeaderCards()}
+      
       <div
         className="mb-4 lg:mb-6 max-w-4xl mx-auto relative"
         ref={searchContainerRef}
@@ -221,8 +320,8 @@ const ServiceTab = () => {
 
       <div className="mb-8">
         <h2 className="text-xl font-bold mb-2">New Services</h2>
-        <div className="mx-auto bg-white rounded-lg shadow-sm overflow-x-auto">
-          <table className="w-full text-xs sm:text-sm min-w-[400px] md:min-w-[800px] lg:min-w-[1200px]">
+        <div className="mx-auto bg-white rounded-lg shadow-sm" style={{ overflowX: 'auto', width: '100%', maxWidth: '100%' }}>
+          <table className="w-full text-xs sm:text-sm" style={{ minWidth: '800px', tableLayout: 'fixed' }}>
             <thead>
               <tr className="bg-gray-100">
                 <th className="p-2 border text-center" colSpan={10}>
@@ -232,16 +331,16 @@ const ServiceTab = () => {
                 </th>
               </tr>
               <tr className="bg-gray-50">
-                <th className="p-1 lg:p-2 border">#</th>
-                <th className="p-1 lg:p-2 border">Svc No</th>
-                <th className="p-1 lg:p-2 border">Service Name</th>
-                <th className="p-1 lg:p-2 border">Qty</th>
-                <th className="p-1 lg:p-2 border">Rate</th>
-                <th className="p-1 lg:p-2 border">Disc</th>
-                <th className="p-1 lg:p-2 border">Tax</th>
-                <th className="p-1 lg:p-2 border">SGST</th>
-                <th className="p-1 lg:p-2 border">Total</th>
-                <th className="p-1 lg:p-2 border">Action</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '5%' }}>#</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '8%' }}>Svc No</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '25%' }}>Service Name</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>Qty</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '10%' }}>Rate</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>Disc</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>Tax</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>SGST</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '10%' }}>Total</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '14%' }}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -251,7 +350,7 @@ const ServiceTab = () => {
                     <td className="p-1 lg:p-2 border text-center">{index + 1}</td>
                     <td className="p-1 lg:p-2 border text-center">{service.serviceId}</td>
                     <td className="p-1 lg:p-2 border">
-                      <span className="line-clamp-1 text-xs sm:text-sm">{service.serviceName}</span>
+                      <div className="truncate">{service.serviceName}</div>
                     </td>
                     <td className="p-1 lg:p-2 border text-center">
                       <input
@@ -297,8 +396,8 @@ const ServiceTab = () => {
 
       <div className="mb-8">
         <h2 className="text-xl font-bold mb-2">Used Services</h2>
-        <div className="mx-auto bg-white rounded-lg shadow-sm overflow-x-auto">
-          <table className="w-full text-xs sm:text-sm min-w-[400px] md:min-w-[800px] lg:min-w-[1200px]">
+        <div className="mx-auto bg-white rounded-lg shadow-sm" style={{ overflowX: 'auto', width: '100%', maxWidth: '100%' }}>
+          <table className="w-full text-xs sm:text-sm" style={{ minWidth: '800px', tableLayout: 'fixed' }}>
             <thead>
               <tr className="bg-gray-100">
                 <th className="p-2 border text-center" colSpan={10}>
@@ -306,16 +405,16 @@ const ServiceTab = () => {
                 </th>
               </tr>
               <tr className="bg-gray-50">
-                <th className="p-1 lg:p-2 border">#</th>
-                <th className="p-1 lg:p-2 border">Svc No</th>
-                <th className="p-1 lg:p-2 border">Service Name</th>
-                <th className="p-1 lg:p-2 border">Qty</th>
-                <th className="p-1 lg:p-2 border">Rate</th>
-                <th className="p-1 lg:p-2 border">Disc</th>
-                <th className="p-1 lg:p-2 border">Tax</th>
-                <th className="p-1 lg:p-2 border">SGST</th>
-                <th className="p-1 lg:p-2 border">Total</th>
-                <th className="p-1 lg:p-2 border">Action</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '5%' }}>#</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '8%' }}>Svc No</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '25%' }}>Service Name</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>Qty</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '10%' }}>Rate</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>Disc</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>Tax</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>SGST</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '10%' }}>Total</th>
+                <th className="p-1 lg:p-2 border" style={{ width: '14%' }}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -327,7 +426,7 @@ const ServiceTab = () => {
                       {service.vehicleServicesUsedId || service.serviceId}
                     </td>
                     <td className="p-1 lg:p-2 border">
-                      <span className="line-clamp-1 text-xs sm:text-sm">{service.serviceName}</span>
+                      <div className="truncate">{service.serviceName}</div>
                     </td>
                     <td className="p-1 lg:p-2 border text-center">{service.quantity}</td>
                     <td className="p-1 lg:p-2 border text-right whitespace-nowrap">
@@ -375,35 +474,31 @@ const ServiceTab = () => {
         </div>
       )}
 
-      {showModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-4 rounded-lg w-1/3 text-center">
-            <h3 className="font-semibold text-xl">Service Already Added</h3>
-            <p className="mt-2 text-sm">This service is already added to the invoice.</p>
-            <button
-              onClick={() => setShowModal(false)}
-              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Modal for service already added */}
+      <Dialog open={showModal} onClose={() => setShowModal(false)}>
+        <DialogTitle>Service Already Added</DialogTitle>
+        <DialogContent>
+          <Typography>This service is already added to the invoice.</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowModal(false)} color="primary" autoFocus>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-      {showSuccessModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-4 rounded-lg w-1/3 text-center">
-            <h3 className="font-semibold text-xl">Invoice Saved!</h3>
-            <p className="mt-2 text-sm">Your invoice has been successfully saved.</p>
-            <button
-              onClick={() => setShowSuccessModal(false)}
-              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Success Modal */}
+      <Dialog open={showSuccessModal} onClose={() => setShowSuccessModal(false)}>
+        <DialogTitle>Invoice Saved!</DialogTitle>
+        <DialogContent>
+          <Typography>Your invoice has been successfully saved.</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowSuccessModal(false)} color="primary" autoFocus>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

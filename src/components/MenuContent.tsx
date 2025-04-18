@@ -32,7 +32,7 @@ const mainListItems = [
       { text: "Manage Spares", icon: <RepairIcon sx={{ color: "#f57c00" }} />, link: "/admin/manage-stock" },
       { text: "Manage Supplier", icon: <RepairIcon sx={{ color: "#d32f2f" }} />, link: "/admin/manageVendor" },
       { text: "Manage Customer", icon: <RepairIcon sx={{ color: "#7b1fa2" }} />, link: "/admin/manage-customer" },
-      { text: "Manage Notes", icon: <RepairIcon sx={{ color: "#00796b" }} />, link: "/admin/manage" },
+      { text: "Manage Notes", icon: <RepairIcon sx={{ color: "#00796b" }} />, link: "/admin/manage-Notes" },
       { text: "Manage Terms & Conditions", icon: <RepairIcon sx={{ color: "#c2185b" }} />, link: "/admin/Service" },
       { text: "Spare Sale Stock", icon: <RepairIcon sx={{ color: "#0288d1" }} />, link: "/admin/manage-stock" },
     ],

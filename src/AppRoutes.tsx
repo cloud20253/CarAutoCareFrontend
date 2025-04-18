@@ -73,6 +73,7 @@ import JobSaleReport from "components/Reports/JobSaleReport";
 import JobSaleReportPDF from "components/Reports/JobSaleReportPDF";
 import PurchaseReport from "components/Reports/PurchaseReport";
 import PurchaseReportPDF from "components/Reports/PurchaseReportPDF";
+import NotesList from "pages/Notes/NotesList";
 
 import SuperTechServiceReport from "components/Reports/SuperTechServiceReport";
 import SuperTechServiceReportPDF from "components/Reports/SuperTechServiceReportPDF";
@@ -120,6 +121,7 @@ const AppRoutes = () => {
                 <Route path="manage-reports" element={<ReportForm />} />
                 <Route path="insuranceList" element={<InsuranceList />} />
                 <Route path="manage-purchaseaccountreport" element={<PurchaseAccountReport />} />
+                <Route path="manage-Notes" element={<NotesList/>} />
 
                 <Route path="ServiceTable" element={<InvoiceTable />} />
                 <Route path="serviceManage" element={<AddService />} />
@@ -168,6 +170,7 @@ const AppRoutes = () => {
                 <Route path="vehicle/add/sparepart/:id" element={<QuatationGrid/>} />
 
                 <Route path="vehicle/add/servicepart/:id" element={<AddVehiclePartService/>} />
+                <Route path="add-vehicle-part-service/:id" element={<AddVehiclePartService/>} />
                 <Route path="vehicle/details/:id" element={<AddVehicle/>} />
                 <Route path="jobcard/manage" element={<JobCardList/>} />
                 <Route path="services" element={<ManageServiceGrid/>} />

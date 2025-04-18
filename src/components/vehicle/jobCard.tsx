@@ -25,7 +25,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { Task, NoteAdd, Delete, Save, RemoveCircleOutline } from "@mui/icons-material";
+import { Task, NoteAdd, Delete, Save, RemoveCircleOutline, Description } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import apiClient from "Services/apiService";
 
@@ -38,6 +38,26 @@ const StyledTextArea = styled(TextareaAutosize)(({ theme }) => ({
   "&:focus": {
     outline: `2px solid ${theme.palette.primary.main}`,
     borderColor: "transparent",
+  },
+}));
+
+// HeaderCard styled component for navigation cards
+const HeaderCard = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  textAlign: "center",
+  cursor: "pointer",
+  borderRadius: theme.shape.borderRadius,
+  transition: "transform 0.3s, box-shadow 0.3s",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+  height: 120, // Fixed height for consistency
+  width: '100%', // Use full width of the grid item
+  boxShadow: theme.shadows[2],
+  "&:hover": {
+    transform: "scale(1.03)",
+    boxShadow: theme.shadows[4],
   },
 }));
 
@@ -108,8 +128,6 @@ const JobCard: React.FC = () => {
     }
   }, [debouncedSearch]);
 
-
-
   const fetchVehicleData = async () => {
     try {
       const vehicleRegId =vehicleId;
@@ -143,8 +161,6 @@ const JobCard: React.FC = () => {
     }
   };
 
-
-  
   const handleJobSelect = (
     event: React.SyntheticEvent,
     newValue: JobOption | null
@@ -196,8 +212,64 @@ const JobCard: React.FC = () => {
     }
   };
 
+  // Function to render header cards
+  const renderHeaderCards = () => {
+    const headerCards = [
+      {
+        label: "Job Card",
+        icon: <Task fontSize="large" color="primary" />,
+        value: "jobCard",
+        onClick: () => {}, // already on job card
+      },
+      {
+        label: "Spare",
+        icon: <Description fontSize="large" color="primary" />,
+        value: "spare",
+        onClick: () => navigate(`/admin/add-vehicle-part-service/${id}`),
+      },
+      {
+        label: "Service",
+        icon: <NoteAdd fontSize="large" color="primary" />,
+        value: "service",
+        onClick: () => navigate(`/admin/serviceTab/${id}`),
+      },
+    ];
+
+    return (
+      <Box sx={{ width: '100%', mb: 3 }}>
+        <Grid container spacing={3} justifyContent="center" sx={{ maxWidth: '900px', mx: 'auto' }}>
+          {headerCards.map((card) => (
+            <Grid item xs={12} sm={4} md={4} key={card.value}>
+              <HeaderCard 
+                onClick={card.onClick}
+                sx={{
+                  border: card.value === 'jobCard' ? '2px solid' : 'none',
+                  borderColor: 'primary.main',
+                  backgroundColor: card.value === 'jobCard' ? 'rgba(25, 118, 210, 0.08)' : 'white',
+                }}
+              >
+                <Box sx={{ mb: 1 }}>{card.icon}</Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1rem' }}>
+                  {card.label}
+                </Typography>
+              </HeaderCard>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+    );
+  };
+
   return (
     <Box sx={{ width: "100%", p: 2 }}>
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle1" color="textSecondary">
+          Vehicle Registration ID: {id}
+        </Typography>
+      </Box>
+      
+      {renderHeaderCards()}
+      
       <Paper elevation={3} sx={{ borderRadius: 0, p: 3, width: "100%" }}>
         <Typography
           variant="h6"
