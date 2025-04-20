@@ -16,6 +16,13 @@ import {
   Autocomplete,
   TextField,
   createFilterOptions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
 import { useNavigate } from 'react-router-dom';
 
@@ -23,6 +30,14 @@ const FormGrid = styled(Grid)(() => ({
   display: "flex",
   flexDirection: "column",
 }));
+
+interface GSTData {
+  gst0: number;
+  gst5: number;
+  gst12: number;
+  gst18: number;
+  gst28: number;
+}
 
 interface CreateTransaction {
   transactionType: "CREDIT" | "DEBIT";
@@ -32,8 +47,15 @@ interface CreateTransaction {
   partName: string;
   manufacturer: string;
   quantity: string;
+  price: number;
   billNo?: string;
-  name: string; 
+  name: string;
+  gstPercentage: number;
+  taxableAmount: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  totalAmount: number;
 }
 
 interface Feedback {
@@ -53,6 +75,70 @@ interface SparePartDto {
   description?: string;  
 }
 
+interface RecentTransaction {
+  id?: number;
+  createdAt?: string;
+  transactionType: "CREDIT" | "DEBIT";
+  partNumber: string;
+  partName: string;
+  manufacturer: string;
+  quantity: string;
+  price: number;
+  billNo?: string;
+  name: string;
+  gstPercentage: number;
+  taxableAmount: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  totalAmount: number;
+}
+
+interface GSTBreakdown {
+  gst0: {
+    taxableAmount: number;
+    cgst: number;
+    sgst: number;
+    igst: number;
+    items: RecentTransaction[];
+  };
+  gst5: {
+    taxableAmount: number;
+    cgst: number;
+    sgst: number;
+    igst: number;
+    items: RecentTransaction[];
+  };
+  gst9: {
+    taxableAmount: number;
+    cgst: number;
+    sgst: number;
+    igst: number;
+    items: RecentTransaction[];
+  };
+  gst12: {
+    taxableAmount: number;
+    cgst: number;
+    sgst: number;
+    igst: number;
+    items: RecentTransaction[];
+  };
+  gst18: {
+    taxableAmount: number;
+    cgst: number;
+    sgst: number;
+    igst: number;
+    items: RecentTransaction[];
+  };
+  gst28: {
+    taxableAmount: number;
+    cgst: number;
+    sgst: number;
+    igst: number;
+    items: RecentTransaction[];
+  };
+}
+
 const initialCreateData: CreateTransaction = {
   transactionType: "CREDIT",
   userId: 10006,
@@ -61,8 +147,24 @@ const initialCreateData: CreateTransaction = {
   partName: "",
   manufacturer: "",
   quantity: "1",
+  price: 0,
   billNo: "",
   name: "",
+  gstPercentage: 0,
+  taxableAmount: 0,
+  cgst: 0,
+  sgst: 0,
+  igst: 0,
+  totalAmount: 0
+};
+
+const initialGSTBreakdown: GSTBreakdown = {
+  gst0: { taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, items: [] },
+  gst5: { taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, items: [] },
+  gst9: { taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, items: [] },
+  gst12: { taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, items: [] },
+  gst18: { taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, items: [] },
+  gst28: { taxableAmount: 0, cgst: 0, sgst: 0, igst: 0, items: [] }
 };
 
 const filterOptions = createFilterOptions<SparePartDto>({
@@ -74,6 +176,14 @@ const filterOptions = createFilterOptions<SparePartDto>({
 const TransactionAdd: React.FC = () => {
   const [createData, setCreateData] = useState<CreateTransaction>(initialCreateData);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([]);
+  const [gstTotals, setGstTotals] = useState<GSTData>({
+    gst0: 0,
+    gst5: 0,
+    gst12: 0,
+    gst18: 0,
+    gst28: 0
+  });
 
   const [vendorSuggestions, setVendorSuggestions] = useState<Vendor[]>([]);
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
@@ -81,6 +191,8 @@ const TransactionAdd: React.FC = () => {
   const [partSuggestions, setPartSuggestions] = useState<SparePartDto[]>([]);
   const [selectedPart, setSelectedPart] = useState<SparePartDto | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const [gstBreakdown, setGstBreakdown] = useState<GSTBreakdown>(initialGSTBreakdown);
 
   const navigate = useNavigate();
 
@@ -156,29 +268,124 @@ const TransactionAdd: React.FC = () => {
     }));
   };
 
+  const resetFormPartially = () => {
+    // Keep vendor and bill number, reset other fields
+    setCreateData(prev => ({
+      ...initialCreateData,
+      name: prev.name,
+      billNo: prev.billNo
+    }));
+    setSelectedPart(null);
+    setSearchTerm("");
+    setPartSuggestions([]);
+  };
+
+  const calculateGSTValues = (price: number, quantity: number, gstPercentage: number) => {
+    const taxableAmount = price * quantity;
+    const gstAmount = (taxableAmount * gstPercentage) / 100;
+    const cgst = gstPercentage > 0 ? gstAmount / 2 : 0;
+    const sgst = gstPercentage > 0 ? gstAmount / 2 : 0;
+    
+    return {
+      taxableAmount,
+      cgst,
+      sgst,
+      igst: 0,
+      totalAmount: taxableAmount + gstAmount
+    };
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const price = parseFloat(e.target.value) || 0;
+    const quantity = parseInt(createData.quantity) || 0;
+    const gstPercentage = createData.gstPercentage;
+    
+    const gstValues = calculateGSTValues(price, quantity, gstPercentage);
+    
+    setCreateData(prev => ({
+      ...prev,
+      price,
+      ...gstValues
+    }));
+  };
+
+  const handleGSTChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const gstPercentage = parseFloat(e.target.value) || 0;
+    const price = createData.price;
+    const quantity = parseInt(createData.quantity) || 0;
+    
+    const gstValues = calculateGSTValues(price, quantity, gstPercentage);
+    
+    setCreateData(prev => ({
+      ...prev,
+      gstPercentage,
+      ...gstValues
+    }));
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const quantity = e.target.value;
+    const price = createData.price;
+    const gstPercentage = createData.gstPercentage;
+    
+    const gstValues = calculateGSTValues(price, parseInt(quantity) || 0, gstPercentage);
+    
+    setCreateData(prev => ({
+      ...prev,
+      quantity,
+      ...gstValues
+    }));
+  };
+
+  const updateGSTBreakdown = (transaction: RecentTransaction) => {
+    setGstBreakdown(prev => {
+      const key = `gst${transaction.gstPercentage}` as keyof GSTBreakdown;
+      const section = prev[key];
+      
+      return {
+        ...prev,
+        [key]: {
+          taxableAmount: section.taxableAmount + transaction.taxableAmount,
+          cgst: section.cgst + transaction.cgst,
+          sgst: section.sgst + transaction.sgst,
+          igst: section.igst + transaction.igst,
+          items: [...section.items, transaction]
+        }
+      };
+    });
+  };
+
   const handleCreateSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
       const dataToSubmit = {
         ...createData,
-        quantity: Number(createData.quantity),
+        quantity: parseInt(createData.quantity)
       };
+      
       const response = await apiClient.post("/sparePartTransactions/add", dataToSubmit);
-      setFeedback({
-        message: response.data.message || "Transaction created successfully",
-        severity: "success",
-      });
-      setCreateData(initialCreateData);
-      setSelectedVendor(null);
-      setSelectedPart(null);
-      setSearchTerm("");
-      setPartSuggestions([]);
+      
+      const recentTransaction: RecentTransaction = {
+        ...createData,
+        id: response.data.id,
+        createdAt: new Date().toISOString()
+      };
+
+      setRecentTransactions(prev => [...prev, recentTransaction]);
+      updateGSTBreakdown(recentTransaction);
+      resetFormPartially();
     } catch (error: any) {
-      setFeedback({
-        message: error.response?.data?.message || "Failed to create transaction",
-        severity: "error",
-      });
+      console.error("Error creating transaction:", error);
     }
+  };
+
+  const calculateTotals = () => {
+    return {
+      totalTaxableAmount: Object.values(gstBreakdown).reduce((sum, section) => sum + section.taxableAmount, 0),
+      totalCGST: Object.values(gstBreakdown).reduce((sum, section) => sum + section.cgst, 0),
+      totalSGST: Object.values(gstBreakdown).reduce((sum, section) => sum + section.sgst, 0),
+      totalIGST: Object.values(gstBreakdown).reduce((sum, section) => sum + section.igst, 0),
+    };
   };
 
   const handleCloseSnackbar = () => {
@@ -219,6 +426,20 @@ const TransactionAdd: React.FC = () => {
               onChange={handleSelectVendor}
               value={selectedVendor}
               renderInput={(params) => <TextField {...params} label="Vendor Name" />}
+            />
+          </FormGrid>
+
+          <FormGrid item xs={12} md={6}>
+            <FormLabel htmlFor="billNo">
+              Bill Number
+            </FormLabel>
+            <OutlinedInput
+              name="billNo"
+              value={createData.billNo}
+              onChange={handleCreateChange}
+              placeholder="Enter Bill Number"
+              size="small"
+              required
             />
           </FormGrid>
 
@@ -268,7 +489,7 @@ const TransactionAdd: React.FC = () => {
             <OutlinedInput
               name="quantity"
               value={createData.quantity}
-              onChange={handleCreateChange}
+              onChange={handleQuantityChange}
               type="number"
               size="small"
               required
@@ -277,14 +498,28 @@ const TransactionAdd: React.FC = () => {
           </FormGrid>
 
           <FormGrid item xs={12} md={6}>
-            <FormLabel htmlFor="billNo">
-              Bill Number
+            <FormLabel htmlFor="price">
+              Price
             </FormLabel>
             <OutlinedInput
-              name="billNo"
-              value={createData.billNo}
-              onChange={handleCreateChange}
-              placeholder="Enter Bill Number"
+              name="price"
+              value={createData.price}
+              onChange={handlePriceChange}
+              type="number"
+              size="small"
+              required
+            />
+          </FormGrid>
+
+          <FormGrid item xs={12} md={6}>
+            <FormLabel htmlFor="gstPercentage">
+              GST%
+            </FormLabel>
+            <OutlinedInput
+              name="gstPercentage"
+              value={createData.gstPercentage}
+              onChange={handleGSTChange}
+              type="number"
               size="small"
               required
             />
@@ -297,6 +532,121 @@ const TransactionAdd: React.FC = () => {
           </FormGrid>
         </Grid>
       </form>
+
+      {/* Recent Transactions Table */}
+      {recentTransactions.length > 0 && (
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            Recent Transactions
+          </Typography>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Part Number</TableCell>
+                  <TableCell>Part Name</TableCell>
+                  <TableCell>Manufacturer</TableCell>
+                  <TableCell align="right">Quantity</TableCell>
+                  <TableCell>Vendor</TableCell>
+                  <TableCell>Bill No</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {recentTransactions.map((transaction, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{transaction.partNumber}</TableCell>
+                    <TableCell>{transaction.partName}</TableCell>
+                    <TableCell>{transaction.manufacturer}</TableCell>
+                    <TableCell align="right">{transaction.quantity}</TableCell>
+                    <TableCell>{transaction.name}</TableCell>
+                    <TableCell>{transaction.billNo}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      )}
+
+      {/* Updated GST Summary Table */}
+      {recentTransactions.length > 0 && (
+        <TableContainer component={Paper} sx={{ mt: 4 }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Total Sale</TableCell>
+                <TableCell>Total Taxable</TableCell>
+                <TableCell>Total CGST</TableCell>
+                <TableCell>Total SGST</TableCell>
+                <TableCell>Total IGST</TableCell>
+                <TableCell>Sale 0%</TableCell>
+                <TableCell>Taxable 0%</TableCell>
+                <TableCell>Sale 5%</TableCell>
+                <TableCell>Taxable 5%</TableCell>
+                <TableCell>CGST 2.5%</TableCell>
+                <TableCell>SGST 2.5%</TableCell>
+                <TableCell>IGST 5%</TableCell>
+                <TableCell>Sale 9%</TableCell>
+                <TableCell>Taxable 9%</TableCell>
+                <TableCell>CGST 4.5%</TableCell>
+                <TableCell>SGST 4.5%</TableCell>
+                <TableCell>IGST 9%</TableCell>
+                <TableCell>Sale 12%</TableCell>
+                <TableCell>Taxable 12%</TableCell>
+                <TableCell>CGST 6%</TableCell>
+                <TableCell>SGST 6%</TableCell>
+                <TableCell>IGST 12%</TableCell>
+                <TableCell>Sale 18%</TableCell>
+                <TableCell>Taxable 18%</TableCell>
+                <TableCell>CGST 9%</TableCell>
+                <TableCell>SGST 9%</TableCell>
+                <TableCell>IGST 18%</TableCell>
+                <TableCell>Sale 28%</TableCell>
+                <TableCell>Taxable 28%</TableCell>
+                <TableCell>CGST 14%</TableCell>
+                <TableCell>SGST 14%</TableCell>
+                <TableCell>IGST 28%</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell>{calculateTotals().totalTaxableAmount.toFixed(2)}</TableCell>
+                <TableCell>{calculateTotals().totalTaxableAmount.toFixed(2)}</TableCell>
+                <TableCell>{calculateTotals().totalCGST.toFixed(2)}</TableCell>
+                <TableCell>{calculateTotals().totalSGST.toFixed(2)}</TableCell>
+                <TableCell>{calculateTotals().totalIGST.toFixed(2)}</TableCell>
+                <TableCell>{(gstBreakdown.gst0.taxableAmount).toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst0.taxableAmount.toFixed(2)}</TableCell>
+                <TableCell>{(gstBreakdown.gst5.taxableAmount + gstBreakdown.gst5.cgst + gstBreakdown.gst5.sgst).toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst5.taxableAmount.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst5.cgst.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst5.sgst.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst5.igst.toFixed(2)}</TableCell>
+                <TableCell>{(gstBreakdown.gst9.taxableAmount + gstBreakdown.gst9.cgst + gstBreakdown.gst9.sgst).toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst9.taxableAmount.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst9.cgst.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst9.sgst.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst9.igst.toFixed(2)}</TableCell>
+                <TableCell>{(gstBreakdown.gst12.taxableAmount + gstBreakdown.gst12.cgst + gstBreakdown.gst12.sgst).toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst12.taxableAmount.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst12.cgst.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst12.sgst.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst12.igst.toFixed(2)}</TableCell>
+                <TableCell>{(gstBreakdown.gst18.taxableAmount + gstBreakdown.gst18.cgst + gstBreakdown.gst18.sgst).toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst18.taxableAmount.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst18.cgst.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst18.sgst.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst18.igst.toFixed(2)}</TableCell>
+                <TableCell>{(gstBreakdown.gst28.taxableAmount + gstBreakdown.gst28.cgst + gstBreakdown.gst28.sgst).toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst28.taxableAmount.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst28.cgst.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst28.sgst.toFixed(2)}</TableCell>
+                <TableCell>{gstBreakdown.gst28.igst.toFixed(2)}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       <Snackbar
         open={!!feedback}

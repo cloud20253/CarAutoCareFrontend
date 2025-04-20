@@ -1,3 +1,6 @@
+
+
+
 import React, { useState, useEffect, useCallback } from "react";
 import apiClient from "Services/apiService";
 import {
@@ -26,7 +29,7 @@ import CustomizedDataGrid from "components/CustomizedDataGrid";
 import { GridCellParams, GridRowsProp, GridColDef } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CancelIcon from "@mui/icons-material/Cancel";
-import SparePartDeleteModel from "./SparePartDeleteModel";
+import SparePartDeleteModel from "components/vehicle/SparePartDeleteModel";
 import { Task, Description, NoteAdd } from "@mui/icons-material";
 
 // Styled components
@@ -81,6 +84,7 @@ const initialCreateData: CreateTransaction = {
   cgst: 0,
   sgst: 0,
 };
+
 interface SpareFilterDto {
   sparePartId: number;
   partName: string;
@@ -91,10 +95,12 @@ interface SpareFilterDto {
   cgst: number;
   sgst: number;
 }
+
 interface Feedback {
   message: string;
   severity: "success" | "error";
 }
+
 const AddVehiclePartService: React.FC = () => {
   const [createData, setCreateData] = useState<CreateTransaction>(initialCreateData);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -107,40 +113,47 @@ const AddVehiclePartService: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>("spare");
 
   const navigate = useNavigate();
-  const { id } = useParams(); 
+  const { id } = useParams(); // 'id' here is the vehicleRegId
 
   useEffect(() => {
     if (id) {
-      fetchSparePartList();
+    //   fetchSparePartList();
     }
   }, [id]);
-  const fetchSparePartList = async () => {
-    try {
-      const responsePart = await apiClient.get(
-        `/sparePartTransactions/vehicleRegId?vehicleRegId=${id}` );
-      if (!responsePart.data || responsePart.data.length === 0) {
-        console.warn("No transactions found for this vehicleRegId");
-        return; }
-      const transactions: any = Array.isArray(responsePart.data)
-        ? responsePart.data
-        : [responsePart.data];
-      const transactionsData = transactions[0].data;
-      const newTransactions = transactionsData.map((resData: any, index: number) => ({
-        id: rows.length + index + 1,
-        partNumber: resData.partNumber,
-        partName: resData.partName,
-        manufacturer: resData.manufacturer,
-        quantity: resData.quantity,
-        amount: resData.price || 0,
-        total: (resData.price || 0) * resData.quantity,
-        transactionType: resData.transactionType,
-        vehicleRegId: resData.vehicleRegId,
-        sparePartTransactionId: resData.sparePartTransactionId,
-        cgst: resData.cgst || 0,
-        sgst: resData.sgst || 0, }));
-      setRows([...newTransactions]);
-    } catch (err) {
-      console.error("Error fetching transactions:", err);  } };
+
+//   const fetchSparePartList = async () => {
+//     try {
+//       const responsePart = await apiClient.get(
+//         `/sparePartTransactions/vehicleRegId?vehicleRegId=${id}`
+//       );
+//       if (!responsePart.data || responsePart.data.length === 0) {
+//         console.warn("No transactions found for this vehicleRegId");
+//         return;
+//       }
+//       const transactions: any = Array.isArray(responsePart.data)
+//         ? responsePart.data
+//         : [responsePart.data];
+//       const transactionsData = transactions[0].data;
+//       const newTransactions = transactionsData.map((resData: any, index: number) => ({
+//         id: rows.length + index + 1,
+//         partNumber: resData.partNumber,
+//         partName: resData.partName,
+//         manufacturer: resData.manufacturer,
+//         quantity: resData.quantity,
+//         amount: resData.price || 0,
+//         total: (resData.price || 0) * resData.quantity,
+//         transactionType: resData.transactionType,
+//         vehicleRegId: resData.vehicleRegId,
+//         sparePartTransactionId: resData.sparePartTransactionId,
+//         cgst: resData.cgst || 0,
+//         sgst: resData.sgst || 0,
+//       }));
+//       setRows([...newTransactions]);
+//     } catch (err) {
+//       console.error("Error fetching transactions:", err);
+//     }
+//   };
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchKeyword);
@@ -149,19 +162,24 @@ const AddVehiclePartService: React.FC = () => {
       clearTimeout(handler);
     };
   }, [searchKeyword]);
+
   const fetchPartSuggestions = useCallback(async (keyword: string) => {
     if (!keyword.trim()) {
       setPartSuggestions([]);
-      return; }
+      return;
+    }
     try {
       const response = await apiClient.get(`/Filter/search?keyword=${keyword}`);
       setPartSuggestions(response.data);
     } catch (error) {
-      console.error("Error fetching part suggestions:", error); }
+      console.error("Error fetching part suggestions:", error);
+    }
   }, []);
+
   useEffect(() => {
     fetchPartSuggestions(debouncedSearch);
   }, [debouncedSearch, fetchPartSuggestions]);
+
   const handleCreateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setCreateData((prev) => ({
@@ -172,8 +190,14 @@ const AddVehiclePartService: React.FC = () => {
           ? Number(value) * prev.quantity
           : name === "quantity"
           ? prev.amount * Number(value)
-          : prev.total,  })); };
+          : prev.total,
+    }));
+  };
+
   const handleSelectSuggestion = (suggestion: SpareFilterDto) => {
+
+
+    
     setCreateData((prev) => ({
       ...prev,
       partName: suggestion.partName,
@@ -185,7 +209,9 @@ const AddVehiclePartService: React.FC = () => {
       sgst: suggestion.sgst,
     }));
     setSearchKeyword("");
-    setPartSuggestions([]); };
+    setPartSuggestions([]);
+  };
+
   const handleClearSelection = () => {
     setCreateData((prev) => ({
       ...prev,
@@ -197,58 +223,148 @@ const AddVehiclePartService: React.FC = () => {
       cgst: 0,
       sgst: 0,
     }));
-    setSearchKeyword(""); };
-  const handleCreateSubmit = async (e: React.FormEvent) => {
+    setSearchKeyword("");
+  };
+
+//   const handleCreateSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     try {
+//       const updatedData = {
+//         ...createData,
+//         vehicleRegId: Number(id),
+//         userId: null,
+//       };
+//       const vehicleRegId = Number(id);
+//       console.log("vehicleRegId in QuatationGrd.tsx"+vehicleRegId)
+//       const response = await apiClient.post(`/api/quotations/${vehicleRegId}/parts`, updatedData);
+//       const sparePartTransactionId = response.data?.data?.sparePartTransactionId;
+//       const newTransaction = {
+//         id: rows.length + 1,
+//         partNumber: updatedData.partNumber,
+//         partName: updatedData.partName,
+//         manufacturer: updatedData.manufacturer,
+//         quantity: updatedData.quantity,
+//         amount: updatedData.amount,
+//         total: updatedData.total,
+//         transactionType: updatedData.transactionType,
+//         vehicleRegId: updatedData.vehicleRegId,
+//         sparePartTransactionId,
+//         cgst: updatedData.cgst,
+//         sgst: updatedData.sgst,
+//       };
+//       setRows((prevRows) => [...prevRows, newTransaction]);
+//       setFeedback({
+//         message: response.data.message || "Transaction created successfully",
+//         severity: "success",
+//       });
+//       setCreateData(initialCreateData);
+//     } catch (error: any) {
+//       setFeedback({
+//         message: error.response?.data?.message || "Failed to create transaction",
+//         severity: "error",
+//       });
+//     }
+//   };
+
+
+const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const updatedData = {
-        ...createData,
-        vehicleRegId: Number(id),
-        userId: null,  };
-      const response = await apiClient.post("/sparePartTransactions/add", updatedData);
-      const sparePartTransactionId = response.data?.data?.sparePartTransactionId;
-      const newTransaction = {
-        id: rows.length + 1,
-        partNumber: updatedData.partNumber,
-        partName: updatedData.partName,
-        manufacturer: updatedData.manufacturer,
-        quantity: updatedData.quantity,
-        amount: updatedData.amount,
-        total: updatedData.total,
-        transactionType: updatedData.transactionType,
-        vehicleRegId: updatedData.vehicleRegId,
-        sparePartTransactionId,
-        cgst: updatedData.cgst,
-        sgst: updatedData.sgst,  };
-      setRows((prevRows) => [...prevRows, newTransaction]);
+  
+    const vehicleRegId = Number(id);
+    if (!vehicleRegId) {
+      console.error("Vehicle ID is missing");
       setFeedback({
-        message: response.data.message || "Transaction created successfully",
-        severity: "success",
+        message: "Vehicle ID is missing",
+        severity: "error",
       });
-      setCreateData(initialCreateData);
+      return;
+    }
+  
+    // Create payload as array (just like `saveInvoice`)
+    const payload = [
+      {
+        lineNo: rows.length + 1,
+        partNumber: createData.partNumber,
+        partName: createData.partName,
+        manufacturer: createData.manufacturer,
+        quantity: createData.quantity,
+        amount: createData.amount,
+        total: createData.total,
+        transactionType: createData.transactionType,
+        vehicleRegId,
+        userId: null,
+        cgst: createData.cgst,
+        sgst: createData.sgst,
+      },
+    ];
+  
+    try {
+      const response = await apiClient.post(`/api/quotations/${vehicleRegId}/parts`, payload);
+  
+      if (response.status >= 200 && response.status < 300) {
+        const sparePartTransactionId = response.data?.data?.sparePartTransactionId;
+  
+        const newTransaction = {
+          ...payload[0],
+          id: rows.length + 1,
+          sparePartTransactionId,
+        };
+  
+        setRows((prevRows) => [...prevRows, newTransaction]);
+  
+        setFeedback({
+          message: response.data.message || "Transaction created successfully",
+          severity: "success",
+        });
+  
+        setCreateData(initialCreateData);
+      } else {
+        console.error("API call failed.");
+      }
     } catch (error: any) {
+      console.error("Error submitting:", error);
       setFeedback({
         message: error.response?.data?.message || "Failed to create transaction",
-        severity: "error", }); } };
+        severity: "error",
+      });
+    }
+  };
+
+  
+  
+  
   const handleCloseSnackbar = () => {
-    setFeedback(null); }; 
+    setFeedback(null);
+  };
+
   const handleDelete = (id: number) => {
     setSelectedId(id);
-    setOpen(true); };
+    // setOpen(true);
+    handleDeleteConfirmed(id )
+  };
+
   const handleDeleteConfirmed = (id: number) => {
-    setRows((prevRows) => prevRows.filter((row) => row.sparePartTransactionId !== id)); };
+    setRows((prevRows) => prevRows.filter((row) => row.id !== id));
+  };
+
   function renderActionButtons(params: GridCellParams) {
     return (
       <IconButton
         color="secondary"
-        onClick={() => handleDelete(params.row.sparePartTransactionId as number)} >
+        onClick={() => handleDelete(params.row.id as number)}
+      >
         <DeleteIcon />
-      </IconButton> );}
+      </IconButton>
+    );
+  }
+
   const computeGstAmounts = (row: any) => {
     const base = row.total;
     const cgstAmount = (base * row.cgst) / 100;
     const sgstAmount = (base * row.sgst) / 100;
-    return { cgstAmount, sgstAmount }; };
+    return { cgstAmount, sgstAmount };
+  };
+
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 80, sortable: false },
     { field: "partNumber", headerName: "Part Number", width: 150, sortable: false },
@@ -265,7 +381,9 @@ const AddVehiclePartService: React.FC = () => {
       valueGetter: (params: any) => {
         if (!params?.row) return "";
         const { cgstAmount } = computeGstAmounts(params.row);
-        return cgstAmount ? cgstAmount.toFixed(2) : "0.00"; }, },
+        return cgstAmount ? cgstAmount.toFixed(2) : "0.00";
+      },
+    },
     { field: "sgst", headerName: "SGST (%)", width: 120, sortable: false },
     {
       field: "sgstAmount",
@@ -275,31 +393,39 @@ const AddVehiclePartService: React.FC = () => {
       valueGetter: (params: any) => {
         if (!params?.row) return "";
         const { sgstAmount } = computeGstAmounts(params.row);
-        return sgstAmount ? sgstAmount.toFixed(2) : "0.00"; }, },
+        return sgstAmount ? sgstAmount.toFixed(2) : "0.00";
+      },
+    },
     { field: "total", headerName: "Total", width: 150, sortable: false },
     {
       field: "action",
       headerName: "Action",
       width: 120,
       sortable: false,
-      renderCell: (params) => renderActionButtons(params), }, ];
+      renderCell: (params) => renderActionButtons(params),
+    },
+  ];
   const grandTotal = rows.reduce((acc, row) => acc + (row.total as number), 0);
   const headerCards = [
-    {
-      label: "Job Card",
-      icon: <Task fontSize="large" color="primary" />,
-      value: "jobCard",
-      onClick: () => navigate(`/admin/job-card/${id}`),  },
     {
       label: "Spare",
       icon: <Description fontSize="large" color="primary" />,
       value: "spare",
-      onClick: () => setCurrentTab("spare"), },
+      onClick: () => setCurrentTab("spare"),
+    },
     {
       label: "Service",
       icon: <NoteAdd fontSize="large" color="primary" />,
       value: "service",
-      onClick: () => navigate(`/admin/serviceTab/${id}`), }, ];
+      onClick: () => navigate(`/admin/quationserviceTab/${id}`),
+    },
+    {
+        label: "Quatation List",
+        icon: <NoteAdd fontSize="large" color="primary" />,
+        value: "quatationlist",
+        onClick: () => navigate(`/admin/quatationlist`),
+      },
+  ];
   return (
     <Box
       sx={{
@@ -309,12 +435,10 @@ const AddVehiclePartService: React.FC = () => {
         width: "100%",
         p: 2,
         backgroundColor: "#f9f9f9",
-      }} >
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="subtitle1" color="textSecondary">
-          Vehicle Registration ID: {id}
-        </Typography>
-      </Box>
+      }}
+    >
+      {/* Display the vehicleRegId */}
+    
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {headerCards.map((card) => (
           <Grid item xs={12} sm={6} md={3} key={card.value}>
@@ -327,13 +451,9 @@ const AddVehiclePartService: React.FC = () => {
           </Grid>
         ))}
       </Grid>
-      {currentTab === "jobCard" && (
-        <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 3, width: "100%" }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Job Card Content
-          </Typography>
-        </Paper> )}
-      {currentTab === "spare" && (<>
+      
+      {currentTab === "spare" && (
+        <>
           <Stack
             direction="row"
             alignItems="center"
@@ -344,12 +464,15 @@ const AddVehiclePartService: React.FC = () => {
               backgroundColor: "#fff",
               borderRadius: 3,
               boxShadow: 1,
-              width: "100%", }} >
+              width: "100%",
+            }}
+          >
             <Typography
               component="h2"
               variant="h6"
-              sx={{ fontWeight: 600, display: "flex", alignItems: "center" }} >
-              Add Vehicle Service Parts
+              sx={{ fontWeight: 600, display: "flex", alignItems: "center" }}
+            >
+              Add Vehicle Spare Parts
             </Typography>
             <Button variant="contained" color="primary" onClick={() => navigate(-1)}>
               Back
@@ -370,10 +493,14 @@ const AddVehiclePartService: React.FC = () => {
                           <IconButton onClick={handleClearSelection}>
                             <CancelIcon />
                           </IconButton>
-                        </InputAdornment> } 
+                        </InputAdornment>
+                      }
                       size="small"
                       fullWidth
-                      disabled  />  ) : ( <>
+                      disabled
+                    />
+                  ) : (
+                    <>
                       <TextField
                         name="partName"
                         value={searchKeyword}
@@ -381,7 +508,8 @@ const AddVehiclePartService: React.FC = () => {
                         placeholder="Type to search spare parts..."
                         variant="outlined"
                         size="small"
-                        fullWidth  />
+                        fullWidth
+                      />
                       {partSuggestions.length > 0 && (
                         <Box
                           sx={{
@@ -390,7 +518,9 @@ const AddVehiclePartService: React.FC = () => {
                             mt: 1,
                             maxHeight: 200,
                             overflowY: "auto",
-                            backgroundColor: "#fff",  }}  >
+                            backgroundColor: "#fff",
+                          }}
+                        >
                           {partSuggestions.map((suggestion) => (
                             <Box
                               key={suggestion.sparePartId}
@@ -399,7 +529,8 @@ const AddVehiclePartService: React.FC = () => {
                                 cursor: "pointer",
                                 "&:hover": { backgroundColor: "#f0f0f0" },
                               }}
-                              onClick={() => handleSelectSuggestion(suggestion)} >
+                              onClick={() => handleSelectSuggestion(suggestion)}
+                            >
                               {suggestion.manufacturer} - {suggestion.partName} - {suggestion.description} <br />
                               <small>
                                 CGST: {suggestion.cgst}% | SGST: {suggestion.sgst}%
@@ -454,7 +585,7 @@ const AddVehiclePartService: React.FC = () => {
                 </FormGrid>
                 <Grid item xs={12}>
                   <Button type="submit" variant="contained" color="primary" fullWidth>
-                    Create Transaction
+                    Save
                   </Button>
                 </Grid>
               </Grid>
@@ -470,6 +601,14 @@ const AddVehiclePartService: React.FC = () => {
               <Paper elevation={3} sx={{ p: 2, textAlign: "right", borderRadius: 3, width: "100%" }}>
                 <Typography variant="h6">Grand Total: {grandTotal}</Typography>
               </Paper>
+              <div className="mt-4 flex justify-end">
+          <button
+            onClick={handleCreateSubmit}
+            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
+          >
+            Save 
+          </button>
+        </div>
             </>
           )}
         </>

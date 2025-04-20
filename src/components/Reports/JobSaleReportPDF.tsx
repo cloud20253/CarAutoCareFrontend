@@ -3,7 +3,6 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { InvoiceFormData } from './InvoiceFormData';
 import apiClient from 'Services/apiService';
 
 interface BillRow {
@@ -26,7 +25,7 @@ interface BillRow {
 }
 
 interface LocationState {
-  invoiceData?: any; // Make this property optional
+  invoiceData?: any;
   invoiceNumber: string;
   jobCardNumber: string;
   invDate: string;
@@ -64,135 +63,97 @@ interface LocationState {
     sgstPercent: string;
     igstPercent: string;
   }[];
-  globalDiscount : number;
+  globalDiscount: number;
   subTotal: number;
-  partsSubtotal:number;
-  laboursSubtotal:number;
+  partsSubtotal: number;
+  laboursSubtotal: number;
   totalAmount: number;
   advanceAmount: string;
   totalInWords: string;
 }
 
-const CounterBillPDF: FC = () => {
+const JobSaleReportPDF: FC = () => {
   const theme = useTheme();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const invoiceNumber = searchParams.get('invoiceNumber');
   const [invoiceData, setInvoiceData] = useState<LocationState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const invoiceRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchInvoiceData = async () => {
-      const vehicleRegId = searchParams.get('vehicleRegId');
-      
-      if (invoiceNumber) {
-        // Fetch by invoice number
-        try {
-          setIsLoading(true);
-          const response = await apiClient.get(`/api/vehicle-invoices/search/invoice/${invoiceNumber}`);
-          console.log('Fetched invoice data by invoice number:', response.data);
-          
-          if (response.data) {
-            // Transform API response to match the LocationState structure
-            const invoice = response.data;
-            setInvoiceData({
-              invoiceData: invoice,
-              invoiceNumber: invoice.invoiceNumber,
-              jobCardNumber: invoice.jobCardNumber || '',
-              invDate: invoice.invoiceDate || '',
-              transactionDate: invoice.invoiceDate || '',
-              customerName: invoice.customerName || '',
-              customerAddress: invoice.customerAddress || '',
-              customerMobile: invoice.customerMobile || '',
-              adharNo: invoice.customerAadharNo || '',
-              gstin: invoice.customerGstin || '',
-              vehicleNo: invoice.vehicleNo || '',
-              vehicleRegId: invoice.vehicleRegId || '',
-              customerAadharNo: invoice.customerAadharNo || '',
-              customerGstin: invoice.customerGstin || '',
-              regNo: invoice.regNo || '',
-              model: invoice.model || '',
-              kmsDriven: invoice.kmsDriven || '',
-              comments: invoice.comments || '',
-              parts: invoice.parts || [],
-              labours: invoice.labours || [],
-              globalDiscount: invoice.globalDiscount || 0,
-              subTotal: invoice.subTotal || 0,
-              partsSubtotal: invoice.partsSubtotal || 0,
-              laboursSubtotal: invoice.laboursSubtotal || 0,
-              totalAmount: invoice.totalAmount || 0,
-              advanceAmount: invoice.advanceAmount || '0',
-              totalInWords: invoice.totalInWords || '',
-              billRows: [],
-              items: []
-            });
-          }
-        } catch (error) {
-          console.error('Error fetching invoice data by invoice number:', error);
-        } finally {
+      try {
+        const invoiceNumber = searchParams.get('invoiceNumber');
+        console.log('Fetching invoice data for:', invoiceNumber);
+
+        if (!invoiceNumber) {
+          setError('No invoice number provided');
           setIsLoading(false);
+          return;
         }
-      } else if (vehicleRegId) {
-        // Fetch by vehicle registration ID
-        try {
-          setIsLoading(true);
-          const response = await apiClient.get(`/api/vehicle-invoices/search/vehicle-reg/${vehicleRegId}`);
-          console.log('Fetched invoice data by vehicle ID:', response.data);
-          
-          if (response.data && response.data.length > 0) {
-            // Use the most recent invoice if multiple exist
-            const invoice = Array.isArray(response.data) ? response.data[0] : response.data;
-            
-            setInvoiceData({
-              invoiceData: invoice,
-              invoiceNumber: invoice.invoiceNumber,
-              jobCardNumber: invoice.jobCardNumber || '',
-              invDate: invoice.invoiceDate || '',
-              transactionDate: invoice.invoiceDate || '',
-              customerName: invoice.customerName || '',
-              customerAddress: invoice.customerAddress || '',
-              customerMobile: invoice.customerMobile || '',
-              adharNo: invoice.customerAadharNo || '',
-              gstin: invoice.customerGstin || '',
-              vehicleNo: invoice.vehicleNo || '',
-              vehicleRegId: invoice.vehicleRegId || '',
-              customerAadharNo: invoice.customerAadharNo || '',
-              customerGstin: invoice.customerGstin || '',
-              regNo: invoice.regNo || '',
-              model: invoice.model || '',
-              kmsDriven: invoice.kmsDriven || '',
-              comments: invoice.comments || '',
-              parts: invoice.parts || [],
-              labours: invoice.labours || [],
-              globalDiscount: invoice.globalDiscount || 0,
-              subTotal: invoice.subTotal || 0,
-              partsSubtotal: invoice.partsSubtotal || 0,
-              laboursSubtotal: invoice.laboursSubtotal || 0,
-              totalAmount: invoice.totalAmount || 0,
-              advanceAmount: invoice.advanceAmount || '0',
-              totalInWords: invoice.totalInWords || '',
-              billRows: [],
-              items: []
-            });
-          }
-        } catch (error) {
-          console.error('Error fetching invoice data by vehicle ID:', error);
-        } finally {
+
+        const response = await apiClient.get(`/api/vehicle-invoices/number/${invoiceNumber}`);
+        console.log('API Response:', response.data);
+
+        if (!response.data) {
+          setError('No invoice data found');
           setIsLoading(false);
+          return;
         }
-      } else if (location.state) {
-        // If we have location state, use it directly
-        setInvoiceData(location.state as LocationState);
-        setIsLoading(false);
-      } else {
+
+        const invoice = response.data;
+        setInvoiceData({
+          invoiceData: invoice,
+          invoiceNumber: invoice.invoiceNumber,
+          jobCardNumber: invoice.jobCardNumber || '',
+          invDate: invoice.invoiceDate || '',
+          transactionDate: invoice.invoiceDate || '',
+          customerName: invoice.customerName || '',
+          customerAddress: invoice.customerAddress || '',
+          customerMobile: invoice.customerMobile || '',
+          adharNo: invoice.customerAadharNo || '',
+          gstin: invoice.customerGstin || '',
+          vehicleNo: invoice.vehicleNo || '',
+          vehicleRegId: invoice.vehicleRegId || '',
+          customerAadharNo: invoice.customerAadharNo || '',
+          customerGstin: invoice.customerGstin || '',
+          regNo: invoice.regNo || '',
+          model: invoice.model || '',
+          kmsDriven: invoice.kmsDriven || '',
+          comments: invoice.comments || '',
+          parts: invoice.parts || [],
+          labours: invoice.labours || [],
+          globalDiscount: invoice.globalDiscount || 0,
+          subTotal: invoice.subTotal || 0,
+          partsSubtotal: invoice.partsSubtotal || 0,
+          laboursSubtotal: invoice.laboursSubtotal || 0,
+          totalAmount: invoice.totalAmount || 0,
+          advanceAmount: invoice.advanceAmount || '0',
+          totalInWords: invoice.totalInWords || '',
+          billRows: [],
+          items: []
+        });
+        setError(null);
+      } catch (error) {
+        console.error('Error fetching invoice data:', error);
+        setError('Error fetching invoice data. Please try again.');
+      } finally {
         setIsLoading(false);
       }
     };
 
     fetchInvoiceData();
-  }, [invoiceNumber, searchParams, location.state]);
+  }, [searchParams]);
 
-  const invoiceRef = useRef<HTMLDivElement>(null); 
+  useEffect(() => {
+    if (!isLoading && !error && invoiceData) {
+      const timer = setTimeout(() => {
+        window.print();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, error, invoiceData]);
 
   const generatePDF = async () => {
     if (invoiceRef.current) {
@@ -240,22 +201,30 @@ const CounterBillPDF: FC = () => {
     return <div>Loading invoice data...</div>;
   }
 
+  if (error) {
+    return <div>{error}</div>;
+  }
+
   if (!invoiceData) {
     return <div>No invoice data found. Please check the invoice number and try again.</div>;
   }
-
+  
   return (
-    <div
-      ref={invoiceRef} 
-      style={{
-        width: '100%',
-        minHeight: '297mm',
-        margin: '0 auto',
-        padding: '5mm',
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '0.9rem',
-        backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff',
-        color: theme.palette.mode === 'dark' ? '#fff' : '#000',
+      <div
+        ref={invoiceRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          maxHeight: '210mm',
+          margin: '0',
+          padding: '0',
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '0.85rem',
+          backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff',
+          color: theme.palette.mode === 'dark' ? '#fff' : '#000',
+          display: 'flex',
+          flexDirection: 'column',
+          pageBreakInside: 'avoid'
       }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <tbody>
@@ -382,11 +351,11 @@ const CounterBillPDF: FC = () => {
             </td>
           </tr>
 
-          <tr>
-            <td colSpan={2} style={{ padding: 0, border: '1px solid #000' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-          <tr>
+            <tr>
+              <td colSpan={2} style={{ padding: 0, border: '1px solid #000' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
           <td 
             style={{
               border: '1px solid grey',
@@ -609,9 +578,9 @@ const CounterBillPDF: FC = () => {
               padding: '8px',
             }}
           ></td>
-        </tr>
-                </thead>
-                <tbody>
+                    </tr>
+                  </thead>
+                  <tbody>
                   {invoiceData.parts.map((part, index) => {
                     const quantity = Number(part.quantity) || 0;
                     const unitPrice = Number(part.unitPrice) || 0;
@@ -1060,11 +1029,11 @@ const CounterBillPDF: FC = () => {
                         Authorized Signature
                       </div>
                     </td>
-                  </tr>
-                </tbody>
-              </table>
-            </td>
-          </tr>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
 
           <tr>
             <td
@@ -1076,31 +1045,165 @@ const CounterBillPDF: FC = () => {
               }}
             >
               Thank You For Visit.... This is a Computer Generated Invoice
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-      <div style={{
-    display: 'flex',
-    justifyContent: 'center', 
-    alignItems: 'center',      
-    padding: '10px 20px',     
-}}>
-  <button 
-    style={{
-      border: '1px solid #000',
-      padding: '10px 20px',
-      textAlign: 'center',
-      color: 'red',
-      cursor: 'pointer'
-    }} 
-    onClick={generatePDF}
-  >
-    Download PDF
-  </button>
-</div>
-    </div>
+      <style>{`
+        @media print {
+          /* Critical print settings */
+          @page {
+            size: A4 landscape;
+            margin: 0 !important;
+          }
+
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            height: 100vh !important;
+            min-height: 100% !important;
+          }
+
+          /* Root container */
+          #root {
+            height: 100vh !important;
+            overflow: hidden !important;
+            position: relative !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+
+          /* Invoice container */
+          div[ref="invoiceRef"] {
+            transform: scale(0.88) !important;
+            transform-origin: top center !important;
+            height: 100% !important;
+            max-height: 210mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            page-break-before: avoid !important;
+            page-break-after: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          /* Hide all unnecessary elements */
+          nav, aside, button, .MuiDrawer-root, .sidebar, #sidebar, .no-print,
+          .MuiDrawer-paper, [class*="drawer"], [class*="Dashboard"], [class*="dashboard"],
+          [class*="sidebar"], [class*="Sidebar"], [class*="Dashboards"], [class*="dashboards"],
+          .MuiAppBar-root, header {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            position: absolute !important;
+            left: -9999px !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+          }
+
+          /* Table optimization */
+          table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 6.8pt !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+
+          td, th {
+            padding: 1px !important;
+            font-size: 6.8pt !important;
+            line-height: 1 !important;
+            height: auto !important;
+          }
+
+          /* Header optimization */
+          h2 {
+            font-size: 10pt !important;
+            margin: 0 !important;
+            padding: 1px !important;
+            line-height: 1.1 !important;
+          }
+
+          p {
+            font-size: 6.8pt !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 1.1 !important;
+          }
+
+          /* Signature and QR section */
+          img[alt="QR Code"] {
+            width: 45px !important;
+            height: 45px !important;
+            margin: 1px auto !important;
+          }
+
+          /* Signature row */
+          table:last-of-type {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+          }
+
+          tr:last-of-type td {
+            height: 25px !important;
+            padding: 1px !important;
+          }
+
+          /* Customer note */
+          textarea {
+            height: 15px !important;
+            min-height: 15px !important;
+            font-size: 6.8pt !important;
+          }
+
+          /* Thank you message */
+          tr:last-child td {
+            padding: 1px !important;
+            height: auto !important;
+            line-height: 1 !important;
+          }
+
+          /* Total sections */
+          tfoot tr td {
+            padding: 1px !important;
+            height: auto !important;
+          }
+
+          /* Words section */
+          tr td[colspan="14"] {
+            padding: 1px !important;
+            line-height: 1 !important;
+            height: auto !important;
+          }
+
+          /* Force all content to stay together */
+          * {
+            page-break-inside: avoid !important;
+          }
+
+          /* Remove all margins and padding from last elements */
+          table:last-child,
+          tr:last-child,
+          td:last-child {
+            margin: 0 !important;
+            padding: 1px !important;
+          }
+
+          /* Ensure white background */
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            background: white !important;
+            color: black !important;
+          }
+        }
+      `}</style>
+      </div>
   );
 };
 const tableBodyCell: React.CSSProperties = {
@@ -1110,4 +1213,4 @@ const tableBodyCell: React.CSSProperties = {
   verticalAlign: 'middle',
 };
 
-export default CounterBillPDF;
+export default JobSaleReportPDF;

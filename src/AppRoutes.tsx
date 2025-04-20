@@ -20,10 +20,14 @@ import Vehiclestatus from 'pages/vechiclestatus';
 import VehicleByAppointmentId from 'pages/VehicleByAppointmentId';
 import ManageRepairPage from "components/RepairsComponent/ManageRepairPage";
 import VehicleList from "components/vehicle/VehicleList";
+import QuatationList from "components/Quatation/QuatationList";
+
 import AddVehicle from "components/vehicle/AddVehicle";
 import TransactionAdd from "pages/TransactionManagement/TransactionAdd";
 import TransactionAll from "pages/TransactionManagement/TransactionAll";
 import AddVehiclePartService from "components/vehicle/AddVehiclePartService";
+import QuatationGrid from "components/Quatation/QuatationGrid";
+
 import StockManageGrid from "components/StockManagement/StockManageGrid";
 import TransactionList from "components/StockManagement/TransactionList";
 import VehicleDetailsView from "components/vehicle/VehicleDetailsView";
@@ -51,12 +55,32 @@ import EditService from "components/ManageServices/EditServices";
 import JobCardPDF from "components/vehicle/jobcardpdf";
 import InvoiceTable from "components/vehicle/ServiceTab";
 import ServiceTab from "components/vehicle/ServiceTab";
+import QuatationServiceTab from "components/Quatation/QuatationServiceTab";
+import SpareTab from "components/Quatation/SpareTab";
+import CustomerList from "components/Customer/CustomerList";
+import InsuranceList from "components/InsuranceList";
 import VendorManagementGrid from "components/Vendor/VendorManagementGrid";
 // import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
 import InvoicePDFGenerator from "components/vehicle/InvoicePDFGenerator";
-import PDFGenerator from "components/pdf/PDFGenerator";
+// import PDFGenerator from "components/pdf/PDFGenerator";
 import UserManagement from "pages/UserMangement";
 import AddUserForm from "components/User/AddUserForm";
+import QuatationPDFGeneration from "components/Quatation/QuatationPDFGeneration";
+import QuatationEdit from "components/Quatation/QuatationEdit";
+import AddCustomerForm from "components/Customer/Customers";
+import ReportForm from "components/Reports/ReportForm";
+import CounterSaleReport from "components/Reports/CounterSaleReport";
+import CounterSalesReportPDF from "components/Reports/CounterSalesReportPDF";
+import JobSaleReport from "components/Reports/JobSaleReport";
+import JobSaleReportPDF from "components/Reports/JobSaleReportPDF";
+import PurchaseReport from "components/Reports/PurchaseReport";
+import PurchaseReportPDF from "components/Reports/PurchaseReportPDF";
+
+import SuperTechServiceReport from "components/Reports/SuperTechServiceReport";
+import SuperTechServiceReportPDF from "components/Reports/SuperTechServiceReportPDF";
+import VehicalHistoryWithPDF from "components/Reports/VehicalHistoryWithPDF";
+
+// import PDFGenerator from "components/pdf/PDFGenerator";
 
 const AppRoutes = () => {
     return(
@@ -92,6 +116,11 @@ const AppRoutes = () => {
                 <Route path="billForm/:id" element={<InvoiceForm />} />
                 <Route path="jobcardpdf" element={<JobCardPDF />} />
                 <Route path="invoicepdfgenerator" element={<InvoicePDFGenerator />} />
+                <Route path="quatationpdfgenerator/:id" element={<QuatationPDFGeneration />} />
+                <Route path="manage-customer" element={<CustomerList />} />
+                <Route path="AddCustomer" element={<AddCustomerForm />} />  
+                <Route path="manage-reports" element={<ReportForm />} />
+                <Route path="insuranceList" element={<InsuranceList />} />
 
                 <Route path="ServiceTable" element={<InvoiceTable />} />
                 <Route path="serviceManage" element={<AddService />} />
@@ -111,22 +140,41 @@ const AppRoutes = () => {
                 <Route path="transaction-list" element={<TransactionList />} /> 
                 <Route path="user-part/view/:id" element={<TransactionDetails />} />
                 <Route path="vehicle" element={<VehicleList />} />
+                <Route path="quatationlist" element={<QuatationList />} />
+
+                <Route path="countersalereport" element={<CounterSaleReport />} />
+                <Route path="countersalereportPdf" element={<CounterSalesReportPDF />} />
+                <Route path="jobsalereport" element={<JobSaleReport />} />
+                <Route path="jobsalereportPdf" element={<JobSaleReportPDF />} />
+                <Route path="purchasereport" element={<PurchaseReport />} />
+                <Route path="purchasereportPdf" element={<PurchaseReportPDF />} />
+                <Route path="supertechservicereport" element={<SuperTechServiceReport />} />
+                <Route path="supertechservicereportPdf" element={<SuperTechServiceReportPDF/>} />
+                <Route path="vehiclehistorywithpdf" element={<VehicalHistoryWithPDF/>} />
                 <Route path="editService/:id" element={<EditService />} />
                 <Route path="vehicle/add" element={<AddVehicle/>} />
                 <Route path="jobcards/add" element={<JobOptionForm />} />
                 <Route path="job-card/:id" element={<JobCard/>} />
-                <Route path="serviceTab/:vehicleId" element={<ServiceTab />} />
+              
+
                 <Route path="quatation" element={<AddNewQuotation />} />
+                <Route path="quationserviceTab/:vehicleId" element={<QuatationServiceTab />} />
+
+                <Route path="serviceTab/:vehicleId" element={<ServiceTab />} />
+                <Route path="spareTab/:vehicleId" element={<SpareTab />} />
+                <Route path="quotation/edit/:id" element={<QuatationEdit/>} />
 
                 <Route path="vehicle/edit/:id" element={<AddVehicle/>} />
                 <Route path="vehicle/view/:id" element={<VehicleDetailsView/>} />
+                <Route path="vehicle/add/sparepart/:id" element={<QuatationGrid/>} />
+
                 <Route path="vehicle/add/servicepart/:id" element={<AddVehiclePartService/>} />
                 <Route path="vehicle/details/:id" element={<AddVehicle/>} />
                 <Route path="jobcard/manage" element={<JobCardList/>} />
                 <Route path="services" element={<ManageServiceGrid/>} />
                 <Route path="spare-part/transaction/add" element={<TransactionAdd />} />
                 <Route path="spare-part/transaction/list" element={<TransactionAll />} />
-                <Route path="pdf" element={<PDFGenerator />} />
+                {/* <Route path="pdf" element={<PDFGenerator />} /> */}
                 <Route path="user/list" element={<UserManagement />} />
                 <Route path="user/add" element={<AddUserForm />} />
 

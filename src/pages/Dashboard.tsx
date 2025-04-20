@@ -2,7 +2,6 @@ import { keyframes } from "@emotion/react";
 import { useTheme } from "@mui/material/styles";
 import { Box, Card, CardActionArea, CardContent, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import ArticleIcon from '@mui/icons-material/Article';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
@@ -42,12 +41,12 @@ const data = [
   {
     value: "Quotation",
     icon: <GarageIcon sx={{ color: "primary.dark", fontSize: 40 }} />,
-    url: "/admin/quatation",
+    url: "/admin/quatationlist",
   },
   {
     value: "Insurance",
     icon: <GarageIcon sx={{ color: "secondary.dark", fontSize: 40 }} />,
-    url: "/admin/vehicle",
+    url: "/admin/insuranceList",
   },
 ];
 

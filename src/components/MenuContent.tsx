@@ -41,18 +41,19 @@ const mainListItems = [
     text: "Report",
     icon: <AssignmentIcon sx={{ color: "#d32f2f" }} />,
     subMenu: [
-      { text: "Job Sales Report", icon: <BuildIcon sx={{ color: "#1976d2" }} />, link: "/admin/manage-service" },
-      { text: "Counter Sales Report", icon: <RepairIcon sx={{ color: "#388e3c" }} />, link: "/admin/manage-repair" },
-      { text: "Purchase Report", icon: <RepairIcon sx={{ color: "#f57c00" }} />, link: "/admin/manage-repair" },
-      { text: "Superwise/Technician Service Report", icon: <RepairIcon sx={{ color: "#d32f2f" }} />, link: "/admin/manage-repair" },
-      { text: "Vehicle History", icon: <RepairIcon sx={{ color: "#7b1fa2" }} />, link: "/admin/manage-repair" },
+      { text: "Job Sales Report", icon: <BuildIcon sx={{ color: "#1976d2" }} />, link: "/admin/jobsalereport" },
+       { text: "Counter Sales Report", icon: <RepairIcon sx={{ color: "#388e3c" }} />, link: "/admin/countersalereport" },
+
+      { text: "Purchase Report", icon: <RepairIcon sx={{ color: "#f57c00" }} />, link: "/admin/purchasereport" },
+      { text: "Superwise/Technician Service Report", icon: <RepairIcon sx={{ color: "#d32f2f" }} />, link: "/admin/supertechservicereport" },
+      { text: "Vehicle History", icon: <RepairIcon sx={{ color: "#7b1fa2" }} />, link: "/admin/vehiclehistorywithpdf" },
     ]
   },
   { 
     text: "Account Report",
     icon: <AssignmentIcon sx={{ color: "#512da8" }} />,
     subMenu: [
-      { text: "Sale Account Report", icon: <BuildIcon sx={{ color: "#1976d2" }} />, link: "/admin/manage-service" },
+      { text: "Sale Account Report", icon: <BuildIcon sx={{ color: "#1976d2" }} />, link: "/admin/manage-reports" },
       { text: "Purches Account Report", icon: <RepairIcon sx={{ color: "#388e3c" }} />, link: "/admin/manage-repair" },
     ]
   },
