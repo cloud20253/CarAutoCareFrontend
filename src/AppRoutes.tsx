@@ -55,6 +55,8 @@ import VendorManagementGrid from "components/Vendor/VendorManagementGrid";
 // import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
 import InvoicePDFGenerator from "components/vehicle/InvoicePDFGenerator";
 import PDFGenerator from "components/pdf/PDFGenerator";
+import UserManagement from "pages/UserMangement";
+import AddUserForm from "components/User/AddUserForm";
 
 const AppRoutes = () => {
     return(
@@ -125,6 +127,9 @@ const AppRoutes = () => {
                 <Route path="spare-part/transaction/add" element={<TransactionAdd />} />
                 <Route path="spare-part/transaction/list" element={<TransactionAll />} />
                 <Route path="pdf" element={<PDFGenerator />} />
+                <Route path="user/list" element={<UserManagement />} />
+                <Route path="user/add" element={<AddUserForm />} />
+
             </Route>
         </Routes>
         </>
