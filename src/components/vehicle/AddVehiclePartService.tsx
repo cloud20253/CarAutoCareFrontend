@@ -117,12 +117,7 @@ const AddVehiclePartService: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams(); 
 
-  useEffect(() => {
-    if (id) {
-      fetchSparePartList();
-    }
-  }, [id]);
-  const fetchSparePartList = async () => {
+  const fetchSparePartList = useCallback(async () => {
     try {
       const responsePart = await apiClient.get(
         `/sparePartTransactions/vehicleRegId?vehicleRegId=${id}` );
@@ -148,7 +143,16 @@ const AddVehiclePartService: React.FC = () => {
         sgst: resData.sgst || 0, }));
       setRows([...newTransactions]);
     } catch (err) {
-      console.error("Error fetching transactions:", err);  } };
+      console.error("Error fetching transactions:", err);  
+    } 
+  }, [id, rows.length]);
+
+  useEffect(() => {
+    if (id) {
+      fetchSparePartList();
+    }
+  }, [id, fetchSparePartList]);
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchKeyword);
@@ -239,7 +243,6 @@ const AddVehiclePartService: React.FC = () => {
     } catch (error: any) {
       console.error("Transaction error:", error.response?.data);
       
-      // Check for specific error messages in the exception
       const errorData = error.response?.data;
       if (errorData?.exception && 
           (errorData.exception.includes("Insufficient stock") || 
@@ -247,7 +250,6 @@ const AddVehiclePartService: React.FC = () => {
         setErrorMessage(errorData.exception);
         setErrorDialogOpen(true);
       } else {
-        // Fall back to snackbar for other errors
         setFeedback({
           message: errorData?.message || errorData?.exception || "Failed to create transaction",
           severity: "error",
@@ -310,7 +312,6 @@ const AddVehiclePartService: React.FC = () => {
       renderCell: (params) => renderActionButtons(params), }, ];
   const grandTotal = rows.reduce((acc, row) => acc + (row.total as number), 0);
 
-  // Function to render header cards that will be used across all tabs
   const renderHeaderCards = () => {
     const headerCards = [
       {
@@ -537,7 +538,6 @@ const AddVehiclePartService: React.FC = () => {
         deleteItemId={selectedId}
         onDelete={handleDeleteConfirmed}
       />
-      {/* Error Dialog */}
       <Dialog 
         open={errorDialogOpen}
         onClose={() => setErrorDialogOpen(false)}

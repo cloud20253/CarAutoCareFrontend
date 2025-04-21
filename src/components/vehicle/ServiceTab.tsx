@@ -7,30 +7,25 @@ import {
   Grid,
   Typography,
   styled,
-  TextField,
-  TableContainer,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
   Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  InputAdornment,
-  Container,
-  IconButton
+  InputBase,
+  useTheme,
+  useMediaQuery,
+  CircularProgress
 } from '@mui/material';
-import { Task, Description, NoteAdd, Search as SearchIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Task, Description, NoteAdd } from '@mui/icons-material';
+import { useNotification } from '../common/Notification';
 
 // HeaderCard styled component for navigation
 const HeaderCard = styled(Paper)(({ theme }) => ({
-  padding: 24,
+  padding: theme.spacing(3),
   textAlign: "center",
   cursor: "pointer",
-  borderRadius: 4,
+  borderRadius: theme.shape.borderRadius,
   transition: "transform 0.3s, box-shadow 0.3s",
   display: "flex",
   flexDirection: "column",
@@ -38,10 +33,76 @@ const HeaderCard = styled(Paper)(({ theme }) => ({
   alignItems: "center",
   height: 120, // Fixed height for consistency
   width: '100%', // Use full width of the grid item
-  boxShadow: "0px 2px 4px -1px rgba(0,0,0,0.2),0px 4px 5px 0px rgba(0,0,0,0.14),0px 1px 10px 0px rgba(0,0,0,0.12)",
+  boxShadow: theme.shadows[2],
   "&:hover": {
     transform: "scale(1.03)",
-    boxShadow: "0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12)",
+    boxShadow: theme.shadows[4],
+  },
+}));
+
+// Search input and results styling
+const SearchInputWrapper = styled(Box)(({ theme }) => ({
+  position: "relative",
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: theme.palette.mode === 'light' ? '#f5f5f5' : '#2d2d2d',
+  width: '100%',
+  marginBottom: theme.spacing(2),
+  border: `1px solid ${theme.palette.divider}`,
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+  color: 'inherit',
+  width: '100%',
+  '& .MuiInputBase-input': {
+    padding: theme.spacing(1, 1, 1, 2),
+    transition: theme.transitions.create('width'),
+  },
+}));
+
+const SearchResultsContainer = styled(Paper)(({ theme }) => ({
+  position: "absolute",
+  width: "100%",
+  zIndex: 10,
+  maxHeight: 300,
+  overflowY: "auto",
+  marginTop: theme.spacing(0.5),
+  boxShadow: theme.shadows[4],
+}));
+
+const SearchResultItem = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(1.5),
+  cursor: "pointer",
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+  },
+  '&:last-child': {
+    borderBottom: 'none',
+  },
+}));
+
+// Table related styles
+const StyledTable = styled(Box)(({ theme }) => ({
+  width: '100%',
+  overflowX: 'auto',
+  '& table': {
+    width: '100%',
+    borderCollapse: 'collapse',
+  },
+  '& th, & td': {
+    padding: theme.spacing(1, 2),
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    textAlign: 'left',
+  },
+  '& th': {
+    backgroundColor: theme.palette.background.paper,
+    fontWeight: 'bold',
+  },
+  '& tr:nth-of-type(odd)': {
+    backgroundColor: theme.palette.action.hover,
+  },
+  '& tr:hover': {
+    backgroundColor: theme.palette.action.selected,
   },
 }));
 
@@ -72,13 +133,16 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 const ServiceTab = () => {
   const { vehicleId } = useParams<{ vehicleId: string }>();
   const navigate = useNavigate();
-  console.log('Vehicle ID:', vehicleId);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { showNotification } = useNotification();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Service[]>([]);
   const [services, setServices] = useState<InvoiceService[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [loading, setLoading] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
@@ -87,19 +151,19 @@ const ServiceTab = () => {
     const headerCards = [
       {
         label: "Job Card",
-        icon: <Task fontSize="large" style={{ color: "#1976d2" }} />,
+        icon: <Task fontSize="large" color="primary" />,
         value: "jobCard",
         onClick: () => navigate(`/admin/job-card/${vehicleId}`),
       },
       {
         label: "Spare",
-        icon: <Description fontSize="large" style={{ color: "#1976d2" }} />,
+        icon: <Description fontSize="large" color="primary" />,
         value: "spare",
         onClick: () => navigate(`/admin/add-vehicle-part-service/${vehicleId}`),
       },
       {
         label: "Service",
-        icon: <NoteAdd fontSize="large" style={{ color: "#1976d2" }} />,
+        icon: <NoteAdd fontSize="large" color="primary" />,
         value: "service",
         onClick: () => {}, // already on service tab
       },
@@ -113,7 +177,8 @@ const ServiceTab = () => {
               <HeaderCard 
                 onClick={card.onClick}
                 sx={{
-                  border: card.value === 'service' ? '2px solid #1976d2' : 'none',
+                  border: card.value === 'service' ? '2px solid' : 'none',
+                  borderColor: 'primary.main',
                   backgroundColor: card.value === 'service' ? 'rgba(25, 118, 210, 0.08)' : 'white',
                 }}
               >
@@ -131,12 +196,25 @@ const ServiceTab = () => {
 
   useEffect(() => {
     if (debouncedSearchQuery) {
+      setLoading(true);
       apiClient
         .get(`/services/search?serviceName=${debouncedSearchQuery}`)
-        .then((res) => setSearchResults(res.data))
-        .catch(console.error);
+        .then((res) => {
+          setSearchResults(res.data);
+          setLoading(false);
+        })
+        .catch(error => {
+          console.error("Error searching services:", error);
+          setLoading(false);
+          showNotification({
+            message: "Failed to search services. Please try again.",
+            type: "error"
+          });
+        });
+    } else {
+      setSearchResults([]);
     }
-  }, [debouncedSearchQuery]);
+  }, [debouncedSearchQuery, showNotification]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -154,6 +232,7 @@ const ServiceTab = () => {
 
   useEffect(() => {
     if (vehicleId) {
+      setLoading(true);
       apiClient
         .get(`/serviceUsed/getByVehicleId/${vehicleId}`)
         .then((res) => {
@@ -172,10 +251,18 @@ const ServiceTab = () => {
             ...mapped,
             ...prev.filter((s) => s.newService)
           ]);
+          setLoading(false);
         })
-        .catch(console.error);
+        .catch(error => {
+          console.error("Error fetching services:", error);
+          setLoading(false);
+          showNotification({
+            message: "Failed to load services for this vehicle.",
+            type: "error"
+          });
+        });
     }
-  }, [vehicleId]);
+  }, [vehicleId, showNotification]);
 
   const addService = (service: Service) => {
     if (services.some((s) => s.serviceId === service.serviceId)) {
@@ -194,6 +281,10 @@ const ServiceTab = () => {
     ]);
     setSearchQuery('');
     setSearchResults([]);
+    showNotification({
+      message: "Service added successfully",
+      type: "success"
+    });
   };
 
   const updateQuantity = (id: number, quantity: number) => {
@@ -215,10 +306,15 @@ const ServiceTab = () => {
     setServices((prev) =>
       prev.filter((service) => !(service.newService && service.serviceId === serviceId))
     );
+    showNotification({
+      message: "Service removed",
+      type: "info"
+    });
   };
 
   const deleteUsedService = (vehicleServicesUsedId: number | undefined) => {
     if (!vehicleServicesUsedId) return;
+    
     apiClient
       .delete(`/serviceUsed/delete/${vehicleServicesUsedId}`)
       .then((res) => {
@@ -228,11 +324,25 @@ const ServiceTab = () => {
               (s) => s.vehicleServicesUsedId !== vehicleServicesUsedId
             )
           );
+          showNotification({
+            message: "Service deleted successfully",
+            type: "success"
+          });
         } else {
           console.error('Failed to delete used service with id:', vehicleServicesUsedId);
+          showNotification({
+            message: "Failed to delete service",
+            type: "error"
+          });
         }
       })
-      .catch(console.error);
+      .catch(error => {
+        console.error("Error deleting service:", error);
+        showNotification({
+          message: "Failed to delete service. Please try again.",
+          type: "error"
+        });
+      });
   };
 
   const newServices = services.filter((s) => s.newService);
@@ -242,9 +352,22 @@ const ServiceTab = () => {
 
   const saveInvoice = () => {
     if (!vehicleId) {
-      console.error('Vehicle ID is missing');
+      showNotification({
+        message: "Vehicle ID is missing",
+        type: "error"
+      });
       return;
     }
+    
+    if (newServices.length === 0) {
+      showNotification({
+        message: "No new services to save",
+        type: "warning"
+      });
+      return;
+    }
+    
+    setLoading(true);
     Promise.all(
       newServices.map((service) =>
         apiClient.post('/serviceUsed/AddService', {
@@ -259,6 +382,7 @@ const ServiceTab = () => {
       )
     )
       .then((responses) => {
+        setLoading(false);
         if (
           responses.every(
             (res) => res.status >= 200 && res.status < 300
@@ -271,235 +395,243 @@ const ServiceTab = () => {
           );
           setShowSuccessModal(true);
         } else {
-          console.error('One or more API calls failed.');
+          showNotification({
+            message: "One or more services failed to save",
+            type: "error"
+          });
         }
       })
-      .catch(console.error);
+      .catch(error => {
+        console.error("Error saving services:", error);
+        setLoading(false);
+        showNotification({
+          message: "Failed to save services. Please try again.",
+          type: "error"
+        });
+      });
   };
-  
+
   return (
-    <div className="min-h-screen p-4 bg-gray-50" style={{ overflow: 'hidden' }}>
-      <div className="mb-4">
-        <Typography variant="subtitle1" style={{ color: 'rgba(0, 0, 0, 0.6)' }}>
-          Vehicle Registration ID: {vehicleId}
+    <Box sx={{ p: 2, width: '100%' }}>
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle1" color="textSecondary">
+          Vehicle ID: {vehicleId}
         </Typography>
-      </div>
-      
+      </Box>
+
       {renderHeaderCards()}
-      
-      <div
-        className="mb-4 lg:mb-6 max-w-4xl mx-auto relative"
-        ref={searchContainerRef}
-      >
-        <input
-          type="text"
-          placeholder="Search services..."
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm lg:text-base"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        {searchResults.length > 0 && (
-          <div className="absolute z-10 w-full bg-white border rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
-            {searchResults.map((service) => (
-              <div
-                key={service.serviceId}
-                className="p-2 hover:bg-gray-100 cursor-pointer text-sm lg:text-base border-b last:border-b-0"
-                onClick={() => addService(service)}
-              >
-                <div className="font-medium break-words">
-                  {service.serviceName}
-                </div>
-                <div className="text-gray-500 text-xs">
-                  Rate: ₹{(service.serviceRate ?? 0).toFixed(2)}
-                </div>
-              </div>
-            ))}
-          </div>
+
+      <Paper elevation={3} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Manage Vehicle Services
+        </Typography>
+
+        <div ref={searchContainerRef}>
+          <SearchInputWrapper>
+            <StyledInputBase
+              placeholder="Search for services..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </SearchInputWrapper>
+
+          {searchResults.length > 0 && (
+            <SearchResultsContainer>
+              {searchResults.map((result) => (
+                <SearchResultItem
+                  key={result.serviceId}
+                  onClick={() => addService(result)}
+                >
+                  <Typography variant="subtitle2">{result.serviceName}</Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    Rate: ₹{result.serviceRate?.toFixed(2) || '0.00'}
+                  </Typography>
+                </SearchResultItem>
+              ))}
+            </SearchResultsContainer>
+          )}
+        </div>
+
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+            <CircularProgress />
+          </Box>
         )}
-      </div>
 
-      <div className="mb-8">
-        <h2 className="text-xl font-bold mb-2">New Services</h2>
-        <div className="mx-auto bg-white rounded-lg shadow-sm" style={{ overflowX: 'auto', width: '100%', maxWidth: '100%' }}>
-          <table className="w-full text-xs sm:text-sm" style={{ minWidth: '800px', tableLayout: 'fixed' }}>
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="p-2 border text-center" colSpan={10}>
-                  <span className="text-sm lg:text-base">
-                    New Service Invoice
-                  </span>
-                </th>
-              </tr>
-              <tr className="bg-gray-50">
-                <th className="p-1 lg:p-2 border" style={{ width: '5%' }}>#</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '8%' }}>Svc No</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '25%' }}>Service Name</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>Qty</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '10%' }}>Rate</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>Disc</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>Tax</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>SGST</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '10%' }}>Total</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '14%' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {newServices.length > 0 ? (
-                newServices.map((service, index) => (
-                  <tr key={`${service.serviceId}-new-${index}`} className="hover:bg-gray-50">
-                    <td className="p-1 lg:p-2 border text-center">{index + 1}</td>
-                    <td className="p-1 lg:p-2 border text-center">{service.serviceId}</td>
-                    <td className="p-1 lg:p-2 border">
-                      <div className="truncate">{service.serviceName}</div>
-                    </td>
-                    <td className="p-1 lg:p-2 border text-center">
-                      <input
-                        type="number"
-                        min="1"
-                        value={service.quantity}
-                        onChange={(e) =>
-                          updateQuantity(service.serviceId, Number(e.target.value))
-                        }
-                        className="w-12 text-center border rounded text-xs lg:text-sm focus:ring-2 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="p-1 lg:p-2 border text-right whitespace-nowrap">
-                      ₹{(service.serviceRate ?? 0).toFixed(2)}
-                    </td>
-                    <td className="p-1 lg:p-2 border text-right">0</td>
-                    <td className="p-1 lg:p-2 border text-right">0.0</td>
-                    <td className="p-1 lg:p-2 border text-right">0.00</td>
-                    <td className="p-1 lg:p-2 border text-right whitespace-nowrap">
-                      ₹{(service.total ?? 0).toFixed(2)}
-                    </td>
-                    <td className="p-1 lg:p-2 border text-center">
-                      <button
-                        onClick={() => removeNewService(service.serviceId)}
-                        className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td className="p-1 lg:p-2 border text-center" colSpan={10}>
-                    No new services added.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+        {!loading && (
+          <>
+            {newServices.length > 0 && (
+              <Box sx={{ mt: 4 }}>
+                <Typography variant="h6" gutterBottom>
+                  New Services
+                </Typography>
+                <StyledTable>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th style={{ width: isMobile ? '10%' : '5%', textAlign: 'center' }}>#</th>
+                        <th style={{ width: '30%' }}>Service Name</th>
+                        <th style={{ width: '15%', textAlign: 'center' }}>Quantity</th>
+                        <th style={{ width: '15%', textAlign: 'right' }}>Rate</th>
+                        {!isMobile && <th style={{ width: '10%', textAlign: 'right' }}>GST</th>}
+                        <th style={{ width: '15%', textAlign: 'right' }}>Total</th>
+                        <th style={{ width: '10%', textAlign: 'center' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {newServices.map((service, index) => (
+                        <tr key={`new-${service.serviceId}`}>
+                          <td style={{ textAlign: 'center' }}>{index + 1}</td>
+                          <td>{service.serviceName}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() => updateQuantity(service.serviceId, Math.max(1, service.quantity - 1))}
+                                sx={{ minWidth: '30px', p: 0 }}
+                              >
+                                -
+                              </Button>
+                              <Box sx={{ mx: 1, display: 'flex', alignItems: 'center' }}>
+                                {service.quantity}
+                              </Box>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() => updateQuantity(service.serviceId, service.quantity + 1)}
+                                sx={{ minWidth: '30px', p: 0 }}
+                              >
+                                +
+                              </Button>
+                            </Box>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>₹{(service.serviceRate ?? 0).toFixed(2)}</td>
+                          {!isMobile && <td style={{ textAlign: 'right' }}>0%</td>}
+                          <td style={{ textAlign: 'right' }}>₹{(service.total ?? 0).toFixed(2)}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <Button
+                              variant="contained"
+                              color="error"
+                              size="small"
+                              onClick={() => removeNewService(service.serviceId)}
+                            >
+                              Delete
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </StyledTable>
+              </Box>
+            )}
 
-      <div className="mb-8">
-        <h2 className="text-xl font-bold mb-2">Used Services</h2>
-        <div className="mx-auto bg-white rounded-lg shadow-sm" style={{ overflowX: 'auto', width: '100%', maxWidth: '100%' }}>
-          <table className="w-full text-xs sm:text-sm" style={{ minWidth: '800px', tableLayout: 'fixed' }}>
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="p-2 border text-center" colSpan={10}>
-                  <span className="text-sm lg:text-base">Used Service Invoice</span>
-                </th>
-              </tr>
-              <tr className="bg-gray-50">
-                <th className="p-1 lg:p-2 border" style={{ width: '5%' }}>#</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '8%' }}>Svc No</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '25%' }}>Service Name</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>Qty</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '10%' }}>Rate</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>Disc</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>Tax</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '7%' }}>SGST</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '10%' }}>Total</th>
-                <th className="p-1 lg:p-2 border" style={{ width: '14%' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h6" gutterBottom>
+                Used Services
+              </Typography>
               {usedServices.length > 0 ? (
-                usedServices.map((service, index) => (
-                  <tr key={`${service.vehicleServicesUsedId}-used-${index}`} className="hover:bg-gray-50">
-                    <td className="p-1 lg:p-2 border text-center">{index + 1}</td>
-                    <td className="p-1 lg:p-2 border text-center">
-                      {service.vehicleServicesUsedId || service.serviceId}
-                    </td>
-                    <td className="p-1 lg:p-2 border">
-                      <div className="truncate">{service.serviceName}</div>
-                    </td>
-                    <td className="p-1 lg:p-2 border text-center">{service.quantity}</td>
-                    <td className="p-1 lg:p-2 border text-right whitespace-nowrap">
-                      ₹{(service.serviceRate ?? 0).toFixed(2)}
-                    </td>
-                    <td className="p-1 lg:p-2 border text-right">0</td>
-                    <td className="p-1 lg:p-2 border text-right">0.0</td>
-                    <td className="p-1 lg:p-2 border text-right">0.00</td>
-                    <td className="p-1 lg:p-2 border text-right whitespace-nowrap">
-                      ₹{(service.total ?? 0).toFixed(2)}
-                    </td>
-                    <td className="p-1 lg:p-2 border text-center">
-                      <button
-                        onClick={() => deleteUsedService(service.vehicleServicesUsedId)}
-                        className="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                <StyledTable>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th style={{ width: isMobile ? '10%' : '5%', textAlign: 'center' }}>#</th>
+                        {!isMobile && <th style={{ width: '10%', textAlign: 'center' }}>ID</th>}
+                        <th style={{ width: '30%' }}>Service Name</th>
+                        <th style={{ width: '10%', textAlign: 'center' }}>Quantity</th>
+                        <th style={{ width: '15%', textAlign: 'right' }}>Rate</th>
+                        {!isMobile && <th style={{ width: '10%', textAlign: 'right' }}>GST</th>}
+                        <th style={{ width: '15%', textAlign: 'right' }}>Total</th>
+                        <th style={{ width: '10%', textAlign: 'center' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {usedServices.map((service, index) => (
+                        <tr key={`used-${service.vehicleServicesUsedId || service.serviceId}`}>
+                          <td style={{ textAlign: 'center' }}>{index + 1}</td>
+                          {!isMobile && (
+                            <td style={{ textAlign: 'center' }}>
+                              {service.vehicleServicesUsedId || service.serviceId}
+                            </td>
+                          )}
+                          <td>{service.serviceName}</td>
+                          <td style={{ textAlign: 'center' }}>{service.quantity}</td>
+                          <td style={{ textAlign: 'right' }}>₹{(service.serviceRate ?? 0).toFixed(2)}</td>
+                          {!isMobile && <td style={{ textAlign: 'right' }}>0%</td>}
+                          <td style={{ textAlign: 'right' }}>₹{(service.total ?? 0).toFixed(2)}</td>
+                          <td style={{ textAlign: 'center' }}>
+                            <Button
+                              variant="contained"
+                              color="error"
+                              size="small"
+                              onClick={() => deleteUsedService(service.vehicleServicesUsedId)}
+                            >
+                              Delete
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </StyledTable>
               ) : (
-                <tr>
-                  <td className="p-1 lg:p-2 border text-center" colSpan={10}>
+                <Paper sx={{ p: 2, textAlign: 'center' }}>
+                  <Typography variant="body1" color="textSecondary">
                     No used services found.
-                  </td>
-                </tr>
+                  </Typography>
+                </Paper>
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </Box>
 
-      <div className="mt-4 flex justify-end">
-        <div className="text-xl font-semibold">Grand Total: ₹{grandTotal.toFixed(2)}</div>
-      </div>
-      {newServices.length > 0 && (
-        <div className="mt-4 flex justify-end">
-          <button
-            onClick={saveInvoice}
-            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600"
-          >
-            Save Invoice
-          </button>
-        </div>
-      )}
+            <Box sx={{ mt: 4, display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', justifyContent: 'space-between' }}>
+              <Typography variant="h6">
+                Total Amount: ₹{grandTotal.toFixed(2)}
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={saveInvoice}
+                disabled={newServices.length === 0}
+                sx={{ mt: isMobile ? 2 : 0 }}
+              >
+                Save Service Invoice
+              </Button>
+            </Box>
+          </>
+        )}
+      </Paper>
 
-      {/* Modal for service already added */}
+      {/* Already added service modal */}
       <Dialog open={showModal} onClose={() => setShowModal(false)}>
         <DialogTitle>Service Already Added</DialogTitle>
         <DialogContent>
-          <Typography>This service is already added to the invoice.</Typography>
+          <Typography>
+            This service is already in your list. You can adjust the quantity if needed.
+          </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowModal(false)} color="primary" autoFocus>
+          <Button onClick={() => setShowModal(false)} color="primary">
             Close
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Success Modal */}
+      {/* Success modal */}
       <Dialog open={showSuccessModal} onClose={() => setShowSuccessModal(false)}>
-        <DialogTitle>Invoice Saved!</DialogTitle>
+        <DialogTitle>Success</DialogTitle>
         <DialogContent>
-          <Typography>Your invoice has been successfully saved.</Typography>
+          <Typography>
+            All services have been saved successfully.
+          </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowSuccessModal(false)} color="primary" autoFocus>
+          <Button onClick={() => setShowSuccessModal(false)} color="primary">
             Close
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   );
 };
 

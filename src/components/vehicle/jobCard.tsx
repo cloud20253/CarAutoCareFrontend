@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Paper,
@@ -24,10 +24,13 @@ import {
   TableContainer,
   useMediaQuery,
   useTheme,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { Task, NoteAdd, Delete, Save, RemoveCircleOutline, Description } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import apiClient from "Services/apiService";
+import JobOptionForm from "components/JobCard/JobOptionForm";
 
 const StyledTextArea = styled(TextareaAutosize)(({ theme }) => ({
   width: "100%",
@@ -94,7 +97,6 @@ const JobCard: React.FC = () => {
   const [workshopNote, setWorkshopNote] = useState("");
   const [message, setMessage] = useState("");
   const [jobCards, setJobCards] = useState<JobCardData[]>([]);
-  const [vehicleData, setVehicleData] = useState<any>(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -103,12 +105,33 @@ const JobCard: React.FC = () => {
     console.log("VehicleRegId from URL:", id);
   }, [id]);
 
+  const fetchJobCards = useCallback(async () => {
+    try {
+      const response = await apiClient.get(`/jobcard/GetByVehicleId?vehicleId=${vehicleId}`);
+      if (response.data && Array.isArray(response.data)) {
+        setJobCards(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching job cards:", error);
+      setMessage("Error fetching job cards.");
+    }
+  }, [vehicleId]);
+
+  const fetchVehicleData = useCallback(async () => {
+    try {
+      await apiClient.get(`http://localhost:8080/vehicle-reg/getById?vehicleRegId=${vehicleId}`);
+    } catch (error) {
+      console.error("Error fetching vehicle data:", error);
+      setMessage("Error fetching vehicle data.");
+    }
+  }, [vehicleId]);
+
   useEffect(() => {
     if (vehicleId !== 0) {
       fetchJobCards();
       fetchVehicleData();
     }
-  }, [vehicleId]);
+  }, [vehicleId, fetchJobCards, fetchVehicleData]);
 
   // Debounce
   useEffect(() => {
@@ -121,43 +144,29 @@ const JobCard: React.FC = () => {
   }, [jobSearch]);
 
   useEffect(() => {
-    if (debouncedSearch.length >= 1) {
-      fetchJobOptions(debouncedSearch);
-    } else {
-      setJobOptions([]);
-    }
+    fetchJobOptions(debouncedSearch);
   }, [debouncedSearch]);
 
-  const fetchVehicleData = async () => {
-    try {
-      const vehicleRegId =vehicleId;
-      const response = await apiClient.get(`http://localhost:8080/vehicle-reg/getById?vehicleRegId=${vehicleRegId}`);
-      setVehicleData(response.data.data);
-      localStorage.setItem("vehicleData", JSON.stringify(response.data.data));
-
-    } catch (error) {
-      console.error("Error fetching vehicle data:", error);
-      setMessage("Error fetching vehicle data.");
-    }
-  };
   const fetchJobOptions = async (query: string) => {
     try {
-      const response = await apiClient.get(`/registerJobCard/search?query=${query}`);
-      console.log("Fetched job options:", response.data);
-      setJobOptions(response.data);
-    } catch (error: any) {
+      const jobResponse = await apiClient.get(`/jobcard/getAllJobs`);
+      const data = jobResponse.data;
+      
+      if (data && Array.isArray(data)) {
+        // Filter based on search query if there is one
+        const filteredOptions = query
+          ? data.filter((option) =>
+              option.description.toLowerCase().includes(query.toLowerCase())
+            )
+          : data;
+        
+        setJobOptions(filteredOptions);
+      } else {
+        setJobOptions([]);
+      }
+    } catch (error) {
       console.error("Error fetching job options:", error);
-    }
-  };
-
-  const fetchJobCards = async () => {
-    try {
-      const response = await apiClient.get(`/api/vehicleJobCards/getByVehicleId?vehicleId=${vehicleId}`);
-      const data = response.data;
-      console.log("Fetched job cards:", data);
-      setJobCards(Array.isArray(data) ? data : [data]);
-    } catch (error: any) {
-      console.error("Error fetching job cards:", error);
+      setMessage("Error fetching job options.");
     }
   };
 

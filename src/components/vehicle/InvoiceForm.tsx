@@ -323,134 +323,75 @@ export default function InvoiceForm() {
         setDialogTitle("Error");
         setDialogMessage("No vehicle data found.");
         setDialogOpen(true); }
-        
-      // Fetch parts data with error handling
+      const partsResponse = await apiClient.get('/sparePartTransactions/vehicleRegId', {
+        params: { vehicleRegId: id } });
       let partsArray: any[] = [];
       let invoiceNumber = '';
       let jobCardNumber = '';
       let transactionDate = '';
-      
-      try {
-        const partsResponse = await apiClient.get('/sparePartTransactions/vehicleRegId', {
-          params: { vehicleRegId: id } 
-        });
-        
-        // Handle various response formats
-        if (partsResponse.data && partsResponse.data.data && Array.isArray(partsResponse.data.data)) {
-          partsArray = partsResponse.data.data;
-        } else if (Array.isArray(partsResponse.data)) {
-          partsArray = partsResponse.data;
-        } else if (partsResponse.data && partsResponse.data.message === "Transactions retrieved successfully") {
-          // Special handling for the "Transactions retrieved successfully" format
-          if (partsResponse.data.data && Array.isArray(partsResponse.data.data)) {
-            partsArray = partsResponse.data.data;
-          }
-        }
-        
-        // Extract invoice details if parts exist
+      if (partsResponse.data && partsResponse.data.data && Array.isArray(partsResponse.data.data)) {
+        partsArray = partsResponse.data.data;
         if (partsArray.length > 0) {
           invoiceNumber = partsArray[0].invoiceNumber || '';
           jobCardNumber = partsArray[0].jobCardNumber || '';
-          transactionDate = partsArray[0].transactionDate || '';
-        }
-        
-        console.log("Parts data received:", partsArray);
-      } catch (error) {
-        console.error("Error fetching parts data:", error);
-        // Continue execution even if parts fetch fails
-      }
-      
-      // Try to get invoice/job card info from service data if not found in parts
-      try {
-        const serviceResponse = await apiClient.get(`/serviceUsed/getByVehicleId/${id}`);
-        let serviceArray: any[] = [];
-        
-        if (serviceResponse.data && !serviceResponse.data.exception && Array.isArray(serviceResponse.data)) {
-          serviceArray = serviceResponse.data;
-        } else if (serviceResponse.data && serviceResponse.data.data && Array.isArray(serviceResponse.data.data)) {
-          serviceArray = serviceResponse.data.data;
-        }
-        
+          transactionDate = partsArray[0].transactionDate || '';   }
+      } else if (Array.isArray(partsResponse.data)) {
+        partsArray = partsResponse.data;
+        if (partsArray.length > 0) {
+          invoiceNumber = partsArray[0].invoiceNumber || '';
+          jobCardNumber = partsArray[0].jobCardNumber || '';
+          transactionDate = partsArray[0].transactionDate || ''; }
+      } else {
+        console.error('Parts data is not an array:', partsResponse.data);  }
+      const serviceResponse = await apiClient.get(`/serviceUsed/getByVehicleId/${id}`);
+      let serviceArray: any[] = [];
+      if (serviceResponse.data && Array.isArray(serviceResponse.data)) {
+        serviceArray = serviceResponse.data;
         if (serviceArray.length > 0 && (!invoiceNumber || !jobCardNumber || !transactionDate)) {
           invoiceNumber = invoiceNumber || serviceArray[0].invoiceNumber || '';
           jobCardNumber = jobCardNumber || serviceArray[0].jobCardNumber || '';
-          transactionDate = transactionDate || serviceArray[0].transactionDate || '';
-        }
-      } catch (error) {
-        console.log("No service data or error fetching service data:", error);
-        // Continue execution even if service fetch fails
-      }
-      
-      // Update form with invoice details
+          transactionDate = transactionDate || serviceArray[0].transactionDate || ''; } }
       setFormData(prev => ({
         ...prev,
         invoiceNumber,
         jobCardNumber,
-        date: transactionDate ? new Date(transactionDate).toISOString().split('T')[0] : ''
-      }));
-      
-      // Process and add parts to form if parts exist
-      if (partsArray.length > 0) {
-        const parts = partsArray.map((p: any) => {
-          // Handle potential missing values with defaults
-          const quantity = parseFloat(p.quantity) || 1;
-          const price = parseFloat(p.price || p.qtyPrice / quantity) || 0;
-          const discountPercent = parseFloat(p.discountPercent) || 0;
-          const cgstPercent = parseFloat(p.cgst) || 0;
-          const sgstPercent = parseFloat(p.sgst) || 0;
-          const igstPercent = parseFloat(p.igst) || 0;
-          
-          // Calculate values
-          const baseAmount = quantity * price;
-          const discountAmount = (baseAmount * discountPercent) / 100;
-          const taxableAmount = baseAmount - discountAmount;
-          const cgst = (taxableAmount * cgstPercent) / 100;
-          const sgst = (taxableAmount * sgstPercent) / 100;
-          const igst = (taxableAmount * igstPercent) / 100;
-          
-          return {
-            partName: p.partName || 'Unknown Part',
-            quantity: String(quantity),
-            unitPrice: String(price),
-            discountPercent: String(discountPercent),
-            cgstPercent: String(cgstPercent),
-            sgstPercent: String(sgstPercent),
-            igstPercent: String(igstPercent),
-            taxableAmount: taxableAmount.toFixed(2),
-            cgst: cgst.toFixed(2),
-            sgst: sgst.toFixed(2),
-            igst: igst.toFixed(2)
-          };
-        });
-        
-        console.log("Processed parts for the form:", parts);
-        setFormData(prev => ({ ...prev, parts }));
-      }
+        date: transactionDate ? new Date(transactionDate).toISOString().split('T')[0] : '' }));
+      const parts = partsArray.map((p: any) => {
+        const baseAmount = parseFloat(p.quantity) * parseFloat(p.price);
+        const discountAmount = (baseAmount * parseFloat(p.discountPercent)) / 100;
+        const taxableAmount = baseAmount - discountAmount;
+        const cgst = (taxableAmount * parseFloat(p.cgst || 0)) / 100;
+        const sgst = (taxableAmount * parseFloat(p.sgst || 0)) / 100;
+        const igst = (taxableAmount * parseFloat(p.igst || 0)) / 100;
+        return {
+          partName: p.partName,
+          quantity: p.quantity ? String(p.quantity) : "1",
+          unitPrice: p.price ? String(p.price) : "",
+          discountPercent: p.discountPercent ? String(p.discountPercent) : "",
+          cgstPercent: p.cgst ? String(p.cgst) : "",
+          sgstPercent: p.sgst ? String(p.sgst) : "",
+          igstPercent: p.igst ? String(p.igst) : "",
+          taxableAmount: taxableAmount.toFixed(2),
+          cgst: cgst.toFixed(2),
+          sgst: sgst.toFixed(2),
+          igst: igst.toFixed(2)}; });
+      setFormData(prev => ({ ...prev, parts }));
     } catch (error: any) {
       console.error('Error fetching data:', error);
       setDialogTitle("Error");
       setDialogMessage("Error fetching vehicle or parts data.");
       setDialogOpen(true);
     } finally {
-      setLoadingData(false);
-    }
+      setLoadingData(false); }
   }, [id, setFormData, setDialogTitle, setDialogMessage, setDialogOpen, setLoadingData]);
   const fetchLabourData = useCallback(async () => {
     try {
       const labourResponse = await apiClient.get(`/serviceUsed/getByVehicleId/${id}`);
       let labourArray: any[] = [];
-      
-      if (labourResponse.data && labourResponse.data.exception && 
-          labourResponse.data.exception.includes("No services found")) {
-        console.log("No services found for this vehicle, continuing with empty labour array");
-      } else if (labourResponse.data && Array.isArray(labourResponse.data)) {
+      if (labourResponse.data && Array.isArray(labourResponse.data)) {
         labourArray = labourResponse.data;
-      } else if (labourResponse.data && labourResponse.data.data && Array.isArray(labourResponse.data.data)) {
-        labourArray = labourResponse.data.data;
       } else {
-        console.log("Labour data format not recognized:", labourResponse.data);
-      }
-      
+        console.error("Labour data is not an array:", labourResponse.data); }
       const labours = labourArray.map((s: any) => ({
         description: s.serviceName || '',
         quantity: s.quantity ? String(s.quantity) : '1',
@@ -463,19 +404,13 @@ export default function InvoiceForm() {
         cgst: s.cgst != null ? String(s.cgst) : '',
         sgst: s.sgst != null ? String(s.sgst) : '',
         igst: '' }));
-      
-      if (labours.length > 0) {
-        setFormData(prev => ({ ...prev, labours }));
-      }
+      setFormData(prev => ({ ...prev, labours }));
     } catch (error) {
-      console.error("Error fetching labour data:", error);
-    }
-  }, [id, setFormData]);
+      console.error("Error fetching labour data:", error); } }, [id, setFormData]);
   useEffect(() => {
     if (id) {
       fetchVehicleData();
-      fetchLabourData();
-    }
+      fetchLabourData(); }
   }, [id, fetchVehicleData, fetchLabourData]);
   const totals = computeTotals();
   const handleSubmit = async () => {

@@ -56,6 +56,7 @@ interface CreateTransaction {
   sgst: number;
   igst: number;
   totalAmount: number;
+  description?: string;
 }
 
 interface Feedback {
@@ -243,13 +244,21 @@ const TransactionAdd: React.FC = () => {
 
   const handleSelectPart = (event: any, newValue: SparePartDto | null) => {
     setSelectedPart(newValue);
-    setCreateData((prev) => ({
-      ...prev,
-      manufacturer: newValue ? newValue.manufacturer : "",
-      partNumber: newValue ? newValue.partNumber : "",
-  
-      partName: newValue ? newValue.partName : "",
-    }));
+    if (newValue) {
+      setCreateData((prev) => ({
+        ...prev,
+        manufacturer: newValue.manufacturer,
+        partNumber: newValue.partNumber,
+        partName: newValue.partName,
+        description: newValue.description || "",
+      }));
+    } else {
+      setCreateData(prev => ({
+        ...initialCreateData,
+        name: prev.name,
+        billNo: prev.billNo
+      }));
+    }
   };
 
   const handleSelectVendor = (event: any, newValue: Vendor | null) => {
@@ -360,7 +369,10 @@ const TransactionAdd: React.FC = () => {
     try {
       const dataToSubmit = {
         ...createData,
-        quantity: parseInt(createData.quantity)
+        quantity: parseInt(createData.quantity),
+        partName: createData.partName,
+        partNumber: createData.partNumber,
+        description: createData.description
       };
       
       const response = await apiClient.post("/sparePartTransactions/add", dataToSubmit);
@@ -498,30 +510,40 @@ const TransactionAdd: React.FC = () => {
           </FormGrid>
 
           <FormGrid item xs={12} md={6}>
-            <FormLabel htmlFor="price">
-              Price
-            </FormLabel>
+            <FormLabel htmlFor="description">Description</FormLabel>
             <OutlinedInput
-              name="price"
-              value={createData.price}
-              onChange={handlePriceChange}
-              type="number"
+              name="description"
+              value={createData.description}
+              onChange={handleCreateChange}
+              placeholder="Description"
               size="small"
-              required
+              disabled
             />
           </FormGrid>
 
           <FormGrid item xs={12} md={6}>
-            <FormLabel htmlFor="gstPercentage">
-              GST%
-            </FormLabel>
+            <FormLabel htmlFor="price">Price</FormLabel>
+            <OutlinedInput
+              name="price"
+              value={createData.price || ''}
+              onChange={handlePriceChange}
+              type="number"
+              size="small"
+              required
+              inputProps={{ min: 0 }}
+            />
+          </FormGrid>
+
+          <FormGrid item xs={12} md={6}>
+            <FormLabel htmlFor="gstPercentage">GST%</FormLabel>
             <OutlinedInput
               name="gstPercentage"
-              value={createData.gstPercentage}
+              value={createData.gstPercentage || ''}
               onChange={handleGSTChange}
               type="number"
               size="small"
               required
+              inputProps={{ min: 0 }}
             />
           </FormGrid>
 

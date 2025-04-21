@@ -53,7 +53,7 @@ export interface VehicleRegDto {
   insuranceStatus: "Insured" | "Expired";
   insuranceFrom: string | null;
   insuranceTo: string | null;
-  vehicleVariant: string; // used for fuel type in your payload
+  vehicleVariant: string; 
   manufactureYear: number | string;
   advancePayment?: number | string;
 }
@@ -122,7 +122,6 @@ const initialFormData: VehicleFormData = {
   advancePayment: 0,
 };
 
-// --- Styled components ---
 const FormGrid = styled(Grid)(() => ({
   display: 'flex',
   flexDirection: 'column',

@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { FiAlertCircle, FiX } from "react-icons/fi";
 import React from "react";
 
-// Cast the icons to accept a size prop along with standard SVG props
 const FiXIcon = FiX as React.FC<{ size?: number } & React.SVGProps<SVGSVGElement>>;
 const FiAlertCircleIcon = FiAlertCircle as React.FC<{ size?: number } & React.SVGProps<SVGSVGElement>>;
 

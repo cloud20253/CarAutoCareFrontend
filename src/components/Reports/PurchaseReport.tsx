@@ -108,8 +108,8 @@ const PurchaseReport: React.FC = () => {
               transactions: billTransactions
             };
             return row;
-          });
-          setRows(formattedRows);
+        });
+        setRows(formattedRows);
         } else {
           alert('Invalid response format from server');
         }
