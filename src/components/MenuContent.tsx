@@ -22,7 +22,7 @@ import {
 
 const mainListItems = [
   { text: "Dashboard", icon: <HomeIcon sx={{ color: "#1976d2" }} />, link: "/admin/dashboard" },
-  { text: "Manage User", icon: <AnalyticsIcon sx={{ color: "#388e3c" }} />, link: "/admin/employeeList" },
+  { text: "Manage User", icon: <AnalyticsIcon sx={{ color: "#388e3c" }} />, link: "/admin/employeeList", adminOnly: true },
   {
     text: "Master",
     icon: <PeopleIcon sx={{ color: "#f57c00" }} />,
@@ -95,34 +95,43 @@ export default function MenuContent() {
           const mainMenuWithAuthorizedSubItems = new Set<string>();
           
           // Filter the menu based on permissions
-          const filtered = mainListItems.map(item => {
-            // Dashboard is always visible
-            if (item.text === "Dashboard") {
-              return item;
-            }
-            
-            // For items without submenus, check if they're in authorized components
-            if (!item.subMenu) {
-              return userComponents.includes(item.text) ? item : null;
-            }
-            
-            // For items with submenus, filter the submenu items
-            const filteredSubMenu = item.subMenu.filter(subItem => 
-              userComponents.includes(subItem.text)
-            );
-            
-            // If there are authorized submenu items, keep the main menu item
-            if (filteredSubMenu.length > 0) {
-              mainMenuWithAuthorizedSubItems.add(item.text);
-              return {
-                ...item,
-                subMenu: filteredSubMenu
-              };
-            }
-            
-            // Otherwise, remove the main menu item
-            return null;
-          }).filter(Boolean) as typeof mainListItems;
+          const filtered = mainListItems
+            .filter(item => {
+              // Skip admin-only items for non-admin users
+              if (item.adminOnly) return false;
+              
+              // Dashboard is always visible
+              if (item.text === "Dashboard") return true;
+              
+              // For items without submenus, check if they're in authorized components
+              if (!item.subMenu) {
+                return userComponents.includes(item.text);
+              }
+              
+              // For items with submenus, we'll check their contents later
+              return true;
+            })
+            .map(item => {
+              // For items without submenus, return as is
+              if (!item.subMenu) return item;
+              
+              // For items with submenus, filter the submenu items
+              const filteredSubMenu = item.subMenu.filter(subItem => 
+                userComponents.includes(subItem.text)
+              );
+              
+              // If there are authorized submenu items, keep the main menu item
+              if (filteredSubMenu.length > 0) {
+                mainMenuWithAuthorizedSubItems.add(item.text);
+                return {
+                  ...item,
+                  subMenu: filteredSubMenu
+                };
+              }
+              
+              // Otherwise, remove the main menu item
+              return null;
+            }).filter(Boolean) as typeof mainListItems;
           
           setFilteredMenu(filtered);
           
