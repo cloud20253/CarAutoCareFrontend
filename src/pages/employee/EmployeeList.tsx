@@ -95,11 +95,22 @@ const EmployeeList: FC = () => {
     navigate('/admin/employeeManagement');
   };
 
-  const filteredEmployees = employees.filter((employee: EmployeeDTO) =>
-    Object.values(employee).some((value) =>
-      value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  const filteredEmployees = employees.filter((employee: EmployeeDTO) => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const fields = [
+      employee.name,
+      employee.position,
+      employee.contact,
+      employee.email,
+      employee.address
+    ];
+    
+    return fields.some(field => 
+      field && field.toString().toLowerCase().includes(searchLower)
+    );
+  });
 
   const columns: GridColDef[] = [
     { field: 'name', headerName: 'Name', flex: 1 },

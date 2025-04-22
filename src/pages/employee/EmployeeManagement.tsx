@@ -14,6 +14,7 @@ import {
   SelectChangeEvent,
   FormGroup,
   CircularProgress,
+  FormHelperText,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useNotification } from '../../components/common/Notification';
@@ -53,6 +54,8 @@ const EmployeeManagement: React.FC = () => {
 
   const [componentNames, setComponentNames] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
   const { showNotification } = useNotification();
 
@@ -62,12 +65,30 @@ const EmployeeManagement: React.FC = () => {
       ...prev,
       [name]: value,
     }));
+    
+    // Mark field as touched
+    setTouchedFields(prev => ({
+      ...prev,
+      [name]: true
+    }));
+  };
+
+  const handleBlur = (fieldName: string) => {
+    setTouchedFields(prev => ({
+      ...prev,
+      [fieldName]: true
+    }));
   };
 
   const handlePositionChange = (e: SelectChangeEvent<string>) => {
     setFormData((prev) => ({
       ...prev,
       position: e.target.value,
+    }));
+    
+    setTouchedFields(prev => ({
+      ...prev,
+      position: true
     }));
   };
 
@@ -80,17 +101,91 @@ const EmployeeManagement: React.FC = () => {
     });
   };
 
+  // Validation functions
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const validateContactNumber = (contact: string) => {
+    return /^\d{10}$/.test(contact);
+  };
+
+  // Get error states
+  const getFieldError = (fieldName: string) => {
+    if (!formSubmitted && !touchedFields[fieldName]) return false;
+    
+    switch (fieldName) {
+      case 'name':
+        return !formData.name;
+      case 'position':
+        return !formData.position;
+      case 'contact':
+        return formData.contact ? !validateContactNumber(formData.contact) : false;
+      case 'address':
+        return !formData.address;
+      case 'email':
+        return !formData.email || !validateEmail(formData.email);
+      case 'username':
+        return !formData.username;
+      case 'password':
+        return !formData.password || formData.password.length < 6;
+      default:
+        return false;
+    }
+  };
+
+  // Get helper text
+  const getHelperText = (fieldName: string) => {
+    if (!formSubmitted && !touchedFields[fieldName]) return '';
+    
+    switch (fieldName) {
+      case 'name':
+        return !formData.name ? 'Name is required' : '';
+      case 'position':
+        return !formData.position ? 'Position is required' : '';
+      case 'contact':
+        return formData.contact && !validateContactNumber(formData.contact) 
+          ? 'Contact must be a 10-digit number' 
+          : '';
+      case 'address':
+        return !formData.address ? 'Address is required' : '';
+      case 'email':
+        if (!formData.email) return 'Email is required';
+        if (!validateEmail(formData.email)) return 'Please enter a valid email';
+        return '';
+      case 'username':
+        return !formData.username ? 'Username is required' : '';
+      case 'password':
+        if (!formData.password) return 'Password is required';
+        if (formData.password.length < 6) return 'Password must be at least 6 characters';
+        return '';
+      default:
+        return '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormSubmitted(true);
     
-    if (!formData.name || !formData.position || !formData.email || !formData.username || !formData.password) {
-      showNotification({ message: 'Please fill in all required fields', type: 'error' });
+    // Validate all fields
+    const isNameValid = !!formData.name;
+    const isPositionValid = !!formData.position;
+    const isAddressValid = !!formData.address;
+    const isEmailValid = !!formData.email && validateEmail(formData.email);
+    const isUsernameValid = !!formData.username;
+    const isPasswordValid = !!formData.password && formData.password.length >= 6;
+    const isContactValid = !formData.contact || validateContactNumber(formData.contact);
+    
+    if (!isNameValid || !isPositionValid || !isAddressValid || !isEmailValid || 
+        !isUsernameValid || !isPasswordValid || !isContactValid) {
+      showNotification({ message: 'Please fix the errors in the form', type: 'error' });
       return;
     }
 
     const employeeDTO: EmployeeDTO = {
       ...formData,
-      userId: Math.floor(Math.random() * 1000) + 100, // Generate a random userId between 100-1099
+      userId: Math.floor(Math.random() * 1000) + 100, 
       componentNames,
     };
 
@@ -134,6 +229,8 @@ const EmployeeManagement: React.FC = () => {
       userId: undefined,
     });
     setComponentNames([]);
+    setFormSubmitted(false);
+    setTouchedFields({});
   };
 
   const permissionsList = [
@@ -152,7 +249,6 @@ const EmployeeManagement: React.FC = () => {
     'Bookings',
     'Service Queue',
     'Service History',
-    'Day Book',
     'Counter Sale',
     'Job Card',
     'Spares',
@@ -180,7 +276,6 @@ const EmployeeManagement: React.FC = () => {
           Add New User
         </Typography>
         <Grid container spacing={3}>
-          {/* Left side - Form fields */}
           <Grid item xs={12} md={5}>
             <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
@@ -190,14 +285,16 @@ const EmployeeManagement: React.FC = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                error={!formData.name}
-                helperText={!formData.name && "Name is required"}
+                onBlur={() => handleBlur('name')}
+                error={getFieldError('name')}
+                helperText={getHelperText('name')}
               />
               
-              <FormControl fullWidth required error={!formData.position}>
+              <FormControl fullWidth required error={getFieldError('position')}>
                 <Select
                   value={formData.position}
                   onChange={handlePositionChange}
+                  onBlur={() => handleBlur('position')}
                   displayEmpty
                   name="position"
                 >
@@ -207,6 +304,7 @@ const EmployeeManagement: React.FC = () => {
                   <MenuItem value="technician">Technician</MenuItem>
                   <MenuItem value="staff">Staff</MenuItem>
                 </Select>
+                {getFieldError('position') && <FormHelperText>Position is required</FormHelperText>}
               </FormControl>
 
               <TextField
@@ -215,6 +313,10 @@ const EmployeeManagement: React.FC = () => {
                 name="contact"
                 value={formData.contact}
                 onChange={handleInputChange}
+                onBlur={() => handleBlur('contact')}
+                error={getFieldError('contact')}
+                helperText={getHelperText('contact')}
+                placeholder="10-digit number"
               />
 
               <TextField
@@ -224,10 +326,11 @@ const EmployeeManagement: React.FC = () => {
                 name="address"
                 value={formData.address}
                 onChange={handleInputChange}
+                onBlur={() => handleBlur('address')}
                 multiline
                 rows={2}
-                error={!formData.address}
-                helperText={!formData.address && "Address is required"}
+                error={getFieldError('address')}
+                helperText={getHelperText('address')}
               />
 
               <TextField
@@ -238,8 +341,9 @@ const EmployeeManagement: React.FC = () => {
                 type="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                error={!formData.email}
-                helperText={!formData.email && "Email is required"}
+                onBlur={() => handleBlur('email')}
+                error={getFieldError('email')}
+                helperText={getHelperText('email')}
               />
 
               <TextField
@@ -249,8 +353,9 @@ const EmployeeManagement: React.FC = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                error={!formData.username}
-                helperText={!formData.username && "Username is required"}
+                onBlur={() => handleBlur('username')}
+                error={getFieldError('username')}
+                helperText={getHelperText('username')}
               />
 
               <TextField
@@ -261,8 +366,9 @@ const EmployeeManagement: React.FC = () => {
                 type="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                error={!formData.password}
-                helperText={!formData.password && "Password is required"}
+                onBlur={() => handleBlur('password')}
+                error={getFieldError('password')}
+                helperText={getHelperText('password')}
               />
 
               <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>

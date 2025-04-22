@@ -8,6 +8,13 @@ import {
   Typography,
   IconButton,
   Divider,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from '@mui/material';
 import CustomizedDataGrid from 'components/CustomizedDataGrid';
 import Copyright from 'internals/components/Copyright';
@@ -17,6 +24,69 @@ import { useNavigate } from 'react-router-dom';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import apiClient from 'Services/apiService';
+
+// Add print styles to hide elements when printing
+const printStyles = `
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    #print-container, #print-container * {
+      visibility: visible;
+    }
+    #print-container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      padding: 20px;
+    }
+    #print-header {
+      display: block !important;
+      visibility: visible;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #print-header h1 {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    #print-header p {
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    .print-hide {
+      display: none !important;
+    }
+    .MuiDataGrid-root, .MuiDataGrid-root * {
+      visibility: visible;
+    }
+    .MuiDataGrid-columnHeaders {
+      font-weight: bold;
+      background-color: #f5f5f5;
+    }
+    .MuiDataGrid-cell {
+      border: 1px solid #ddd !important;
+      padding: 8px !important;
+    }
+    .MuiDataGrid-columnHeader {
+      border: 1px solid #ddd !important;
+      padding: 8px !important;
+    }
+    .MuiDataGrid-footerContainer, 
+    .MuiDataGrid-columnSeparator, 
+    .MuiDataGrid-menuIcon, 
+    .MuiDataGrid-iconButtonContainer, 
+    .MuiDataGrid-sortIcon,
+    .MuiDataGrid-toolbarContainer {
+      display: none !important;
+    }
+    .action-column {
+      display: none !important;
+    }
+  }
+`;
 
 interface ReportRow {
   id: number;
@@ -123,6 +193,8 @@ const SuperTechServiceReport: React.FC = () => {
       minWidth: 100,
       sortable: false,
       filterable: false,
+      cellClassName: 'action-column',
+      headerClassName: 'action-column',
       renderCell: (params: GridCellParams) => (
         <IconButton
           color="secondary"
@@ -136,14 +208,22 @@ const SuperTechServiceReport: React.FC = () => {
 
   const handlePrintAll = () => window.print();
 
+  // Format dates for display
+  const formattedFromDate = fromDate ? new Date(fromDate).toLocaleDateString() : '';
+  const formattedToDate = toDate ? new Date(toDate).toLocaleDateString() : '';
+
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '1700px' } }}>
-      <Typography variant="h4" gutterBottom>
+      {/* Add print styles */}
+      <style>{printStyles}</style>
+      
+      {/* Screen title - hidden when printing */}
+      <Typography variant="h4" gutterBottom className="print-hide">
         Service Details
       </Typography>
 
-      {/* Date pickers + Search */}
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+      {/* Date pickers + Search - hidden when printing */}
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }} className="print-hide">
         <FormControl sx={{ flexGrow: 1 }}>
           <TextField
             type="date"
@@ -169,8 +249,8 @@ const SuperTechServiceReport: React.FC = () => {
         </Button>
       </Stack>
 
-      {/* Supervisor / Technician / Worker filters */}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
+      {/* Supervisor / Technician / Worker filters - hidden when printing */}
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }} className="print-hide">
         <TextField
           label="Search Supervisor"
           variant="outlined"
@@ -194,17 +274,28 @@ const SuperTechServiceReport: React.FC = () => {
         />
       </Stack>
 
-      <Divider sx={{ mb: 2 }} />
+      <Divider sx={{ mb: 2 }} className="print-hide" />
 
-      {/* DataGrid */}
-      <Grid container spacing={1}>
-        <Grid item xs={12}>
-          <CustomizedDataGrid columns={columns} rows={rows} />
+      {/* Main container for printing */}
+      <div id="print-container">
+        {/* Print header */}
+        <div id="print-header" style={{ display: 'none' }}>
+          <h1>Monthly Service Report</h1>
+          {fromDate && toDate && (
+            <p>From {formattedFromDate} To {formattedToDate}</p>
+          )}
+        </div>
+
+        {/* DataGrid */}
+        <Grid container spacing={1}>
+          <Grid item xs={12}>
+            <CustomizedDataGrid columns={columns} rows={rows} />
+          </Grid>
         </Grid>
-      </Grid>
+      </div>
 
-      {/* Print All button */}
-      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+      {/* Print All button - hidden when printing */}
+      <div style={{ marginTop: '20px', textAlign: 'center' }} className="print-hide">
         <button
           style={{
             border: 'none',
@@ -225,7 +316,7 @@ const SuperTechServiceReport: React.FC = () => {
         </button>
       </div>
 
-      <Copyright sx={{ my: 4 }} />
+      <Copyright sx={{ my: 4 }} className="print-hide" />
     </Box>
   );
 };
