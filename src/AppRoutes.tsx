@@ -3,15 +3,14 @@ import { Route, Routes } from "react-router-dom";
 import { CircularProgress, Box } from "@mui/material";
 import WebHeader from "pages/Headers";
 import AdminHeader from "pages/AdminHeader";
-
-// Simple loader component to show while loading lazy components
+import EmployeeManagement from "pages/employee/EmployeeManagement";
+import EmployeeList from "pages/employee/EmployeeList";
 const LoadingFallback = () => (
   <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
     <CircularProgress />
   </Box>
 );
 
-// Lazy loaded components
 const SignIn = lazy(() => import("./pages/SignInSide"));
 const Home = lazy(() => import("./pages/Home"));
 const SignUp = lazy(() => import("./pages/SignUp"));
@@ -113,7 +112,7 @@ const AppRoutes = () => {
             <Route path="/VehicleByAppointmentId" element={<VehicleByAppointmentId />} />
             
             </Route>
-            <Route path="/admin/*" element={<AdminHeader />}>
+            <Route path="/admin" element={<AdminHeader />}>
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="appointmentList" element={<AppointmentList />} />
                 <Route path="jobCardgrid" element={<JobCardGrid />} />
@@ -121,7 +120,9 @@ const AppRoutes = () => {
                 <Route path="billForm/:id" element={<InvoiceForm />} />
                 <Route path="jobcardpdf" element={<JobCardPDF />} />
                 <Route path="invoicepdfgenerator" element={<InvoicePDFGenerator />} />
-                <Route path="quatationpdfgenerator/:id" element={<QuatationPDFGeneration />} />
+                <Route path="employeeManagement" element={<EmployeeManagement />} />
+                <Route path="employeeList" element={<EmployeeList />} />
+                <Route path="employeeManagement/edit/:userId" element={<EmployeeManagement />} />
                 <Route path="manage-customer" element={<CustomerList />} />
                 <Route path="AddCustomer" element={<AddCustomerForm />} />  
                 <Route path="manage-reports" element={<ReportForm />} />

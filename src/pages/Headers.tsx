@@ -90,7 +90,7 @@ const WebHeader = () => {
                 </span>
               </Link>
 
-              {userRole === "ADMIN" && (
+              {(userRole === "ADMIN" || userRole === "EMPLOYEE") && (
   <>
     <Link
       to="/admin/dashboard"
