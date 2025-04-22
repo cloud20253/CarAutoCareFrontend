@@ -1,7 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { keyframes } from "@emotion/react";
 import { useTheme } from "@mui/material/styles";
-import { Box, Card, CardActionArea, CardContent, Typography, Container, Paper, Divider, Grid, Avatar } from "@mui/material";
+import { 
+  Box, 
+  Card, 
+  CardActionArea, 
+  Typography, 
+  Container, 
+  Paper, 
+  Divider, 
+  Grid, 
+  Avatar,
+  useMediaQuery
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import ArticleIcon from '@mui/icons-material/Article';
@@ -63,6 +74,24 @@ const allComponents = [
     icon: <SecurityIcon sx={{ color: "secondary.dark", fontSize: 40 }} />,
     url: "/admin/insuranceList",
     description: "Handle insurance claims and policies",
+  },
+  {
+    value: "Job Card",
+    icon: <DescriptionIcon sx={{ color: "success.dark", fontSize: 40 }} />,
+    url: "/admin/jobCardgrid",
+    description: "Manage job cards",
+  },
+  {
+    value: "Spares",
+    icon: <InventoryIcon sx={{ color: "warning.dark", fontSize: 40 }} />,
+    url: "/admin/manage-stock",
+    description: "Manage spare parts",
+  },
+  {
+    value: "Services",
+    icon: <BuildIcon sx={{ color: "info.dark", fontSize: 40 }} />,
+    url: "/admin/services",
+    description: "Manage services",
   },
 ];
 
@@ -128,10 +157,44 @@ const getCardBorderGlow = (index: number, isDark: boolean) => {
 export default function Dashboard() {
   const navigate = useNavigate();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   const [userRole, setUserRole] = useState("");
   const [userName, setUserName] = useState("");
   const [authorizedComponents, setAuthorizedComponents] = useState<string[]>([]);
   const [filteredComponents, setFilteredComponents] = useState(allComponents);
+  
+  const findMatchingComponents = useCallback((componentNames: string[]) => {
+    // First try to match exact names
+    const exactMatches = allComponents.filter(component => 
+      componentNames.includes(component.value)
+    );
+    
+    // If we don't have enough exact matches, try partial matches
+    if (exactMatches.length < componentNames.length) {
+      const remainingNames = componentNames.filter(
+        name => !exactMatches.some(match => match.value === name)
+      );
+      
+      const partialMatches = allComponents.filter(component => 
+        !exactMatches.some(match => match.value === component.value) && // Avoid duplicates
+        remainingNames.some(name => 
+          component.value.toLowerCase().includes(name.toLowerCase()) ||
+          name.toLowerCase().includes(component.value.toLowerCase())
+        )
+      );
+      
+      // If we still don't have enough components, add some defaults
+      if (exactMatches.length + partialMatches.length < componentNames.length) {
+        const defaultComponents = allComponents.slice(0, componentNames.length - (exactMatches.length + partialMatches.length));
+        return [...exactMatches, ...partialMatches, ...defaultComponents];
+      }
+      
+      return [...exactMatches, ...partialMatches];
+    }
+    
+    return exactMatches;
+  }, []);
 
   useEffect(() => {
     const storedDecodedToken = localStorage.getItem("userData");
@@ -148,17 +211,18 @@ export default function Dashboard() {
           const userComponents = parsedToken.componentNames || [];
           setAuthorizedComponents(userComponents);
           
-          const filtered = allComponents.filter(component => 
-            userComponents.includes(component.value)
-          );
+          // Use the helper function to find matching components
+          const matchedComponents = findMatchingComponents(userComponents);
+          setFilteredComponents(matchedComponents);
           
-          setFilteredComponents(filtered);
+          console.log("User has access to:", userComponents);
+          console.log("Matched components:", matchedComponents.map(c => c.value));
         }
       } catch (error) {
         console.error("Error parsing user data:", error);
       }
     }
-  }, []);
+  }, [findMatchingComponents]);
   
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -167,24 +231,43 @@ export default function Dashboard() {
     return "Good Evening";
   };
 
+  // Calculate grid column sizes based on number of components
+  const getGridColumns = () => {
+    const count = filteredComponents.length;
+    
+    if (isMobile) {
+      return count <= 2 ? 12 : 6; // 1 or a max of 2 columns on mobile
+    } else if (isTablet) {
+      if (count <= 3) return 4; // 3 columns
+      return 4; // 3 columns  
+    } else {
+      if (count <= 4) return 3; // 4 columns
+      if (count <= 8) return 3; // 4 columns
+      return 2; // 6 columns for many items
+    }
+  };
+
   return (
     <Box
       sx={{
         minHeight: "100vh",
+        width: '100%',
         background: theme.palette.mode === 'dark' 
           ? 'linear-gradient(to bottom right, #1a202c, #2d3748)' 
           : 'linear-gradient(to bottom right, #f7fafc, #ebf4ff)',
         color: theme.palette.text.primary,
-        py: 4,
+        py: { xs: 2, sm: 3, md: 4 },
+        px: { xs: 1, sm: 2 }
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="xl" sx={{ width: '100%' }}>
         <Paper 
           elevation={0}
           sx={{
-            p: 4,
-            mb: 4,
+            p: { xs: 2, sm: 3, md: 4 },
+            mb: { xs: 2, sm: 3, md: 4 },
             borderRadius: 3,
+            width: '100%',
             background: theme.palette.mode === 'dark' 
               ? 'linear-gradient(135deg, rgba(66, 153, 225, 0.1), rgba(0, 0, 0, 0))' 
               : 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7))',
@@ -196,19 +279,25 @@ export default function Dashboard() {
             animation: `${fadeIn} 0.5s ease-out`,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'center', sm: 'flex-start' },
+            mb: 2 
+          }}>
             <Avatar 
               sx={{ 
-                width: 56, 
-                height: 56, 
+                width: { xs: 48, sm: 56 }, 
+                height: { xs: 48, sm: 56 }, 
                 bgcolor: 'primary.main',
-                mr: 2,
+                mr: { xs: 0, sm: 2 },
+                mb: { xs: 1, sm: 0 },
                 animation: `${pulse} 2s infinite`
               }}
             >
               {userName ? userName.charAt(0).toUpperCase() : "A"}
             </Avatar>
-            <Box>
+            <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
               <Typography variant="h5" fontWeight="bold">
                 {getGreeting()}, {userName || "User"}
               </Typography>
@@ -220,20 +309,28 @@ export default function Dashboard() {
           
           <Divider sx={{ my: 2 }} />
           
-          <Typography variant="h4" fontWeight="bold" mb={1} align="center">
-        AUTO CAR CARE POINT
-      </Typography>
+          <Typography 
+            variant="h4" 
+            fontWeight="bold" 
+            mb={1} 
+            align="center"
+            sx={{ fontSize: { xs: '1.6rem', sm: '1.8rem', md: '2rem' } }}
+          >
+            AUTO CAR CARE POINT
+          </Typography>
         </Paper>
 
         {userRole === "EMPLOYEE" && (
-          <Box sx={{ mb: 4, animation: `${fadeIn} 0.6s ease-out` }}>
+          <Box sx={{ mb: { xs: 2, sm: 3, md: 4 }, animation: `${fadeIn} 0.6s ease-out` }}>
             <Paper 
               elevation={0} 
-        sx={{
-                p: 2, 
+              sx={{
+                p: { xs: 1.5, sm: 2 }, 
                 borderRadius: 2,
                 bgcolor: 'info.main',
                 color: 'white',
+                textAlign: 'center',
+                width: '100%'
               }}
             >
               <Typography variant="body1">
@@ -243,13 +340,13 @@ export default function Dashboard() {
           </Box>
         )}
 
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ width: '100%', mx: 'auto' }}>
           {filteredComponents.map((card, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
-          <Card
-            sx={{
-                  height: 160,
-              borderRadius: 3,
+            <Grid item xs={getGridColumns()} sm={4} md={3} key={index}>
+              <Card
+                sx={{
+                  height: { xs: 130, sm: 150 },
+                  borderRadius: 3,
                   overflow: 'hidden',
                   position: 'relative',
                   transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
@@ -278,7 +375,7 @@ export default function Dashboard() {
                       : 'radial-gradient(circle at center, rgba(191,219,254,0.5) 0%, rgba(255,255,255,0) 70%)'
                   },
                   "&:hover": {
-                    transform: "translateY(-10px) scale(1.02)",
+                    transform: "translateY(-5px) scale(1.02)",
                     boxShadow: (theme) => getCardBorderGlow(index, theme.palette.mode === 'dark'),
                     borderColor: getCardGlowColor(index).replace('0.8', '0.3'),
                     "&::before": {
@@ -295,18 +392,18 @@ export default function Dashboard() {
                   },
                   opacity: 0,
                   animation: `${fadeIn} 0.5s ease-out forwards`,
-                  animationDelay: `${0.2 + index * 0.1}s`,
+                  animationDelay: `${0.1 + index * 0.05}s`,
                 }}
               >
                 <CardActionArea 
                   onClick={() => navigate(card.url)} 
                   sx={{ 
                     height: "100%",
-              display: "flex",
+                    display: "flex",
                     flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-                    p: 2,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    p: { xs: 1, sm: 2 },
                     position: 'relative',
                     zIndex: 1
                   }}
@@ -314,9 +411,9 @@ export default function Dashboard() {
                   <Box 
                     className="icon-container"
                     sx={{ 
-                      p: 2, 
+                      p: { xs: 1, sm: 1.5 }, 
                       borderRadius: '50%', 
-                      mb: 2,
+                      mb: { xs: 1, sm: 1.5 },
                       display: 'inline-flex',
                       bgcolor: theme.palette.mode === 'dark' 
                         ? 'rgba(255,255,255,0.15)' 
@@ -326,16 +423,22 @@ export default function Dashboard() {
                       boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                     }}
                   >
-                    {card.icon}
+                    {React.cloneElement(card.icon, { 
+                      sx: { 
+                        ...card.icon.props.sx,
+                        fontSize: isMobile ? 24 : 32
+                      }
+                    })}
                   </Box>
                   <Typography 
                     className="card-title"
-                    variant="h6" 
+                    variant={isMobile ? "subtitle1" : "h6"}
                     fontWeight="bold"
                     align="center"
                     sx={{ 
                       transition: "all 0.3s ease",
                       position: "relative",
+                      fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' },
                       "&::after": {
                         content: '""',
                         position: "absolute",
@@ -352,10 +455,10 @@ export default function Dashboard() {
                       }
                     }}
                   >
-                  {card.value}
-                </Typography>
-            </CardActionArea>
-          </Card>
+                    {card.value}
+                  </Typography>
+                </CardActionArea>
+              </Card>
             </Grid>
           ))}
         </Grid>
@@ -379,8 +482,8 @@ export default function Dashboard() {
 
         <Box 
           sx={{ 
-            mt: 6, 
-            pt: 3, 
+            mt: { xs: 4, sm: 5, md: 6 }, 
+            pt: 2, 
             borderTop: '1px solid', 
             borderColor: 'divider',
             textAlign: 'center',
@@ -389,7 +492,7 @@ export default function Dashboard() {
         >
           <Typography variant="body2" color="text.secondary">
             Copyright © Auto Car Care Point {new Date().getFullYear()}. All rights reserved.
-      </Typography>
+          </Typography>
         </Box>
       </Container>
     </Box>
