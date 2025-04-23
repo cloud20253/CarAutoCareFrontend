@@ -176,7 +176,7 @@ const EmployeeList: FC = () => {
         </Box>
 
         <DataGrid
-          rows={employees}
+          rows={filteredEmployees}
           columns={columns}
           getRowId={(row: EmployeeDTO) => row.id || row.userId || Math.random()}
           initialState={{
