@@ -3,6 +3,8 @@ import { Route, Routes } from "react-router-dom";
 import { CircularProgress, Box } from "@mui/material";
 import WebHeader from "pages/Headers";
 import AdminHeader from "pages/AdminHeader";
+import TermsAndConditionsList from "components/Terms/TermsAndConditionsList";
+import AddTermsAndConditions from "components/Terms/AddTermsAndConditions";
 import EmployeeManagement from "pages/employee/EmployeeManagement";
 import EmployeeList from "pages/employee/EmployeeList";
 const LoadingFallback = () => (
@@ -97,6 +99,7 @@ const AppRoutes = () => {
             <Route element={<WebHeader />} >
             <Route path="/" element = {<Home/>} />
             <Route path="/add-part" element={<MyAddSparePart />} /> 
+            <Route path="/terms/add" element={<AddTermsAndConditions />} /> 
             <Route path="/getAll" element={<SparePart />} /> 
             <Route path="/supplier/add" element={<AddNewSupplierPage />} /> 
             <Route path="/supplier/update/:vendorId" element={<VendorUpdatePage />} />
@@ -129,6 +132,15 @@ const AppRoutes = () => {
                 <Route path="insuranceList" element={<InsuranceList />} />
                 <Route path="manage-purchaseaccountreport" element={<PurchaseAccountReport />} />
                 <Route path="manage-Notes" element={<NotesList/>} />
+                
+                {/* Terms and Conditions Routes */}
+                <Route path="manage-Terms" element={<TermsAndConditionsList/>} />
+                
+                {/* Route for editing - matches /admin/terms/edit/:id */}
+                <Route path="terms/edit/:id" element={<AddTermsAndConditions />} />
+                
+                {/* Route for adding - matches /admin/terms/add */}
+                <Route path="terms/add" element={<AddTermsAndConditions />} />
 
                 <Route path="ServiceTable" element={<InvoiceTable />} />
                 <Route path="serviceManage" element={<AddService />} />

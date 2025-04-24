@@ -15,11 +15,14 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import PaymentIcon from '@mui/icons-material/Payment';
 import BuildIcon from '@mui/icons-material/Build';
 import InventoryIcon from '@mui/icons-material/Inventory';
+import GavelIcon from '@mui/icons-material/Gavel';
+import logger from '../../utils/logger';
 
 interface NavItem {
   name: string;
   path: string;
   icon: React.ReactNode;
+  requiredRole?: string;
 }
 
 const navigationItems: NavItem[] = [
@@ -38,18 +41,23 @@ const navigationItems: NavItem[] = [
   { name: 'Insurance', path: '/insurance', icon: <SecurityIcon /> },
   { name: 'Manage Repairs', path: '/repairs', icon: <BuildIcon /> },
   { name: 'Manage Stock', path: '/stock', icon: <InventoryIcon /> },
+  { name: 'Terms & Conditions', path: '/terms', icon: <GavelIcon /> },
 ];
 
 interface NavigationMenuProps {
   components: string[];
+  userRole?: string;
 }
 
-const NavigationMenu: React.FC<NavigationMenuProps> = ({ components }) => {
-  console.log('Authorized components:', components);
+const NavigationMenu: React.FC<NavigationMenuProps> = ({ components, userRole = '' }) => {
+  logger.info('Authorized components:', components);
+  logger.info('User role:', userRole);
 
-  const authorizedItems = navigationItems.filter(item => 
-    components.includes(item.name)
-  );
+  // If the user is an admin, show all navigation items
+  // Otherwise, filter based on authorized components
+  const authorizedItems = userRole === 'ADMIN' 
+    ? navigationItems 
+    : navigationItems.filter(item => components.includes(item.name));
 
   if (authorizedItems.length === 0) {
     return (

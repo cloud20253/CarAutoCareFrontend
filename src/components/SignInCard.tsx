@@ -70,15 +70,12 @@ export default function SignInCard() {
         password
       }
       const response = await SignInUser(data);
-     console.log(response);
      const decodedToken = jwtDecode<MyJwtPayload>(response);
 
-      console.log("Decoded Token:", decodedToken?.authorities[0]);
       localStorage.setItem("token",response)
       localStorage.setItem("userData", JSON.stringify(decodedToken));
       navigate("/");
     } catch (err) {
-      console.error("Error signing in:", err);
       alert("Sign-in failed. Please check your credentials.");
     }
   };
@@ -304,10 +301,8 @@ export default function SignInCard() {
 //         password,
 //       };
 //       const response = await SignInUser(data);
-//       console.log(response);
       
 //       const decodedToken = jwtDecode<MyJwtPayload>(response);
-//       console.log("Decoded Token:", decodedToken?.authorities[0]);
 
 //       // Store token and user data in sessionStorage for session-only persistence
 //       sessionStorage.setItem("token", response);
@@ -315,7 +310,6 @@ export default function SignInCard() {
 
 //       navigate("/");
 //     } catch (err) {
-//       console.error("Error signing in:", err);
 //       alert("Sign-in failed. Please check your credentials.");
 //     }
 //   };

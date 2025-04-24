@@ -1,30 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Box } from '@mui/material';
-import { jwtDecode } from 'jwt-decode';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { Box, Button, Snackbar, Alert } from '@mui/material';
 import NavigationMenu from './components/navigation/NavigationMenu';
+import ConsoleSanitizer from './utils/ConsoleSanitizer';
+import logger from './utils/logger';
+import TermsAndConditionsList from './components/Terms/TermsAndConditionsList';
+import AddTermsAndConditions from './components/Terms/AddTermsAndConditions';
+import SignInSide from './pages/SignInSide';
+import SessionExpirationHandler from './components/navigation/SessionExpirationHandler';
+import { 
+  getUserFromToken, 
+  logout,
+  User
+} from './utils/tokenUtils';
 
 // Mock token for testing - remove in production
-const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJTYW1Db25AZ21haWwuY29tIiwiZmlyc3RuYW1lIjoiU2FtIiwidXNlcklkIjoxMDAzMywiY29tcG9uZW50TmFtZXMiOlsiTWFuYWdlIFJlcGFpcnMiLCJNYW5hZ2UgVXNlciIsIlNlcnZpY2UgUXVldWUiLCJCb29raW5ncyIsIkNvdW50ZXIgU2FsZSIsIk1hbmFnZSBTdG9jayJdLCJhdXRob3JpdGllcyI6WyJFTVBMT1lFRSJdLCJyb2xlcyI6WyJFTVBMT1lFRSJdLCJpc0VuYWJsZSI6dHJ1ZSwiaWF0IjoxNzQ1MzA3MzY1LCJleHAiOjE3NDUzMTA5NjV9.D1R-Xr9u3WmJdGm9W4oyBDxD0vLVr2zZT9QYsZT62Kg";
-
-interface DecodedToken {
-  sub: string;
-  firstname: string;
-  userId: number;
-  componentNames: string[];
-  authorities: string[];
-  roles: string[];
-  isEnable: boolean;
-  iat: number;
-  exp: number;
-}
-
-interface User {
-  isAuthenticated: boolean;
-  name: string;
-  role: string;
-  components: string[];
-}
+const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBnbWFpbC5jb20iLCJmaXJzdG5hbWUiOiJBZG1pbiIsInVzZXJJZCI6MTAwMTAsImNvbXBvbmVudE5hbWVzIjpbIk1hbmFnZSBSZXBhaXJzIiwiTWFuYWdlIFVzZXIiLCJTZXJ2aWNlIFF1ZXVlIiwiQm9va2luZ3MiLCJDb3VudGVyIFNhbGUiLCJNYW5hZ2UgU3RvY2siLCJUZXJtcyAmIENvbmRpdGlvbnMiXSwiYXV0aG9yaXRpZXMiOlsiQURNSU4iXSwicm9sZXMiOlsiQURNSU4iXSwiaXNFbmFibGUiOnRydWUsImlhdCI6MTcxODQ0NjQ5MCwiZXhwIjoyNzE4NDUwMDkwfQ.nLBoKLJxAyJ9FQYGmfeMY3S9KhO7RLTfhZ98uSdp-60";
 
 const Header: React.FC<{ user: User, onLogout: () => void }> = ({ user, onLogout }) => {
   return (
@@ -36,16 +27,38 @@ const Header: React.FC<{ user: User, onLogout: () => void }> = ({ user, onLogout
       justifyContent: 'space-between',
       alignItems: 'center'
     }}>
-      <Box component="a" href="/" sx={{ textDecoration: 'none', color: 'white' }}>
+      <Box 
+        component={Link} 
+        to="/" 
+        sx={{ textDecoration: 'none', color: 'white' }}
+      >
         <Box sx={{ fontSize: '1.5rem', fontWeight: 'bold' }}>AutoCarCarePoint</Box>
       </Box>
       
       <Box sx={{ display: 'flex', gap: 3 }}>
-        <Box component="a" href="/" sx={{ color: 'white', textDecoration: 'none' }}>Home</Box>
-        <Box component="a" href="/buy-accessories" sx={{ color: 'white', textDecoration: 'none' }}>Buy Accessories</Box>
+        <Box 
+          component={Link} 
+          to="/" 
+          sx={{ color: 'white', textDecoration: 'none' }}
+        >
+          Home
+        </Box>
+        <Box 
+          component={Link} 
+          to="/buy-accessories" 
+          sx={{ color: 'white', textDecoration: 'none' }}
+        >
+          Buy Accessories
+        </Box>
         
         {user.isAuthenticated && (user.role === 'ADMIN' || user.role === 'EMPLOYEE') && (
-          <Box component="a" href="/dashboard" sx={{ color: 'white', textDecoration: 'none' }}>Dashboard</Box>
+          <Box 
+            component={Link} 
+            to="/dashboard" 
+            sx={{ color: 'white', textDecoration: 'none' }}
+          >
+            Dashboard
+          </Box>
         )}
         
         {user.isAuthenticated && (
@@ -73,6 +86,29 @@ const Header: React.FC<{ user: User, onLogout: () => void }> = ({ user, onLogout
   );
 };
 
+// AuthGuard component to protect routes
+const AuthGuard: React.FC<{
+  user: User;
+  requiredRoles?: string[];
+  children: React.ReactNode;
+}> = ({ user, requiredRoles = [], children }) => {
+  if (!user.isAuthenticated) {
+    return <Navigate to="/signIn" />;
+  }
+
+  // Admin users can access all routes
+  if (user.role === 'ADMIN') {
+    return <>{children}</>;
+  }
+
+  // For non-admin users, check role-based permissions
+  if (requiredRoles.length > 0 && !requiredRoles.includes(user.role)) {
+    return <Box p={4}>You don't have permission to access this page.</Box>;
+  }
+
+  return <>{children}</>;
+};
+
 const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   if (!user.isAuthenticated || (user.role !== 'ADMIN' && user.role !== 'EMPLOYEE')) {
     return <Box>Not authorized</Box>;
@@ -80,7 +116,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      <NavigationMenu components={user.components} />
+      <NavigationMenu components={user.components} userRole={user.role} />
     </Box>
   );
 };
@@ -94,41 +130,33 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    // For testing purposes - in production, retrieve from localStorage
-    // const token = localStorage.getItem('token');
-    const token = mockToken;
-    
-    if (token) {
-      try {
-        const decoded = jwtDecode<DecodedToken>(token);
-        console.log('Decoded token:', decoded);
-        
-        if (decoded && decoded.exp * 1000 > Date.now()) {
-          setUser({
-            isAuthenticated: true,
-            name: decoded.firstname,
-            role: decoded.roles[0],
-            components: decoded.componentNames
-          });
-        }
-      } catch (error) {
-        console.error('Error decoding token:', error);
-      }
+    // For development, use mock token - REMOVE IN PRODUCTION
+    if (!localStorage.getItem('token')) {
+      localStorage.setItem('token', mockToken);
     }
+    
+    // Get user from token
+    const currentUser = getUserFromToken();
+    setUser(currentUser);
   }, []);
 
   const handleLogout = () => {
+    logout();
     setUser({
       isAuthenticated: false,
       name: '',
       role: '',
       components: []
     });
-    localStorage.removeItem('token');
   };
 
   return (
     <Router>
+      <ConsoleSanitizer />
+      
+      {/* Add the session expiration handler if user is authenticated */}
+      {user.isAuthenticated && <SessionExpirationHandler />}
+      
       <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5' }}>
         <Header user={user} onLogout={handleLogout} />
         
@@ -136,6 +164,33 @@ const App: React.FC = () => {
           <Route path="/dashboard" element={<Dashboard user={user} />} />
           <Route path="/" element={<Box>Home Page</Box>} />
           <Route path="/buy-accessories" element={<Box>Buy Accessories Page</Box>} />
+          <Route path="/signIn" element={<SignInSide />} />
+          
+          {/* Terms and Conditions Routes - Protected with AuthGuard */}
+          <Route 
+            path="/terms" 
+            element={
+              <AuthGuard user={user} requiredRoles={['ADMIN']}>
+                <TermsAndConditionsList />
+              </AuthGuard>
+            } 
+          />
+          <Route 
+            path="/terms/add" 
+            element={
+              <AuthGuard user={user} requiredRoles={['ADMIN']}>
+                <AddTermsAndConditions />
+              </AuthGuard>
+            } 
+          />
+          <Route 
+            path="/terms/edit/:id" 
+            element={
+              <AuthGuard user={user} requiredRoles={['ADMIN']}>
+                <AddTermsAndConditions />
+              </AuthGuard>
+            } 
+          />
         </Routes>
       </Box>
     </Router>
