@@ -192,7 +192,7 @@ const EmployeeManagement: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await apiClient.post<BaseResponseDTO>(
-        'employees/add',
+        'api/employees/add',
         employeeDTO
       );
 
@@ -270,12 +270,12 @@ const EmployeeManagement: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
+    <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
+      <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="h5" gutterBottom sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
           Add New User
         </Typography>
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, md: 3 }}>
           <Grid item xs={12} md={5}>
             <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
@@ -288,9 +288,10 @@ const EmployeeManagement: React.FC = () => {
                 onBlur={() => handleBlur('name')}
                 error={getFieldError('name')}
                 helperText={getHelperText('name')}
+                size="small"
               />
               
-              <FormControl fullWidth required error={getFieldError('position')}>
+              <FormControl fullWidth required error={getFieldError('position')} size="small">
                 <Select
                   value={formData.position}
                   onChange={handlePositionChange}
@@ -317,6 +318,7 @@ const EmployeeManagement: React.FC = () => {
                 error={getFieldError('contact')}
                 helperText={getHelperText('contact')}
                 placeholder="10-digit number"
+                size="small"
               />
 
               <TextField
@@ -331,6 +333,7 @@ const EmployeeManagement: React.FC = () => {
                 rows={2}
                 error={getFieldError('address')}
                 helperText={getHelperText('address')}
+                size="small"
               />
 
               <TextField
@@ -344,6 +347,7 @@ const EmployeeManagement: React.FC = () => {
                 onBlur={() => handleBlur('email')}
                 error={getFieldError('email')}
                 helperText={getHelperText('email')}
+                size="small"
               />
 
               <TextField
@@ -356,6 +360,7 @@ const EmployeeManagement: React.FC = () => {
                 onBlur={() => handleBlur('username')}
                 error={getFieldError('username')}
                 helperText={getHelperText('username')}
+                size="small"
               />
 
               <TextField
@@ -369,14 +374,16 @@ const EmployeeManagement: React.FC = () => {
                 onBlur={() => handleBlur('password')}
                 error={getFieldError('password')}
                 helperText={getHelperText('password')}
+                size="small"
               />
 
-              <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2, mt: 2, justifyContent: { xs: 'center', sm: 'flex-start' } }}>
                 <Button 
                   type="submit" 
                   variant="contained" 
                   color="primary"
                   disabled={isLoading}
+                  sx={{ minWidth: '100px' }}
                 >
                   {isLoading ? <CircularProgress size={24} /> : 'Submit'}
                 </Button>
@@ -386,6 +393,7 @@ const EmployeeManagement: React.FC = () => {
                   color="secondary" 
                   onClick={handleReset}
                   disabled={isLoading}
+                  sx={{ minWidth: '100px' }}
                 >
                   Reset
                 </Button>
@@ -395,10 +403,21 @@ const EmployeeManagement: React.FC = () => {
 
           {/* Right side - Component Names */}
           <Grid item xs={12} md={7}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" gutterBottom sx={{ 
+              mt: { xs: 3, md: 0 },
+              textAlign: { xs: 'center', sm: 'left' }
+            }}>
               Manage Roles
             </Typography>
-            <FormGroup sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
+            <FormGroup sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: { 
+                xs: 'repeat(2, 1fr)', 
+                sm: 'repeat(2, 1fr)', 
+                md: 'repeat(3, 1fr)' 
+              },
+              gap: { xs: 0.5, sm: 1 }
+            }}>
               {permissionsList.map((component) => (
                 <FormControlLabel
                   key={component}
@@ -407,9 +426,27 @@ const EmployeeManagement: React.FC = () => {
                       checked={componentNames.includes(component)}
                       onChange={() => handleComponentChange(component)}
                       disabled={isLoading}
+                      size="small"
                     />
                   }
-                  label={component}
+                  label={
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {component}
+                    </Typography>
+                  }
+                  sx={{ 
+                    margin: 0, 
+                    padding: { xs: '2px 0', sm: '4px 0' },
+                    minHeight: { xs: '30px', sm: 'auto' }
+                  }}
                 />
               ))}
             </FormGroup>

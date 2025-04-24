@@ -26,6 +26,7 @@ import {
   useTheme,
   Snackbar,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 import { Task, NoteAdd, Delete, Save, RemoveCircleOutline, Description } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
@@ -96,7 +97,9 @@ const JobCard: React.FC = () => {
   const [customerNote, setCustomerNote] = useState("");
   const [workshopNote, setWorkshopNote] = useState("");
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error" | "">("");
   const [jobCards, setJobCards] = useState<JobCardData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -107,7 +110,7 @@ const JobCard: React.FC = () => {
 
   const fetchJobCards = useCallback(async () => {
     try {
-      const response = await apiClient.get(`/jobcard/GetByVehicleId?vehicleId=${vehicleId}`);
+      const response = await apiClient.get(`/api/vehicleJobCards/getByVehicleId?vehicleId=${vehicleId}`);
       if (response.data && Array.isArray(response.data)) {
         setJobCards(response.data);
       }
@@ -144,29 +147,56 @@ const JobCard: React.FC = () => {
   }, [jobSearch]);
 
   useEffect(() => {
-    fetchJobOptions(debouncedSearch);
+    if (debouncedSearch.trim()) {
+      fetchJobOptions(debouncedSearch);
+    } else {
+      // Only fetch all jobs when no search is active
+      fetchAllJobOptions();
+    }
   }, [debouncedSearch]);
 
-  const fetchJobOptions = async (query: string) => {
+  // Fetch all job options
+  const fetchAllJobOptions = async () => {
     try {
-      const jobResponse = await apiClient.get(`/jobcard/getAllJobs`);
+      setIsLoading(true);
+      const jobResponse = await apiClient.get("/registerJobCard/getAll");
       const data = jobResponse.data;
       
       if (data && Array.isArray(data)) {
-        // Filter based on search query if there is one
-        const filteredOptions = query
-          ? data.filter((option) =>
-              option.description.toLowerCase().includes(query.toLowerCase())
-            )
-          : data;
-        
-        setJobOptions(filteredOptions);
+        setJobOptions(data);
       } else {
         setJobOptions([]);
       }
     } catch (error) {
-      console.error("Error fetching job options:", error);
+      console.error("Error fetching all job options:", error);
       setMessage("Error fetching job options.");
+      setMessageType("error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch job options based on search
+  const fetchJobOptions = async (query: string) => {
+    try {
+      setIsLoading(true);
+      // Use the new search endpoint
+      const jobResponse = await apiClient.get(`/registerJobCard/search?query=${query}`);
+      const data = jobResponse.data;
+      
+      if (data && Array.isArray(data)) {
+        setJobOptions(data);
+      } else {
+        setJobOptions([]);
+      }
+    } catch (error) {
+      console.error("Error searching job options:", error);
+      setMessage("Error searching job options.");
+      setMessageType("error");
+      // Fallback to getAllJobs if search fails
+      fetchAllJobOptions();
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -193,6 +223,14 @@ const JobCard: React.FC = () => {
   };
 
   const handleSave = async () => {
+    // Validation
+    if (selectedJobs.length === 0) {
+      setMessage("Please select at least one job.");
+      setMessageType("error");
+      return;
+    }
+
+    setIsLoading(true);
     const jobCardData = {
       vehicleId: vehicleId,
       vehicleNumber: localStorage.getItem("vehicleNumber") || null,
@@ -207,7 +245,36 @@ const JobCard: React.FC = () => {
     try {
       const response = await apiClient.post("/api/vehicleJobCards/add", jobCardData);
       setMessage("Job card created successfully!");
+      setMessageType("success");
       localStorage.setItem("jobCardDetails", JSON.stringify(response.data));
+      
+      // Create empty PDF data to ensure PDF generation even without data
+      const emptyJobCard = {
+        vehicleJobCardId: response.data?.vehicleJobCardId || "N/A",
+        jobName: response.data?.jobName || "N/A",
+        customerName: "N/A",
+        jobStatus: response.data?.jobStatus || "N/A",
+        customerNote: response.data?.customerNote || "N/A",
+        workShopNote: response.data?.workShopNote || "N/A"
+      };
+      
+      // Ensure we have data for the PDF by storing empty data if needed
+      if (!response.data) {
+        localStorage.setItem("jobCardDetails", JSON.stringify(emptyJobCard));
+      }
+      
+      // Store vehicle data for PDF if not already stored
+      if (!localStorage.getItem("vehicleData")) {
+        localStorage.setItem("vehicleData", JSON.stringify({
+          vehicleNumber: jobCardData.vehicleNumber || "N/A",
+          customerMobileNumber: "N/A",
+          customerAddress: "N/A",
+          email: "N/A",
+          superwiser: "N/A",
+          technician: "N/A"
+        }));
+      }
+      
       setSelectedJobs([]);
       setCustomerNote("");
       setWorkshopNote("");
@@ -218,6 +285,9 @@ const JobCard: React.FC = () => {
         "Error creating job card: " +
           (error.response?.data?.message || error.message)
       );
+      setMessageType("error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -304,9 +374,26 @@ const JobCard: React.FC = () => {
           onInputChange={(event, newInputValue) => {
             setJobSearch(newInputValue);
           }}
+          loading={isLoading}
           renderInput={(params) => (
-            <TextField {...params} label="Search Job Name" variant="outlined" fullWidth sx={{ mb: 2 }} />
+            <TextField 
+              {...params} 
+              label="Search Job Name" 
+              variant="outlined" 
+              fullWidth 
+              sx={{ mb: 2 }} 
+              InputProps={{
+                ...params.InputProps,
+                endAdornment: (
+                  <>
+                    {isLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                    {params.InputProps.endAdornment}
+                  </>
+                ),
+              }}
+            />
           )}
+          noOptionsText="No jobs found. Try a different search term."
         />
         {selectedJobs.length > 0 && (
           <Paper elevation={1} sx={{ p: 2, mb: 2, width: "100%" }}>
@@ -446,9 +533,9 @@ const JobCard: React.FC = () => {
 
         {message && (
           <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" color="primary">
+            <Alert severity={messageType || "info"} sx={{ width: "100%" }}>
               {message}
-            </Typography>
+            </Alert>
           </Box>
         )}
       </Paper>

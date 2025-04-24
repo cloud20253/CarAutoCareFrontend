@@ -16,6 +16,13 @@ import {
   alpha,
   Divider,
   useMediaQuery,
+  Avatar,
+  InputAdornment,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from '@mui/material';
 import {
   DataGrid,
@@ -174,9 +181,9 @@ const EmployeeList: FC = () => {
     { 
       field: 'srNo', 
       headerName: 'Sr No', 
-      width: 70,
-      minWidth: 70,
-      maxWidth: 80,
+      width: 60,
+      minWidth: 50,
+      maxWidth: 60,
       sortable: false,
       filterable: false,
       headerAlign: 'center',
@@ -187,8 +194,8 @@ const EmployeeList: FC = () => {
     { 
       field: 'name', 
       headerName: 'Name', 
-      width: 120,
-      minWidth: 100,
+      width: 100,
+      minWidth: 80,
       flex: 0.5,
       sortable: false,
       renderHeader: renderHeaderWithTooltip,
@@ -196,8 +203,8 @@ const EmployeeList: FC = () => {
     { 
       field: 'position', 
       headerName: 'Position', 
-      width: 120,
-      minWidth: 100,
+      width: 90,
+      minWidth: 80,
       flex: 0.5,
       sortable: false,
       renderHeader: renderHeaderWithTooltip,
@@ -205,6 +212,7 @@ const EmployeeList: FC = () => {
         <Chip 
           label={params.value} 
           size="small"
+          sx={{ fontSize: { xs: '0.6rem', sm: '0.75rem' }, height: { xs: '20px', sm: '24px' } }}
           color={
             params.value === 'Manager' ? 'primary' : 
             params.value === 'Technician' ? 'info' : 
@@ -217,8 +225,8 @@ const EmployeeList: FC = () => {
     { 
       field: 'contact', 
       headerName: 'Contact', 
-      width: 120,
-      minWidth: 100,
+      width: 90,
+      minWidth: 80,
       flex: 0.5,
       sortable: false,
       renderHeader: renderHeaderWithTooltip,
@@ -226,9 +234,9 @@ const EmployeeList: FC = () => {
     { 
       field: 'email', 
       headerName: 'Email', 
-      width: 180,
-      minWidth: 150,
-      flex: 1,
+      width: 140,
+      minWidth: 100,
+      flex: 0.8,
       sortable: false,
       renderHeader: renderHeaderWithTooltip,
       renderCell: (params) => (
@@ -239,7 +247,8 @@ const EmployeeList: FC = () => {
               overflow: 'hidden', 
               textOverflow: 'ellipsis', 
               whiteSpace: 'nowrap',
-              width: '100%'
+              width: '100%',
+              fontSize: { xs: '0.7rem', sm: '0.875rem' }
             }}
           >
             {params.value}
@@ -250,8 +259,8 @@ const EmployeeList: FC = () => {
     { 
       field: 'username', 
       headerName: 'Username', 
-      width: 120,
-      minWidth: 100,
+      width: 90,
+      minWidth: 80,
       flex: 0.5,
       sortable: false,
       renderHeader: renderHeaderWithTooltip,
@@ -259,8 +268,8 @@ const EmployeeList: FC = () => {
     { 
       field: 'password', 
       headerName: 'Password', 
-      width: 120,
-      minWidth: 100,
+      width: 90,
+      minWidth: 80,
       flex: 0.5,
       sortable: false,
       renderHeader: renderHeaderWithTooltip,
@@ -268,23 +277,24 @@ const EmployeeList: FC = () => {
     {
       field: 'actions',
       headerName: 'Action',
-      width: 100,
-      minWidth: 100,
+      width: 90,
+      minWidth: 80,
       flex: 0,
       sortable: false,
       renderHeader: renderHeaderWithTooltip,
       renderCell: (params: GridRenderCellParams<EmployeeDTO>) => (
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row" spacing={0.5}>
           <Tooltip title="Edit">
             <IconButton 
               size="small" 
               onClick={() => handleEdit(params.row.userId || 0)}
               sx={{ 
                 bgcolor: alpha(theme.palette.primary.main, 0.1),
-                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) },
+                padding: { xs: '2px', sm: '4px' }
               }}
             >
-              <EditIcon fontSize="small" color="primary" />
+              <EditIcon sx={{ fontSize: { xs: '0.9rem', sm: '1.25rem' } }} color="primary" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Delete">
@@ -293,10 +303,11 @@ const EmployeeList: FC = () => {
               onClick={() => handleDelete(params.row.userId || 0)}
               sx={{ 
                 bgcolor: alpha(theme.palette.error.main, 0.1),
-                '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.2) }
+                '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.2) },
+                padding: { xs: '2px', sm: '4px' }
               }}
             >
-              <DeleteIcon fontSize="small" color="error" />
+              <DeleteIcon sx={{ fontSize: { xs: '0.9rem', sm: '1.25rem' } }} color="error" />
             </IconButton>
           </Tooltip>
         </Stack>
@@ -305,198 +316,204 @@ const EmployeeList: FC = () => {
   ];
 
   return (
-    <Box 
-      ref={containerRef}
-      sx={{ 
-        position: 'relative',
-        width: '100%',
-        height: '100%',
-        p: 0,
-        m: 0,
-        boxSizing: 'border-box',
-        display: 'flex',
-        flexDirection: 'column',
+    <Box
+      position="relative"
+      mx="auto"
+      display="flex"
+      flexDirection="column"
+      width="100%"
+      sx={{
+        transition:
+          "width 0.3s ease-in-out, max-width 0.3s ease-in-out, margin 0.3s ease-in-out",
       }}
     >
-      <Card elevation={3} sx={{ 
-        borderRadius: 2, 
-        overflow: 'hidden',
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-      }}>
-        <CardHeader
-          title={
-            <Typography 
-              variant={isMobile ? "h6" : "h5"} 
-              fontWeight="bold" 
-              sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center', textAlign: 'center' }}
-            >
-              <PersonIcon color="primary" />
-              Employee Directory
-            </Typography>
-          }
-          subheader={!isMobile && "Manage employee accounts and profiles"}
-          sx={{ 
-            backgroundColor: alpha(theme.palette.primary.main, 0.05),
-            borderBottom: `1px solid ${theme.palette.divider}`,
-            p: isMobile ? 1.5 : 2,
-            '& .MuiCardHeader-content': { overflow: 'hidden', textAlign: 'center' },
-            '& .MuiCardHeader-action': { 
-              margin: isMobile ? '4px 0 0 0' : 'auto',
-              alignSelf: isMobile ? 'flex-start' : 'center',
-            },
-            textAlign: 'center'
+      <Card
+        sx={{
+          width: "100%",
+          maxWidth: "100%",
+          overflow: "hidden",
+          boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
+          borderRadius: "8px",
+        }}
+      >
+        <CardContent
+          sx={{
+            width: "100%",
+            maxWidth: "100%",
+            padding: { xs: "16px", sm: "24px" },
+            paddingBottom: "16px",
+            overflow: "hidden",
           }}
-          action={
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={!isMobile && <AddIcon />}
-              onClick={handleAddNew}
-              size={isMobile ? "small" : "medium"}
-              sx={{ borderRadius: 2, ml: isMobile ? 1 : 0 }}
-            >
-              {isMobile ? <AddIcon /> : "Add New Employee"}
-            </Button>
-          }
-        />
-        
-        <CardContent sx={{ 
-          p: 0, 
-          width: '100%', 
-          flexGrow: 1,
-          display: 'flex',
-          flexDirection: 'column',
-        }}>
-          <Box sx={{ 
-            p: 2, 
-            display: 'flex', 
-            justifyContent: 'flex-end',
-            flexDirection: isMobile ? 'column' : 'row',
-            width: '100%'
-          }}>
-            <TextField
-              size="small"
-              placeholder="Search employees..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+        >
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            sx={{
+              justifyContent: "space-between",
+              alignItems: { xs: "stretch", sm: "center" },
+              marginBottom: "16px",
+              width: "100%",
+            }}
+          >
+            <Typography
+              variant="h5"
               sx={{ 
-                width: isMobile ? '100%' : 300,
-                mb: isMobile ? 1 : 0
+                fontWeight: "bold", 
+                fontSize: { xs: "1.2rem", sm: "1.5rem" },
+                textAlign: { xs: "center", sm: "left" }
               }}
-              InputProps={{
-                startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
+            >
+              Employee List
+            </Typography>
+            <Stack 
+              direction={{ xs: "column", sm: "row" }} 
+              spacing={1}
+              width={{ xs: "100%", sm: "auto" }}
+            >
+              <TextField
+                size="small"
+                placeholder="Search employee..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  width: { xs: "100%", sm: "200px" },
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "8px",
+                  },
+                }}
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={handleAddNew}
+                sx={{
+                  borderRadius: "8px",
+                  boxShadow: "none",
+                  whiteSpace: "nowrap",
+                  width: { xs: "100%", sm: "auto" }
+                }}
+              >
+                Add New
+              </Button>
+            </Stack>
+          </Stack>
+
+          <Box
+            sx={{
+              width: "100%",
+              position: "relative",
+              overflowX: "auto",
+              '&::-webkit-scrollbar': {
+                height: '8px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                borderRadius: '8px',
+              },
+              "& .MuiDataGrid-root": {
+                border: "none",
+                minWidth: { xs: "600px", md: "100%" },
+                maxWidth: "none",
+              },
+              "& .MuiDataGrid-cell": {
+                borderBottom: "none",
+                padding: { xs: '6px 8px', sm: '16px' }
+              },
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#F3F4F6",
+                borderRadius: "8px",
+                borderBottom: "none",
+              },
+              "& .MuiDataGrid-virtualScroller": {
+                marginTop: "10px !important",
+              },
+              "& .MuiDataGrid-footerContainer": {
+                borderTop: "none",
+              },
+              "& .MuiDataGrid-virtualScrollerRenderZone": {
+                "& .MuiDataGrid-row": {
+                  "&:nth-of-type(2n)": {
+                    backgroundColor: "#F3F4F6",
+                  },
+                  "&:hover": {
+                    backgroundColor: "#E5E7EB",
+                  },
+                },
+              },
+              "& .MuiDataGrid-columnHeader": {
+                padding: { xs: '0 4px', sm: '0 16px' }
+              }
+            }}
+          >
+            <DataGrid
+              rows={employeesWithIndex}
+              columns={columns}
+              getRowId={(row) => row.id}
+              autoHeight
+              hideFooter={employeesWithIndex.length <= 25}
+              loading={loading}
+              disableColumnMenu
+              disableRowSelectionOnClick
+              sx={{
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                '& .MuiDataGrid-columnHeaderTitleContainer': {
+                  padding: { xs: '0 4px', sm: '0 8px' }
+                },
+              }}
+              slots={{
+                noRowsOverlay: () => (
+                  <Stack
+                    height="100%"
+                    alignItems="center"
+                    justifyContent="center"
+                    padding="40px"
+                  >
+                    <Typography color="text.secondary">
+                      {loading ? "Loading employees..." : "No employees found"}
+                    </Typography>
+                  </Stack>
+                ),
+              }}
+            />
+
+            {/* Mobile scroll indicator */}
+            <Box
+              sx={{
+                display: { xs: "block", md: "none" },
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: "4px",
+                background:
+                  "linear-gradient(to right, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 100%)",
+                borderRadius: "0 0 8px 8px",
+                width: "100%",
               }}
             />
           </Box>
           
-          <Divider />
-          
-          <Box sx={{ 
-            flexGrow: 1,
-            width: '100%', 
-            p: 2,
-            display: 'flex',
-            overflow: 'hidden',
-          }}>
-            <div style={{ 
-              width: '100%', 
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              overflowX: 'auto',
-            }}>
-              <div style={{ 
-                minWidth: isMobile ? 800 : 'auto',
-                width: '100%' 
-              }}>
-                <DataGrid
-                  rows={employeesWithIndex}
-                  columns={columns}
-                  getRowId={(row: EmployeeDTO) => row.id || row.userId || Math.random()}
-                  hideFooter={employeesWithIndex.length <= 25}
-                  autoHeight
-                  disableRowSelectionOnClick
-                  disableColumnMenu
-                  disableColumnSorting
-                  loading={loading}
-                  columnVisibilityModel={{
-                    address: false,
-                  }}
-                  sx={{
-                    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                    borderRadius: 1,
-                    width: '100%',
-                    '& .MuiDataGrid-columnHeaders': {
-                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                      color: theme.palette.primary.main,
-                      fontWeight: 'bold',
-                      height: isMobile ? '80px !important' : 'auto',
-                      maxHeight: isMobile ? '80px !important' : 'auto',
-                      lineHeight: isMobile ? 1.1 : 'inherit',
-                      whiteSpace: isMobile ? 'normal' : 'nowrap',
-                    },
-                    '& .MuiDataGrid-columnHeaderTitle': {
-                      overflow: 'visible',
-                      lineHeight: isMobile ? 1.1 : 'inherit',
-                      fontWeight: 600,
-                      color: theme.palette.text.primary,
-                      fontSize: isMobile ? '0.7rem' : 'inherit',
-                      textAlign: 'center',
-                      whiteSpace: isMobile ? 'normal' : 'nowrap',
-                      wordBreak: isMobile ? 'break-word' : 'normal',
-                    },
-                    '& .MuiDataGrid-columnHeader': {
-                      padding: isMobile ? '0 4px' : 'inherit',
-                    },
-                    '& .MuiDataGrid-columnSeparator': {
-                      display: 'none',
-                    },
-                    '& .MuiDataGrid-row:hover': {
-                      backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                    },
-                    '& .MuiDataGrid-cell': {
-                      borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-                      padding: '8px 10px',
-                      fontSize: isMobile ? '0.8rem' : 'inherit',
-                    },
-                    '& .MuiDataGrid-columnHeaderTitleContainer': {
-                      padding: '0 8px',
-                    },
-                    '& .MuiDataGrid-virtualScroller': {
-                      overflowY: 'auto',
-                      overflowX: 'auto',
-                    },
-                    '& .MuiDataGrid-main': {
-                      overflow: 'visible',
-                      width: '100%',
-                    },
-                    '& .MuiDataGrid-footerContainer': {
-                      borderTop: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-                    },
-                  }}
-                />
-              </div>
-            </div>
+          {/* Mobile scroll helper text */}
+          <Box
+            sx={{
+              display: { xs: "flex", md: "none" },
+              justifyContent: "center",
+              alignItems: "center",
+              mt: 1,
+              color: "text.secondary",
+              fontSize: "0.75rem"
+            }}
+          >
+            <Typography variant="caption">← Swipe to see more →</Typography>
           </Box>
-          
-          {/* Mobile scroll indicator */}
-          {isMobile && (
-            <Box 
-              sx={{ 
-                textAlign: 'center', 
-                py: 1,
-                borderTop: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-                backgroundColor: alpha(theme.palette.primary.main, 0.02),
-              }}
-            >
-              <Typography variant="caption" color="text.secondary">
-                ← Swipe horizontally to view all columns →
-              </Typography>
-            </Box>
-          )}
         </CardContent>
       </Card>
     </Box>

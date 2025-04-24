@@ -489,10 +489,17 @@ export default function Dashboard() {
   const [tokenExpiryWarning, setTokenExpiryWarning] = useState(false);
   
   const findMatchingComponents = useCallback((componentNames: string[]) => {
+    // Create a Set to track components already added to prevent duplicates
+    const addedComponentValues = new Set();
+    
     // First try to match exact names
-    const exactMatches = allComponents.filter(component => 
-      componentNames.includes(component.value)
-    );
+    const exactMatches = allComponents.filter(component => {
+      if (componentNames.includes(component.value)) {
+        addedComponentValues.add(component.value);
+        return true;
+      }
+      return false;
+    });
     
     // If we don't have enough exact matches, try partial matches
     if (exactMatches.length < componentNames.length) {
@@ -500,17 +507,33 @@ export default function Dashboard() {
         name => !exactMatches.some(match => match.value === name)
       );
       
-      const partialMatches = allComponents.filter(component => 
-        !exactMatches.some(match => match.value === component.value) && // Avoid duplicates
-        remainingNames.some(name => 
+      const partialMatches = allComponents.filter(component => {
+        // Skip if this component was already added as an exact match
+        if (addedComponentValues.has(component.value)) {
+          return false;
+        }
+        
+        // Check if this component matches any remaining component name
+        const isMatch = remainingNames.some(name => 
           component.value.toLowerCase().includes(name.toLowerCase()) ||
           name.toLowerCase().includes(component.value.toLowerCase())
-        )
-      );
+        );
+        
+        // If it matches, add to tracking set and return true
+        if (isMatch) {
+          addedComponentValues.add(component.value);
+          return true;
+        }
+        
+        return false;
+      });
       
       // If we still don't have enough components, add some defaults
       if (exactMatches.length + partialMatches.length < componentNames.length) {
-        const defaultComponents = allComponents.slice(0, componentNames.length - (exactMatches.length + partialMatches.length));
+        const defaultComponents = allComponents.filter(component => 
+          !addedComponentValues.has(component.value)
+        ).slice(0, componentNames.length - (exactMatches.length + partialMatches.length));
+        
         return [...exactMatches, ...partialMatches, ...defaultComponents];
       }
       
@@ -1473,51 +1496,6 @@ export default function Dashboard() {
                       }
                     }}
                   >
-                    {card.badge && (
-                      <Badge 
-                        badgeContent={card.badge} 
-                        color={card.urgent ? "error" : "primary"}
-                        sx={{ 
-                          position: 'absolute', 
-                          top: 10, 
-                          right: 10,
-                          zIndex: 2,
-                          ".MuiBadge-badge": {
-                            animation: card.urgent ? `${heartbeat} 1.5s infinite` : 'none',
-                            boxShadow: card.urgent 
-                              ? '0 0 10px rgba(239, 68, 68, 0.5)' 
-                              : '0 0 10px rgba(59, 130, 246, 0.3)',
-                            fontWeight: 'bold',
-                            borderRadius: '8px',
-                            minWidth: '22px',
-                            height: '22px',
-                            fontSize: '0.75rem',
-                            padding: '0 6px',
-                            background: card.urgent 
-                              ? `linear-gradient(135deg, ${theme.palette.error.main}, ${theme.palette.error.dark})`
-                              : `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                            border: '1px solid',
-                            borderColor: card.urgent 
-                              ? 'rgba(255,255,255,0.3)' 
-                              : 'rgba(255,255,255,0.3)',
-                            transformOrigin: 'center',
-                            transition: 'all 0.3s ease',
-                            '&::after': {
-                              content: '""',
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              width: '100%',
-                              height: '100%',
-                              borderRadius: 'inherit',
-                              background: 'linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0))',
-                              opacity: 0.5,
-                            }
-                          }
-                        }}
-                      />
-                    )}
-                    
                     {/* Decorative element in the background */}
                     <Box
                       className="card-decoration"
