@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect, FormEvent } from "react";
 import apiClient from "Services/apiService";
+import storageUtils from '../../utils/storageUtils';
 
 import {
   Box,
@@ -198,10 +199,9 @@ const TransactionAdd: React.FC = () => {
   const navigate = useNavigate();
 
   let userRole: string = "";
-  const storedDecodedToken = localStorage.getItem("userData");
-  if (storedDecodedToken) {
-    const parsedToken = JSON.parse(storedDecodedToken);
-    userRole = parsedToken.authorities[0];
+  const userData = storageUtils.getUserData();
+  if (userData) {
+    userRole = userData.authorities?.[0] || "";
   }
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { ChevronDown, User, LogOut, Menu, X } from "lucide-react";
+import storageUtils from "../utils/storageUtils";
 
 const WebHeader = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -9,16 +10,14 @@ const WebHeader = () => {
   let isLogin = false;
   let userRole = "";
 
-  const storedDecodedToken = localStorage.getItem("userData");
-  if (storedDecodedToken) {
-    const parsedToken = JSON.parse(storedDecodedToken);
-    userRole = parsedToken.authorities[0];
+  const userData = storageUtils.getUserData();
+  if (userData) {
+    userRole = userData.authorities?.[0] || "";
     isLogin = true;
   }
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userData");
+    storageUtils.clearAuthData();
     isLogin = false;
     navigate("/signIn");
   };

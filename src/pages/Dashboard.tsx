@@ -45,6 +45,7 @@ import EngineeringIcon from '@mui/icons-material/Engineering';
 import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import { jwtDecode } from "jwt-decode";
+import storageUtils from '../utils/storageUtils';
 
 // Primary dashboard items - these are unique to the dashboard
 const allComponents = [
@@ -546,7 +547,7 @@ export default function Dashboard() {
     }, 2000);
     
     // Parse token for user info
-    const token = localStorage.getItem("token");
+    const token = storageUtils.getAuthToken();
     if (token) {
       try {
         interface DecodedToken {
@@ -579,18 +580,17 @@ export default function Dashboard() {
     setTasksCompleted(Math.floor(Math.random() * 15) + 10);
     setTasksPending(Math.floor(Math.random() * 8) + 2);
     
-    const storedDecodedToken = localStorage.getItem("userData");
-    if (storedDecodedToken) {
+    const userData = storageUtils.getUserData();
+    if (userData) {
       try {
-        const parsedToken = JSON.parse(storedDecodedToken);
-        const role = parsedToken.authorities[0];
+        const role = userData.authorities[0];
         setUserRole(role);
-        setUserName(parsedToken.firstname || "");
+        setUserName(userData.firstname || "");
         
         if (role === "ADMIN") {
           setFilteredComponents(allComponents);
         } else {
-          const userComponents = parsedToken.componentNames || [];
+          const userComponents = userData.componentNames || [];
           setAuthorizedComponents(userComponents);
           
           // Use the helper function to find matching components
@@ -666,8 +666,7 @@ export default function Dashboard() {
   const handleLogout = useCallback(() => {
     setIsLoggingOut(true);
     
-    localStorage.removeItem("token");
-    localStorage.removeItem("userData");
+    storageUtils.clearAuthData();
     sessionStorage.clear(); 
     
     clearAllCookies();
@@ -681,7 +680,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const checkTokenExpiry = () => {
-      const token = localStorage.getItem("token");
+      const token = storageUtils.getAuthToken();
       if (token) {
         try {
           const decodedToken = jwtDecode<any>(token);

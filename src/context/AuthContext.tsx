@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import storageUtils from '../utils/storageUtils';
+import secureStorage from '../utils/secureStorage';
 
 interface DecodedToken {
   sub: string;
@@ -40,7 +42,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = storageUtils.getAuthToken();
     if (token) {
       try {
         const decoded = jwtDecode<DecodedToken>(token);
@@ -56,11 +58,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           });
         } else {
           console.log('Token expired');
-          localStorage.removeItem('token');
+          storageUtils.clearAuthData();
         }
       } catch (error) {
         console.error('Invalid token:', error);
-        localStorage.removeItem('token');
+        storageUtils.clearAuthData();
       }
     }
   }, []);
@@ -68,7 +70,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = (token: string) => {
     try {
       const decoded = jwtDecode<DecodedToken>(token);
-      localStorage.setItem('token', token);
+      
+      // Store token using secure storage
+      storageUtils.clearAuthData(); // Clear any existing data
+      secureStorage.setItem('token', token);
+      secureStorage.setItem('userData', decoded);
+      
       setIsAuthenticated(true);
       setAuthorizedComponents(decoded.componentNames || []);
       setUserRole(decoded.roles[0] || '');
@@ -83,12 +90,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    storageUtils.clearAuthData();
     setIsAuthenticated(false);
     setAuthorizedComponents([]);
     setUserRole('');
     setUserName('');
-    window.location.href = '/login';
+    window.location.href = '/signIn';
   };
 
   const value = {

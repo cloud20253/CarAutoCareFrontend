@@ -19,11 +19,6 @@ const reportItems = [
     link: "/admin/transaction-list",
     icon: <FaClipboardListIcon size={40} color="#388e3c" />,
   },
-  {
-    text: "Stock By Date",
-    link: "/admin/stock-by-date",
-    icon: <FaCalendarAltIcon size={40} color="#f57c00" />,
-  },
 ];
 
 export default function ReportCards() {

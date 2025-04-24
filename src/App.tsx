@@ -8,14 +8,12 @@ import TermsAndConditionsList from './components/Terms/TermsAndConditionsList';
 import AddTermsAndConditions from './components/Terms/AddTermsAndConditions';
 import SignInSide from './pages/SignInSide';
 import SessionExpirationHandler from './components/navigation/SessionExpirationHandler';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import { 
   getUserFromToken, 
   logout,
   User
 } from './utils/tokenUtils';
-
-// Mock token for testing - remove in production
-const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBnbWFpbC5jb20iLCJmaXJzdG5hbWUiOiJBZG1pbiIsInVzZXJJZCI6MTAwMTAsImNvbXBvbmVudE5hbWVzIjpbIk1hbmFnZSBSZXBhaXJzIiwiTWFuYWdlIFVzZXIiLCJTZXJ2aWNlIFF1ZXVlIiwiQm9va2luZ3MiLCJDb3VudGVyIFNhbGUiLCJNYW5hZ2UgU3RvY2siLCJUZXJtcyAmIENvbmRpdGlvbnMiXSwiYXV0aG9yaXRpZXMiOlsiQURNSU4iXSwicm9sZXMiOlsiQURNSU4iXSwiaXNFbmFibGUiOnRydWUsImlhdCI6MTcxODQ0NjQ5MCwiZXhwIjoyNzE4NDUwMDkwfQ.nLBoKLJxAyJ9FQYGmfeMY3S9KhO7RLTfhZ98uSdp-60";
 
 const Header: React.FC<{ user: User, onLogout: () => void }> = ({ user, onLogout }) => {
   return (
@@ -130,11 +128,6 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    // For development, use mock token - REMOVE IN PRODUCTION
-    if (!localStorage.getItem('token')) {
-      localStorage.setItem('token', mockToken);
-    }
-    
     // Get user from token
     const currentUser = getUserFromToken();
     setUser(currentUser);
@@ -151,6 +144,7 @@ const App: React.FC = () => {
   };
 
   return (
+    <ErrorBoundary>
     <Router>
       <ConsoleSanitizer />
       
@@ -194,6 +188,7 @@ const App: React.FC = () => {
         </Routes>
       </Box>
     </Router>
+    </ErrorBoundary>
   );
 };
 

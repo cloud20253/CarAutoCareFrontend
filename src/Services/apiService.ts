@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
+import storageUtils from '../utils/storageUtils';
 
 // Define custom response type with cached property
 interface CachedAxiosResponse<T = any> extends AxiosResponse<T> {
@@ -24,8 +25,8 @@ const apiClient = axios.create({
 // Add request interceptor
 apiClient.interceptors.request.use(
   (config) => {
-    // Add auth token if available
-    const token = localStorage.getItem('token');
+    // Add auth token if available - using storageUtils instead of localStorage
+    const token = storageUtils.getAuthToken();
     if (token && config.headers) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -79,6 +80,14 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Handle 401 Unauthorized errors
+    if (error.response && error.response.status === 401) {
+      console.warn('Received 401 Unauthorized - Token may be expired or invalid');
+      
+      // Option to redirect to login page
+      // window.location.href = '/signIn';
+    }
+    
     return Promise.reject(error);
   }
 );

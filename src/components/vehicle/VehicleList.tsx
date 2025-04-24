@@ -15,6 +15,14 @@ import {
   OutlinedInput,
   Select,
   Tooltip,
+  Paper,
+  Divider,
+  Chip,
+  alpha,
+  CircularProgress,
+  Card,
+  CardContent,
+  useTheme,
 } from '@mui/material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { GridCellParams, GridRowsProp, GridColDef } from '@mui/x-data-grid';
@@ -34,7 +42,7 @@ import VehicleDeleteModal from './VehicleDeleteModal';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import PreviewIcon from '@mui/icons-material/Preview';
-import { Print } from '@mui/icons-material';
+import { Print, FilterListOutlined, Add as AddIcon } from '@mui/icons-material';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -77,6 +85,7 @@ export default function VehicleList() {
   const navigate = useNavigate();
   const [searchParams] = React.useState(() => new URLSearchParams(window.location.search));
   const listType = searchParams.get("listType");
+  const theme = useTheme();
 
   const [rows, setRows] = React.useState<GridRowsProp>([]);
   const [open, setOpen] = React.useState<boolean>(false);
@@ -85,6 +94,7 @@ export default function VehicleList() {
   const [selectedType, setSelectedType] = React.useState<string>("");
   const [textInput, setTextInput] = React.useState<string>("");
   const [loading, setLoading] = React.useState<boolean>(false);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState<boolean>(false);
 
   // New local search state for filtering the data grid rows
   const [localSearchTerm, setLocalSearchTerm] = useState<string>("");
@@ -97,73 +107,152 @@ export default function VehicleList() {
   // Renders the action buttons in the last column
   function renderActionButtons(params: GridCellParams) {
     return (
-      <>
-        <IconButton
-          color="primary"
-          onClick={() => navigate(`/admin/vehicle/edit/${params.row.vehicleRegId}`)}
-        >
-          <EditIcon />
-        </IconButton>
-        <IconButton
-          color="secondary"
-          onClick={() => handleDelete(params.row.vehicleRegId)}
-        >
-          <DeleteIcon />
-        </IconButton>
-        <IconButton
-          color="secondary"
-          onClick={() =>
-            navigate(`/admin/vehicle/add/servicepart/${params.row.vehicleRegId}`)
-          }
-        >
-          <BuildIcon />
-        </IconButton>
-        <IconButton
-          color="secondary"
-          onClick={() => navigate(`/admin/vehicle/view/${params.row.vehicleRegId}`)}
-        >
-          <PreviewIcon />
-        </IconButton>
-        <IconButton
-          color="secondary"
-          onClick={() => navigate(`/admin/vehicle/view/${params.row.vehicleRegId}`)}
-        >
-          <Print />
-        </IconButton>
-      </>
+      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+        <Tooltip title="Edit Vehicle">
+          <IconButton
+            color="primary"
+            size="small"
+            sx={{ 
+              backgroundColor: alpha(theme.palette.primary.main, 0.1),
+              '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.2) }
+            }}
+            onClick={() => navigate(`/admin/vehicle/edit/${params.row.vehicleRegId}`)}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        
+        <Tooltip title="Delete Vehicle">
+          <IconButton
+            color="error"
+            size="small"
+            sx={{ 
+              backgroundColor: alpha(theme.palette.error.main, 0.1),
+              '&:hover': { backgroundColor: alpha(theme.palette.error.main, 0.2) }
+            }}
+            onClick={() => handleDelete(params.row.vehicleRegId)}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        
+        <Tooltip title="Manage Service Parts">
+          <IconButton
+            color="info"
+            size="small"
+            sx={{ 
+              backgroundColor: alpha(theme.palette.info.main, 0.1),
+              '&:hover': { backgroundColor: alpha(theme.palette.info.main, 0.2) }
+            }}
+            onClick={() => navigate(`/admin/vehicle/add/servicepart/${params.row.vehicleRegId}`)}
+          >
+            <BuildIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        
+        <Tooltip title="View Details">
+          <IconButton
+            color="success"
+            size="small"
+            sx={{ 
+              backgroundColor: alpha(theme.palette.success.main, 0.1),
+              '&:hover': { backgroundColor: alpha(theme.palette.success.main, 0.2) }
+            }}
+            onClick={() => navigate(`/admin/vehicle/view/${params.row.vehicleRegId}`)}
+          >
+            <PreviewIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        
+        <Tooltip title="Print">
+          <IconButton
+            color="secondary"
+            size="small"
+            sx={{ 
+              backgroundColor: alpha(theme.palette.secondary.main, 0.1),
+              '&:hover': { backgroundColor: alpha(theme.palette.secondary.main, 0.2) }
+            }}
+            onClick={() => navigate(`/admin/vehicle/view/${params.row.vehicleRegId}`)}
+          >
+            <Print fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
     );
   }
 
   // Function to render the invoice status column
   function renderInvoiceStatus(params: GridCellParams) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {params.row.hasInvoice ? (
-          <Tooltip title="Invoice generated">
-            <CheckCircleIcon color="success" />
-          </Tooltip>
+          <Chip
+            icon={<CheckCircleIcon fontSize="small" />}
+            color="success"
+            variant="outlined"
+            sx={{ minWidth: 35 }}
+          />
         ) : (
-          <Tooltip title="No invoice">
-            <CancelIcon color="error" />
-          </Tooltip>
+          <Chip
+            icon={<CancelIcon fontSize="small" />}
+            color="error"
+            variant="outlined"
+            sx={{ minWidth: 35 }}
+          />
         )}
-      </div>
+      </Box>
     );
   }
 
-  // Updated columns: removed estimate and due, added invoiceStatus
+  // Function to render status with color-coded chip
+  function renderStatus(params: GridCellParams) {
+    const status = params.value as string;
+    let color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' = 'default';
+    
+    if (status.toLowerCase() === 'complete') color = 'success';
+    else if (status.toLowerCase() === 'inprogress') color = 'warning';
+    else if (status.toLowerCase() === 'waiting') color = 'info';
+    
+    return (
+      <Chip 
+        label={status} 
+        color={color} 
+        size="small" 
+        variant="outlined"
+        sx={{ minWidth: 90 }}
+      />
+    );
+  }
+
+  // Updated columns with proper TypeScript typing
   const columns: GridColDef[] = [
     { field: 'date', headerName: 'Date', flex: 1, minWidth: 100 },
-    { field: 'vehicleNoName', headerName: 'Veh No/Name', flex: 1, minWidth: 150 },
+    { field: 'vehicleNoName', headerName: 'Vehicle Number/Name', flex: 1, minWidth: 150 },
     { field: 'customerMobile', headerName: 'Customer & Mobile', flex: 1, minWidth: 150 },
-    { field: 'status', headerName: 'Ready', flex: 1, minWidth: 100 },
-    { field: 'advance', headerName: 'Advance', flex: 1, minWidth: 100 },
-    { field: 'hasInvoice', headerName: 'Invoice', flex: 1, minWidth: 80, renderCell: renderInvoiceStatus },
+    { field: 'status', headerName: 'Status', flex: 1, minWidth: 100, renderCell: renderStatus },
+    { 
+      field: 'advance', 
+      headerName: 'Advance', 
+      flex: 1, 
+      minWidth: 100,
+      renderCell: (params) => (
+        <Typography variant="body2">₹{params.row.advance}</Typography>
+      )
+    },
+    { field: 'hasInvoice', headerName: 'Invoice', flex: 1, minWidth: 100, renderCell: renderInvoiceStatus },
     { field: 'superwiser', headerName: 'Supervisor', flex: 1, minWidth: 100 },
     { field: 'technician', headerName: 'Technician', flex: 1, minWidth: 100 },
     { field: 'worker', headerName: 'Worker', flex: 1, minWidth: 100 },
-    { field: 'kilometer', headerName: 'Kilometer', flex: 1, minWidth: 100 },
-    { field: 'Action', headerName: 'Action', flex: 1, minWidth: 250, renderCell: (params) => renderActionButtons(params) },
+    { 
+      field: 'kilometer', 
+      headerName: 'Kilometers', 
+      flex: 1, 
+      minWidth: 100,
+      renderCell: (params) => (
+        <Typography variant="body2">{params.row.kilometer} km</Typography>
+      )
+    },
+    { field: 'Action', headerName: 'Actions', flex: 1, minWidth: 250, renderCell: renderActionButtons },
   ];
 
   // Function to check invoice status for all vehicles
@@ -340,99 +429,216 @@ export default function VehicleList() {
   });
 
   return (
-    <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '1700px' } }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-        <Typography component="h2" variant="h6">
-          Vehicle List
-        </Typography>
-        <Button variant="contained" color="primary" onClick={() => navigate('/admin/vehicle/add')}>
-          Add Vehicle
-        </Button>
-      </Stack>
-
-      {/* New Search Box Above the Data Grid */}
-      <Box sx={{ mb: 2 }}>
-        <FormControl fullWidth>
-          <OutlinedInput
-            size="small"
-            placeholder="Search in results..."
-            value={localSearchTerm}
-            onChange={(e) => setLocalSearchTerm(e.target.value)}
-            startAdornment={
-              <InputAdornment position="start" sx={{ color: 'text.primary' }}>
-                <SearchRoundedIcon fontSize="small" />
-              </InputAdornment>
-            }
-          />
-        </FormControl>
-      </Box>
-
-      <Grid container spacing={2} columns={12} sx={{ mb: (theme: Theme) => theme.spacing(2) }}>
-        <Grid container spacing={2} sx={{ display: 'flex', gap: 2 }} item xs={12}>
-          <FormControl sx={{ width: { xs: '100%', md: '25ch' } }}>
-            <InputLabel>Select Type</InputLabel>
-            <Select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              size="medium"
+    <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '1700px' }, p: 2 }}>
+      <Card elevation={3} sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Stack 
+            direction={{ xs: 'column', sm: 'row' }} 
+            alignItems={{ xs: 'flex-start', sm: 'center' }} 
+            justifyContent="space-between" 
+            spacing={2}
+            sx={{ mb: 3 }}
+          >
+            <Box>
+              <Typography component="h1" variant="h5" fontWeight="bold" color="primary">
+                Vehicle List
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mt={0.5}>
+                {listType === 'serviceQueue' 
+                  ? 'Vehicles currently in service queue' 
+                  : listType === 'serviceHistory' 
+                    ? 'Completed service history'
+                    : 'All registered vehicles'}
+              </Typography>
+            </Box>
+            <Button 
+              variant="contained" 
+              color="primary" 
+              startIcon={<AddIcon />}
+              onClick={() => navigate('/admin/vehicle/add')}
+              sx={{ 
+                borderRadius: 2,
+                boxShadow: theme.shadows[3],
+                px: 3
+              }}
             >
-              <MenuItem value="Vehicle ID">Vehicle ID</MenuItem>
-              <MenuItem value="Date Range">Date Range</MenuItem>
-              <MenuItem value="Appointment Number">Appointment Number</MenuItem>
-            </Select>
+              Add Vehicle
+            </Button>
+          </Stack>
+
+          {/* Quick Search Box Above the Data Grid */}
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <OutlinedInput
+              size="small"
+              placeholder="Quick search in results..."
+              value={localSearchTerm}
+              onChange={(e) => setLocalSearchTerm(e.target.value)}
+              startAdornment={
+                <InputAdornment position="start" sx={{ color: 'text.secondary' }}>
+                  <SearchRoundedIcon fontSize="small" />
+                </InputAdornment>
+              }
+              sx={{ 
+                borderRadius: 2,
+                backgroundColor: alpha(theme.palette.common.white, 0.05)
+              }}
+            />
           </FormControl>
 
-          {(selectedType === 'Vehicle ID' || selectedType === 'Appointment Number') && (
-            <FormControl sx={{ width: { xs: '100%', md: '25ch' } }} variant="outlined">
-              <OutlinedInput
-                size="small"
-                id="search"
-                placeholder="Enter text..."
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                startAdornment={
-                  <InputAdornment position="start" sx={{ color: 'text.primary' }}>
-                    <SearchRoundedIcon fontSize="small" />
-                  </InputAdornment>
-                }
-              />
-            </FormControl>
+          {/* Advanced search toggle */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+            <Button 
+              size="small" 
+              startIcon={<FilterListOutlined />}
+              onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+              sx={{ borderRadius: 2 }}
+            >
+              {showAdvancedSearch ? "Hide Advanced Search" : "Show Advanced Search"}
+            </Button>
+          </Box>
+
+          {/* Advanced search section */}
+          {showAdvancedSearch && (
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 2, 
+                borderRadius: 2, 
+                backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                mb: 2
+              }}
+            >
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} md={3}>
+                  <FormControl fullWidth>
+                    <InputLabel>Search Type</InputLabel>
+                    <Select
+                      value={selectedType}
+                      onChange={(e) => setSelectedType(e.target.value)}
+                      size="small"
+                      sx={{ borderRadius: 2 }}
+                    >
+                      <MenuItem value="Vehicle ID">Vehicle ID</MenuItem>
+                      <MenuItem value="Date Range">Date Range</MenuItem>
+                      <MenuItem value="Appointment Number">Appointment Number</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {(selectedType === 'Vehicle ID' || selectedType === 'Appointment Number') && (
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth variant="outlined">
+                      <OutlinedInput
+                        size="small"
+                        id="search"
+                        placeholder={selectedType === 'Vehicle ID' ? "Enter vehicle ID..." : "Enter appointment number..."}
+                        value={textInput}
+                        onChange={(e) => setTextInput(e.target.value)}
+                        startAdornment={
+                          <InputAdornment position="start" sx={{ color: 'text.secondary' }}>
+                            <SearchRoundedIcon fontSize="small" />
+                          </InputAdornment>
+                        }
+                        sx={{ borderRadius: 2 }}
+                      />
+                    </FormControl>
+                  </Grid>
+                )}
+
+                {selectedType === 'Date Range' && (
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth>
+                      <Box sx={{ 
+                        border: `1px solid ${theme.palette.divider}`, 
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        '& .react-datepicker-wrapper': {
+                          width: '100%'
+                        },
+                        '& input': {
+                          width: '100%',
+                          p: 1,
+                          boxSizing: 'border-box',
+                          border: 'none',
+                          outline: 'none',
+                          fontSize: '0.875rem'
+                        }
+                      }}>
+                        <ReactDatePicker
+                          selected={dateValue[0]}
+                          onChange={(update: [Date | null, Date | null]) => setDateValue(update)}
+                          startDate={dateValue[0]}
+                          endDate={dateValue[1]}
+                          selectsRange
+                          dateFormat="yyyy-MM-dd"
+                          placeholderText="Select date range"
+                        />
+                      </Box>
+                    </FormControl>
+                  </Grid>
+                )}
+
+                <Grid item xs={12} md={3}>
+                  <Button 
+                    variant="contained" 
+                    color="primary" 
+                    fullWidth
+                    onClick={handleSearch}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    Search
+                  </Button>
+                </Grid>
+              </Grid>
+            </Paper>
           )}
 
-          {selectedType === 'Date Range' && (
-            <Grid item mt={-1}>
-              <FormControl sx={{ width: { xs: '100%', md: '25ch' } }}>
-                <ReactDatePicker
-                  selected={dateValue[0]}
-                  onChange={(update: [Date | null, Date | null]) => setDateValue(update)}
-                  startDate={dateValue[0]}
-                  endDate={dateValue[1]}
-                  selectsRange
-                  dateFormat="yyyy-MM-dd"
-                  placeholderText="Select date range"
-                />
-              </FormControl>
-            </Grid>
-          )}
-
-          <Button variant="contained" color="primary" sx={{ alignSelf: 'start' }} onClick={handleSearch}>
-            Search
-          </Button>
-        </Grid>
-        <VehicleDeleteModal open={open} onClose={() => setOpen(false)} deleteItemId={Number(selectedId)} />
-      </Grid>
-
-      <Grid container spacing={2} columns={12}>
-        <Grid item xs={12} component="div">
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-              <Typography variant="body1">Loading vehicle invoice status...</Typography>
-            </Box>
-          ) : (
-            <CustomizedDataGrid columns={columns} rows={filteredRows} />
-          )}
-        </Grid>
-      </Grid>
+          {/* Data grid section */}
+          <Box sx={{ 
+            position: 'relative',
+            height: 'calc(100vh - 350px)',
+            minHeight: '400px',
+            width: '100%',
+            overflow: 'hidden',
+            borderRadius: 2,
+            border: `1px solid ${theme.palette.divider}`,
+          }}>
+            {loading && (
+              <Box sx={{ 
+                position: 'absolute', 
+                top: 0, 
+                left: 0, 
+                right: 0, 
+                bottom: 0, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                backgroundColor: alpha(theme.palette.background.paper, 0.7),
+                zIndex: 10
+              }}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <CircularProgress size={40} />
+                  <Typography variant="body2" sx={{ mt: 2 }}>
+                    Loading vehicle data...
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+            
+            <CustomizedDataGrid 
+              columns={columns} 
+              rows={filteredRows} 
+            />
+          </Box>
+        </CardContent>
+      </Card>
+      
+      <VehicleDeleteModal 
+        open={open} 
+        onClose={() => setOpen(false)} 
+        deleteItemId={Number(selectedId)} 
+      />
+      
       <Copyright sx={{ my: 4 }} />
     </Box>
   );

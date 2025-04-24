@@ -1,5 +1,6 @@
 import { jwtDecode } from 'jwt-decode';
 import logger from './logger';
+import secureStorage from './secureStorage';
 
 // Token decoder interface
 export interface DecodedToken {
@@ -24,7 +25,7 @@ export interface User {
 // Check if token is valid and not expired
 export const isTokenValid = (): boolean => {
   try {
-    const token = localStorage.getItem('token');
+    const token = secureStorage.getItem('token');
     
     if (!token) {
       return false;
@@ -44,7 +45,7 @@ export const isTokenValid = (): boolean => {
 // Get the decoded token if valid
 export const getDecodedToken = (): DecodedToken | null => {
   try {
-    const token = localStorage.getItem('token');
+    const token = secureStorage.getItem('token');
     
     if (!token) {
       return null;
@@ -89,9 +90,9 @@ export const getUserFromToken = (): User => {
 
 // Handle logout by clearing token and session
 export const logout = (): void => {
-  // Clear localStorage
-  localStorage.removeItem('token');
-  localStorage.removeItem('userData');
+  // Clear storage
+  secureStorage.removeItem('token');
+  secureStorage.removeItem('userData');
   
   // Redirect to login page
   window.location.href = '/signIn';
@@ -100,7 +101,7 @@ export const logout = (): void => {
 // Get time until token expires (in milliseconds)
 export const getTimeUntilExpiration = (): number | null => {
   try {
-    const token = localStorage.getItem('token');
+    const token = secureStorage.getItem('token');
     
     if (!token) {
       return null;

@@ -8,6 +8,7 @@ import {
   ListItemText,
   Stack,
   Collapse,
+  Tooltip,
 } from "@mui/material";
 import {
   HomeRounded as HomeIcon,
@@ -19,6 +20,8 @@ import {
   ExpandLess,
   ExpandMore,
 } from "@mui/icons-material";
+import storageUtils from '../utils/storageUtils';
+import { useSidebar } from '../contexts/SidebarContext';
 
 const mainListItems = [
   { text: "Dashboard", icon: <HomeIcon sx={{ color: "#1976d2" }} />, link: "/admin/dashboard" },
@@ -73,14 +76,14 @@ export default function MenuContent() {
   const [userRole, setUserRole] = React.useState("");
   const [authorizedComponents, setAuthorizedComponents] = React.useState<string[]>([]);
   const [filteredMenu, setFilteredMenu] = React.useState(mainListItems);
+  const { sidebarOpen, openSidebar } = useSidebar();
 
   React.useEffect(() => {
-    // Get user permissions from localStorage
-    const storedDecodedToken = localStorage.getItem("userData");
-    if (storedDecodedToken) {
+    // Get user permissions from userData
+    const userData = storageUtils.getUserData();
+    if (userData) {
       try {
-        const parsedToken = JSON.parse(storedDecodedToken);
-        const role = parsedToken.authorities[0];
+        const role = userData.authorities[0];
         setUserRole(role);
         
         // If role is ADMIN, show all menu items
@@ -88,7 +91,7 @@ export default function MenuContent() {
           setFilteredMenu(mainListItems);
         } else {
           // For EMPLOYEE, filter based on authorized components
-          const userComponents = parsedToken.componentNames || [];
+          const userComponents = userData.componentNames || [];
           setAuthorizedComponents(userComponents);
           
           // Keep track of which main menu items have authorized sub-items
@@ -148,55 +151,159 @@ export default function MenuContent() {
   }, []);
 
   const handleToggle = (menuText: string) => {
+    // If sidebar is not open, open it first
+    if (!sidebarOpen) {
+      openSidebar();
+    }
     setOpenSubMenu((prev) => (prev === menuText ? null : menuText));
+  };
+
+  const handleMenuClick = () => {
+    // If sidebar is not open, open it first before navigation
+    if (!sidebarOpen) {
+      openSidebar();
+    }
+  };
+
+  // Render menu items with proper tooltips that don't interfere with clicking
+  const renderMenuItem = (item: any, index: number) => {
+    if (!item.subMenu) {
+      // For regular menu items without submenu
+      return (
+        <ListItem key={index} disablePadding sx={{ display: "block" }}>
+          {!sidebarOpen ? (
+            <Tooltip title={item.text} placement="right" arrow enterDelay={500} leaveDelay={200}>
+              <ListItemButton
+                component={NavLink}
+                to={item.link}
+                onClick={handleMenuClick}
+                selected={location.pathname === item.link}
+                sx={{ 
+                  minHeight: 48,
+                  justifyContent: sidebarOpen ? 'initial' : 'center',
+                  px: 2.5,
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: sidebarOpen ? 3 : 'auto',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                {sidebarOpen && (
+                  <ListItemText primary={item.text} sx={{ opacity: 1 }} />
+                )}
+              </ListItemButton>
+            </Tooltip>
+          ) : (
+            <ListItemButton
+              component={NavLink}
+              to={item.link}
+              selected={location.pathname === item.link}
+              sx={{ 
+                minHeight: 48,
+                justifyContent: sidebarOpen ? 'initial' : 'center',
+                px: 2.5,
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: sidebarOpen ? 3 : 'auto',
+                  justifyContent: 'center',
+                }}
+              >
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText primary={item.text} sx={{ opacity: 1 }} />
+            </ListItemButton>
+          )}
+        </ListItem>
+      );
+    } else {
+      // For menu items with submenu
+      return (
+        <React.Fragment key={index}>
+          <ListItem disablePadding sx={{ display: "block" }}>
+            {!sidebarOpen ? (
+              <Tooltip title={item.text} placement="right" arrow enterDelay={500} leaveDelay={200}>
+                <ListItemButton
+                  onClick={() => handleToggle(item.text)}
+                  sx={{ 
+                    minHeight: 48,
+                    justifyContent: sidebarOpen ? 'initial' : 'center',
+                    px: 2.5,
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: sidebarOpen ? 3 : 'auto',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  {sidebarOpen && (
+                    <>
+                      <ListItemText primary={item.text} sx={{ opacity: 1 }} />
+                      {openSubMenu === item.text ? <ExpandLess /> : <ExpandMore />}
+                    </>
+                  )}
+                </ListItemButton>
+              </Tooltip>
+            ) : (
+              <ListItemButton
+                onClick={() => handleToggle(item.text)}
+                sx={{ 
+                  minHeight: 48,
+                  justifyContent: sidebarOpen ? 'initial' : 'center',
+                  px: 2.5,
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: sidebarOpen ? 3 : 'auto',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText primary={item.text} sx={{ opacity: 1 }} />
+                {openSubMenu === item.text ? <ExpandLess /> : <ExpandMore />}
+              </ListItemButton>
+            )}
+          </ListItem>
+          <Collapse in={openSubMenu === item.text && sidebarOpen} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              {item.subMenu.map((subItem: any, subIndex: number) => (
+                <ListItem key={subIndex} disablePadding sx={{ display: "block" }}>
+                  <ListItemButton
+                    component={NavLink}
+                    to={subItem.link}
+                    onClick={handleMenuClick}
+                    selected={location.pathname === subItem.link}
+                    sx={{ minHeight: 48, pl: 4 }}
+                  >
+                    <ListItemText primary={subItem.text} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Collapse>
+        </React.Fragment>
+      );
+    }
   };
 
   return (
     <Stack sx={{ flexGrow: 1, p: { xs: 1, sm: 2 }, justifyContent: "space-between" }}>
-      <List dense>
-        {filteredMenu.map((item, index) => (
-          <React.Fragment key={index}>
-            {!item.subMenu ? (
-              <ListItem disablePadding sx={{ display: "block" }}>
-                <NavLink
-                  to={item.link}
-                  style={{ textDecoration: "none", color: "inherit", width: "100%" }}
-                >
-                  <ListItemButton selected={location.pathname === item.link} sx={{ minHeight: 48 }}>
-                    <ListItemIcon>{item.icon}</ListItemIcon>
-                    <ListItemText primary={item.text} />
-                  </ListItemButton>
-                </NavLink>
-              </ListItem>
-            ) : (
-              <>
-                <ListItem disablePadding sx={{ display: "block" }}>
-                  <ListItemButton onClick={() => handleToggle(item.text)} sx={{ minHeight: 48 }}>
-                    <ListItemIcon>{item.icon}</ListItemIcon>
-                    <ListItemText primary={item.text} />
-                    {openSubMenu === item.text ? <ExpandLess /> : <ExpandMore />}
-                  </ListItemButton>
-                </ListItem>
-                <Collapse in={openSubMenu === item.text} timeout="auto" unmountOnExit>
-                  <List component="div" disablePadding>
-                    {item.subMenu.map((subItem, subIndex) => (
-                      <ListItem key={subIndex} disablePadding sx={{ pl: 4 }}>
-                        <NavLink
-                          to={subItem.link}
-                          style={{ textDecoration: "none", color: "inherit", width: "100%" }}
-                        >
-                          <ListItemButton selected={location.pathname === subItem.link} sx={{ minHeight: 48 }}>
-                            <ListItemText primary={subItem.text} />
-                          </ListItemButton>
-                        </NavLink>
-                      </ListItem>
-                    ))}
-                  </List>
-                </Collapse>
-              </>
-            )}
-          </React.Fragment>
-        ))}
+      <List dense sx={{ width: '100%' }}>
+        {filteredMenu.map((item, index) => renderMenuItem(item, index))}
       </List>
     </Stack>
   );

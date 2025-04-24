@@ -4,6 +4,7 @@ import apiClient from "Services/apiService";
 import { motion } from "framer-motion";
 import { FiAlertCircle, FiX } from "react-icons/fi";
 import React from "react";
+import storageUtils from '../utils/storageUtils';
 
 const FiXIcon = FiX as React.FC<{ size?: number } & React.SVGProps<SVGSVGElement>>;
 const FiAlertCircleIcon = FiAlertCircle as React.FC<{ size?: number } & React.SVGProps<SVGSVGElement>>;
@@ -29,10 +30,9 @@ function SparePart() {
   const navigate = useNavigate();
 
   let userRole: string = "";
-  const storedDecodedToken = localStorage.getItem("userData");
-  if (storedDecodedToken) {
-    const parsedToken = JSON.parse(storedDecodedToken);
-    userRole = parsedToken.authorities[0];
+  const userData = storageUtils.getUserData();
+  if (userData) {
+    userRole = userData.authorities?.[0] || "";
   }
 
   const fetchSpareParts = async (page: number = currentPage) => {
