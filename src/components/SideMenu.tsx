@@ -9,10 +9,8 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import MenuIcon from '@mui/icons-material/Menu';
 import SelectContent from './SelectContent';
 import MenuContent from './MenuContent';
-import CardAlert from './CardAlert';
 import OptionsMenu from './OptionsMenu';
 import { useSidebar } from '../contexts/SidebarContext';
 
@@ -104,20 +102,7 @@ export default function SideMenu() {
               borderColor: 'divider',
             }}
           >
-            <Avatar
-              sizes="small"
-              alt="Riley Carter"
-              src="/static/images/avatar/7.jpg"
-              sx={{ width: 36, height: 36 }}
-            />
-            <Box sx={{ mr: 'auto' }}>
-              <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
-                Riley Carter
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                riley@email.com
-              </Typography>
-            </Box>
+           
             <OptionsMenu />
           </Stack>
         )}
