@@ -169,18 +169,18 @@ const EmployeeList: FC = () => {
       // Then send the delete request
       await apiClient.delete(`/api/employees/delete/${employeeToDelete}`);
       
-      showNotification({
-        message: 'Employee deleted successfully',
-        type: 'success',
-      });
+        showNotification({
+          message: 'Employee deleted successfully',
+          type: 'success',
+        });
       
       // No need to call fetchEmployees here since we've already updated the state
-    } catch (error) {
-      console.error('Error deleting employee:', error);
-      showNotification({
-        message: 'Failed to delete employee',
-        type: 'error',
-      });
+      } catch (error) {
+        console.error('Error deleting employee:', error);
+        showNotification({
+          message: 'Failed to delete employee',
+          type: 'error',
+        });
       
       // Revert the optimistic update if the API call fails
       fetchEmployees(false);
@@ -372,7 +372,7 @@ const EmployeeList: FC = () => {
               }}
             >
               <EditIcon sx={{ fontSize: { xs: '0.9rem', sm: '1.25rem' } }} color="primary" />
-            </IconButton>
+          </IconButton>
           </Tooltip>
           <Tooltip title="Delete">
             <IconButton 
@@ -385,7 +385,7 @@ const EmployeeList: FC = () => {
               }}
             >
               <DeleteIcon sx={{ fontSize: { xs: '0.9rem', sm: '1.25rem' } }} color="error" />
-            </IconButton>
+          </IconButton>
           </Tooltip>
         </Stack>
       ),
@@ -466,11 +466,11 @@ const EmployeeList: FC = () => {
                 spacing={1}
                 width={{ xs: "100%", sm: "auto" }}
               >
-                <TextField
-                  size="small"
+            <TextField
+              size="small"
                   placeholder="Search employee..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -484,21 +484,21 @@ const EmployeeList: FC = () => {
                       borderRadius: "8px",
                     },
                   }}
-                />
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddNew}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={handleAddNew}
                   sx={{
                     borderRadius: "8px",
                     boxShadow: "none",
                     whiteSpace: "nowrap",
                     width: { xs: "100%", sm: "auto" }
                   }}
-                >
+            >
                   Add New
-                </Button>
+            </Button>
               </Stack>
             </Stack>
 
@@ -519,16 +519,16 @@ const EmployeeList: FC = () => {
                 },
               }}
             >
-              <DataGrid
+        <DataGrid
                 rows={employeesWithIndex}
-                columns={columns}
+          columns={columns}
                 getRowId={(row) => row.id || Math.random()} // Fallback for missing IDs
-                autoHeight
+          autoHeight
                 hideFooter={employeesWithIndex.length <= 25}
-                loading={loading}
+          loading={loading}
                 disableColumnMenu
                 disableRowSelectionOnClick
-                sx={{
+          sx={{
                   fontSize: { xs: '0.75rem', sm: '0.875rem' },
                   '& .MuiDataGrid-columnHeaderTitleContainer': {
                     padding: { xs: '0 4px', sm: '0 8px' }
@@ -538,19 +538,19 @@ const EmployeeList: FC = () => {
                     minWidth: { xs: "600px", md: "100%" },
                     maxWidth: "none",
                   },
-                  '& .MuiDataGrid-cell': {
+            '& .MuiDataGrid-cell': {
                     borderBottom: "none",
                     padding: { xs: '6px 8px', sm: '16px' }
-                  },
+            },
                   '& .MuiDataGrid-columnHeaders': {
                     backgroundColor: "#F3F4F6",
                     borderRadius: "8px",
                     borderBottom: "none",
-                  },
-                  '& .MuiDataGrid-virtualScroller': {
+            },
+            '& .MuiDataGrid-virtualScroller': {
                     marginTop: "10px !important",
-                  },
-                  '& .MuiDataGrid-footerContainer': {
+            },
+            '& .MuiDataGrid-footerContainer': {
                     borderTop: "none",
                   },
                   '& .MuiDataGrid-virtualScrollerRenderZone': {
@@ -582,8 +582,8 @@ const EmployeeList: FC = () => {
                       </Typography>
                     </Stack>
                   ),
-                }}
-              />
+          }}
+        />
 
               {/* Mobile scroll indicator */}
               <Box
@@ -617,7 +617,7 @@ const EmployeeList: FC = () => {
             </Box>
           </CardContent>
         </Card>
-      </Box>
+    </Box>
 
       {/* Delete Confirmation Dialog */}
       <Dialog

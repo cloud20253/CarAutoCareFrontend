@@ -201,8 +201,8 @@ const UserPartList: React.FC = () => {
     return (
       <Tooltip title={headerName}>
         <span>{headerName}</span>
-      </Tooltip>
-    );
+    </Tooltip>
+  );
   };
 
   // Define columns - all columns are visible on all screen sizes
@@ -211,21 +211,21 @@ const UserPartList: React.FC = () => {
     const baseColumnWidth = isMobile ? 60 : 80;
     
     // Define a more mobile-optimized column set
-    const columns: GridColDef[] = [
-      {
+  const columns: GridColDef[] = [
+    {
         field: 'actions',
         headerName: 'Actions',
         width: isMobile ? 40 : baseColumnWidth,
         flex: isMobile ? 0.4 : 0.5,
-        sortable: false,
-        filterable: false,
-        renderCell: (params: GridCellParams) => (
+      sortable: false,
+      filterable: false,
+      renderCell: (params: GridCellParams) => (
           <Stack direction="row" alignItems="center" justifyContent="center">
             <Tooltip title="View Details">
-              <IconButton
-                color="primary"
-                onClick={() => navigate(`/admin/user-part/view/${params.row.id}`)}
-                size="small"
+        <IconButton
+          color="primary"
+          onClick={() => navigate(`/admin/user-part/view/${params.row.id}`)}
+          size="small"
                 sx={{ 
                   backgroundColor: alpha(theme.palette.primary.main, 0.1),
                   '&:hover': {
@@ -233,54 +233,72 @@ const UserPartList: React.FC = () => {
                   },
                   padding: isMobile ? '4px' : '8px',
                 }}
-              >
+        >
                 <VisibilityIcon fontSize="small" />
-              </IconButton>
+        </IconButton>
             </Tooltip>
           </Stack>
-        ),
+      ),
         renderHeader: renderHeaderWithTooltip,
-      },
-      {
-        field: 'id',
+    },
+    {
+      field: 'id',
         headerName: 'Sr.No',
         width: isMobile ? 40 : baseColumnWidth,
         flex: isMobile ? 0.3 : 0.5,
         sortable: false,
-        renderHeader: renderHeaderWithTooltip,
-      },
-      {
+      renderHeader: renderHeaderWithTooltip,
+    },
+    {
         field: 'partName',
         headerName: 'Spare Name',
         width: isMobile ? baseColumnWidth : baseColumnWidth * 1.5,
         flex: isMobile ? 1.2 : 2,
         sortable: false,
         renderHeader: renderHeaderWithTooltip,
+      },
+    {
+        field: 'description',
+        headerName: 'Description',
+        width: isMobile ? baseColumnWidth : baseColumnWidth * 2,
+        flex: isMobile ? 1.2 : 2.5,
+        sortable: false,
+        renderHeader: renderHeaderWithTooltip,
+        renderCell: (params: GridCellParams) => {
+          const description = params.value as string || '—';
+          return (
+            <Tooltip title={description}>
+              <Typography variant="body2" noWrap>
+                {description}
+              </Typography>
+            </Tooltip>
+          );
+        },
       }
     ];
 
     // Add partNumber only for non-mobile view
     if (!isMobile) {
       columns.push({
-        field: 'partNumber',
-        headerName: 'Part Number',
+      field: 'partNumber',
+      headerName: 'Part Number',
         width: baseColumnWidth,
-        flex: 1,
+      flex: 1,
         sortable: false,
-        renderHeader: renderHeaderWithTooltip,
+      renderHeader: renderHeaderWithTooltip,
       });
     }
 
     // Add the rest of the columns
     columns.push(
       // On mobile, we'll use more compact money formatting
-      {
+    {
         field: 'buyingPrice',
         headerName: 'Purchase Rate',
         width: isMobile ? 70 : baseColumnWidth,
         flex: isMobile ? 0.7 : 1,
         sortable: false,
-        renderHeader: renderHeaderWithTooltip,
+      renderHeader: renderHeaderWithTooltip,
         renderCell: (params: GridCellParams) => {
           const buyingPrice = Number(params.value);
           return (
@@ -289,14 +307,14 @@ const UserPartList: React.FC = () => {
             </Typography>
           );
         },
-      },
-      {
+    },
+    {
         field: 'price',
         headerName: 'Sale Rate',
         width: isMobile ? 60 : baseColumnWidth,
         flex: isMobile ? 0.7 : 1,
         sortable: false,
-        renderHeader: renderHeaderWithTooltip,
+      renderHeader: renderHeaderWithTooltip,
         renderCell: (params: GridCellParams) => {
           const price = Number(params.value);
           return (
@@ -305,14 +323,14 @@ const UserPartList: React.FC = () => {
             </Typography>
           );
         },
-      },
-      {
+    },
+    {
         field: 'gst',
         headerName: 'GST%',
         width: isMobile ? 50 : baseColumnWidth,
         flex: isMobile ? 0.3 : 0.5,
         sortable: false,
-        renderHeader: renderHeaderWithTooltip,
+      renderHeader: renderHeaderWithTooltip,
         renderCell: (params: GridCellParams) => {
           const gst = params.row.gst ? Number(params.row.gst) : 18;
           return (
@@ -321,14 +339,14 @@ const UserPartList: React.FC = () => {
             </Typography>
           );
         },
-      },
-      {
-        field: 'quantity',
+    },
+    {
+      field: 'quantity',
         headerName: 'Stock Qty',
         width: isMobile ? 60 : baseColumnWidth,
         flex: isMobile ? 0.5 : 0.8,
         sortable: false,
-        renderHeader: renderHeaderWithTooltip,
+      renderHeader: renderHeaderWithTooltip,
         renderCell: (params: GridCellParams) => {
           const quantity = Number(params.value);
           const isLowStock = quantity < 2;
@@ -346,8 +364,8 @@ const UserPartList: React.FC = () => {
             </Box>
           );
         },
-      },
-      {
+    },
+    {
         field: 'viewSupplier',
         headerName: 'Spare Supplier',
         width: isMobile ? 150 : baseColumnWidth * 1.5,
@@ -364,8 +382,19 @@ const UserPartList: React.FC = () => {
               variant="contained"
               color="primary"
               size="small"
-              onClick={() => params.row.manufacturer && window.open(`/admin/supplier/search/${params.row.manufacturer}`, '_blank')}
-              disabled={!params.row.manufacturer}
+              onClick={() => {
+                if (params.row.partNumber && params.row.manufacturer) {
+                  // Open the supplier list with the specified API endpoint including description and quantity
+                  navigate(`/admin/spare-supplier/${params.row.partNumber}/${params.row.manufacturer}`, {
+                    state: { 
+                      description: params.row.description || '',
+                      quantity: params.row.quantity || 0,
+                      price: params.row.price || 0
+                    }
+                  });
+                }
+              }}
+              disabled={!params.row.manufacturer || !params.row.partNumber}
               sx={{ 
                 backgroundColor: '#4caf50',
                 color: 'white',
@@ -387,7 +416,7 @@ const UserPartList: React.FC = () => {
             </Button>
           </Box>
         ),
-        renderHeader: renderHeaderWithTooltip,
+      renderHeader: renderHeaderWithTooltip,
       }
     );
 
@@ -420,8 +449,8 @@ const UserPartList: React.FC = () => {
             bgcolor: alpha(theme.palette.primary.main, 0.05),
             borderBottom: `1px solid ${theme.palette.divider}`,
             textAlign: 'center'
-          }}
-        >
+      }}
+    >
           <Box sx={{ mx: 'auto', maxWidth: '600px' }}>
             <Typography 
               variant={isMobile ? "h6" : "h5"} 
@@ -482,7 +511,7 @@ const UserPartList: React.FC = () => {
                   <Typography variant={isMobile ? "caption" : "subtitle2"} color="text.secondary">Low Stock Items</Typography>
                   <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold" color="error.main" sx={{ mt: 1 }}>
                     {lowStockCount}
-                  </Typography>
+      </Typography>
                 </Paper>
               </Grid>
               
@@ -532,47 +561,47 @@ const UserPartList: React.FC = () => {
           {/* Search Box */}
           <Box sx={{ px: { xs: 1.5, sm: 3 }, pb: { xs: 1.5, sm: 2 } }}>
             <FormControl fullWidth variant="outlined" size={isMobile ? "small" : "medium"}>
-              <OutlinedInput
+          <OutlinedInput
                 placeholder={isMobile ? "Search parts..." : "Search by part number, name, manufacturer or description..."}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSearchClick();
-                  }
-                }}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSearchClick();
+              }
+            }}
                 startAdornment={
                   <InputAdornment position="start">
                     <SearchIcon color="action" />
                   </InputAdornment>
                 }
-                endAdornment={
-                  <InputAdornment position="end">
+            endAdornment={
+              <InputAdornment position="end">
                     <Button 
                       onClick={handleSearchClick} 
                       variant="contained" 
                       size="small"
                       sx={{ borderRadius: 1.5 }}
                     >
-                      Search
-                    </Button>
-                  </InputAdornment>
-                }
+                  Search
+                </Button>
+              </InputAdornment>
+            }
                 sx={{ borderRadius: 2 }}
-              />
-            </FormControl>
-          </Box>
+          />
+        </FormControl>
+      </Box>
 
           {/* Data Grid */}
-          <Box 
-            sx={{ 
+      <Box
+        sx={{
               px: { xs: 0.5, sm: 3 },  // Reduce padding on mobile 
               pb: { xs: 1, sm: 3 },
               width: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
             <Box
               sx={{
                 width: '100%', 
@@ -592,37 +621,37 @@ const UserPartList: React.FC = () => {
                 display: 'flex',
                 minWidth: isMobile ? '500px' : 'auto',
               }}>
-                <DataGrid
-                  rows={rows}
+        <DataGrid
+          rows={rows}
                   columns={getColumns()}
-                  loading={loading}
+          loading={loading}
                   autoHeight
-                  disableRowSelectionOnClick
+          disableRowSelectionOnClick
                   hideFooter={rows.length <= 25}
-                  disableColumnMenu
+          disableColumnMenu
                   disableColumnSorting
-                  getRowClassName={(params) =>
-                    params.row.quantity < 2 ? 'low-stock' : ''
-                  }
+          getRowClassName={(params) =>
+            params.row.quantity < 2 ? 'low-stock' : ''
+          }
                   // Reduce row height on mobile for more compact view
                   rowHeight={isMobile ? 42 : 52}
-                  sx={{
-                    border: 'none',
+          sx={{
+            border: 'none',
                     width: '100%',
                     flexGrow: 1,
                     '& .MuiDataGrid-root': {
                       width: '100%',
                       flexGrow: 1,
                     },
-                    '& .MuiDataGrid-columnHeaders': {
+            '& .MuiDataGrid-columnHeaders': {
                       backgroundColor: alpha(theme.palette.primary.main, 0.05),
                       borderBottom: `1px solid ${theme.palette.divider}`,
                       height: isMobile ? '60px !important' : 'auto',
                       maxHeight: isMobile ? '60px !important' : 'auto',
                       lineHeight: isMobile ? 1.1 : 'inherit',
                       whiteSpace: isMobile ? 'normal' : 'nowrap',
-                    },
-                    '& .MuiDataGrid-columnHeaderTitle': {
+            },
+            '& .MuiDataGrid-columnHeaderTitle': {
                       overflow: 'visible',
                       lineHeight: isMobile ? 1.1 : 'inherit',
                       fontWeight: 600,
@@ -634,10 +663,10 @@ const UserPartList: React.FC = () => {
                     },
                     '& .MuiDataGrid-columnHeader': {
                       padding: isMobile ? '0 2px' : 'inherit',
-                    },
-                    '& .MuiDataGrid-columnSeparator': {
-                      display: 'none',
-                    },
+            },
+            '& .MuiDataGrid-columnSeparator': {
+              display: 'none',
+            },
                     '& .MuiDataGrid-cell': {
                       borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
                       fontSize: isMobile ? '0.7rem' : 'inherit',
@@ -648,13 +677,13 @@ const UserPartList: React.FC = () => {
                     },
                     '& .MuiDataGrid-cell:last-child': {
                       paddingRight: 1,
-                    },
+            },
                     '& .MuiDataGrid-row': {
                       '&:hover': {
                         backgroundColor: alpha(theme.palette.primary.main, 0.04),
                       },
                     },
-                    '& .low-stock': {
+            '& .low-stock': {
                       backgroundColor: alpha(theme.palette.error.main, 0.08),
                       '&:hover': {
                         backgroundColor: alpha(theme.palette.error.main, 0.12),
@@ -687,13 +716,13 @@ const UserPartList: React.FC = () => {
                     },
                     '&::-webkit-scrollbar-track': {
                       backgroundColor: alpha(theme.palette.primary.main, 0.05),
-                    },
-                  }}
-                />
+            },
+          }}
+        />
               </div>
             </Box>
-          </Box>
-          
+      </Box>
+
           {/* Mobile scroll indicator */}
           {isMobile && (
             <Box 
@@ -725,10 +754,10 @@ const UserPartList: React.FC = () => {
           )}
           
           {/* Results count indicator */}
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: alpha(theme.palette.primary.main, 0.05),
               borderTop: `1px solid ${theme.palette.divider}`,
@@ -741,7 +770,7 @@ const UserPartList: React.FC = () => {
               size={isMobile ? "small" : "medium"}
               sx={{ minWidth: '120px', justifyContent: 'center' }}
             />
-          </Box>
+        </Box>
         </CardContent>
       </Card>
 

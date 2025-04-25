@@ -86,6 +86,7 @@ const NotesList = lazy(() => import("pages/Notes/NotesList"));
 const SuperTechServiceReport = lazy(() => import("components/Reports/SuperTechServiceReport"));
 const SuperTechServiceReportPDF = lazy(() => import("components/Reports/SuperTechServiceReportPDF"));
 const VehicalHistoryWithPDF = lazy(() => import("components/Reports/VehicalHistoryWithPDF"));
+const SpareSuppliersView = lazy(() => import("components/Vendor/SpareSuppliersView"));
 
 const AppRoutes = () => {
     return(
@@ -193,6 +194,7 @@ const AppRoutes = () => {
                 <Route path="services" element={<ManageServiceGrid/>} />
                 <Route path="spare-part/transaction/add" element={<TransactionAdd />} />
                 <Route path="spare-part/transaction/list" element={<TransactionAll />} />
+                <Route path="spare-supplier/:partNumber/:manufacturer" element={<SpareSuppliersView />} />
             </Route>
         </Routes>
         </Suspense>
