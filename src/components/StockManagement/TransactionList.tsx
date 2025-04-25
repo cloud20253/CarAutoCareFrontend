@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -31,6 +31,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import SearchIcon from '@mui/icons-material/Search';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import WarningIcon from '@mui/icons-material/Warning';
+import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 import { useNavigate } from 'react-router-dom';
 import apiClient from 'Services/apiService';
 
@@ -64,6 +65,26 @@ const UserPartList: React.FC = () => {
   const [totalElements, setTotalElements] = useState<number>(0);
   const [searchText, setSearchText] = useState<string>("");
   const [lowStockCount, setLowStockCount] = useState<number>(0);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        containerRef.current.style.width = '100%';
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('sidebarToggle', handleResize);
+    
+    handleResize();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('sidebarToggle', handleResize);
+    };
+  }, []);
 
   const fetchAllUserParts = async (): Promise<any[]> => {
     setLoading(true);
@@ -152,6 +173,11 @@ const UserPartList: React.FC = () => {
 
   // Custom header renderer to handle mobile view with line breaks
   const renderHeaderWithTooltip = (params: GridColumnHeaderParams) => {
+    // Add null check before accessing headerName
+    if (!params || !params.colDef) {
+      return <span>Unknown</span>;
+    }
+
     const headerName = params.colDef.headerName || '';
     
     // For mobile view, add break for multi-word headers
@@ -181,58 +207,126 @@ const UserPartList: React.FC = () => {
 
   // Define columns - all columns are visible on all screen sizes
   const getColumns = (): GridColDef[] => {
+    // Calculate flexible column widths
+    const baseColumnWidth = isMobile ? 60 : 80;
+    
+    // Define a more mobile-optimized column set
     const columns: GridColDef[] = [
       {
-        field: 'view',
-        headerName: '',
-        width: 60,
+        field: 'actions',
+        headerName: 'Actions',
+        width: isMobile ? 40 : baseColumnWidth,
+        flex: isMobile ? 0.4 : 0.5,
         sortable: false,
         filterable: false,
         renderCell: (params: GridCellParams) => (
-          <Tooltip title="View Details">
-            <IconButton
-              color="primary"
-              onClick={() => navigate(`/admin/user-part/view/${params.row.id}`)}
-              size="small"
-              sx={{ 
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                },
-                m: 'auto',
-              }}
-            >
-              <VisibilityIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          <Stack direction="row" alignItems="center" justifyContent="center">
+            <Tooltip title="View Details">
+              <IconButton
+                color="primary"
+                onClick={() => navigate(`/admin/user-part/view/${params.row.id}`)}
+                size="small"
+                sx={{ 
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                  },
+                  padding: isMobile ? '4px' : '8px',
+                }}
+              >
+                <VisibilityIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Stack>
         ),
-        renderHeader: () => null,
-      },
-      {
-        field: 'id',
-        headerName: 'ID',
-        width: 60,
-        sortable: false,
         renderHeader: renderHeaderWithTooltip,
       },
       {
-        field: 'partNumber',
-        headerName: isMobile ? 'Part Num' : 'Part Number',
-        width: 110,
+        field: 'id',
+        headerName: 'Sr.No',
+        width: isMobile ? 40 : baseColumnWidth,
+        flex: isMobile ? 0.3 : 0.5,
         sortable: false,
         renderHeader: renderHeaderWithTooltip,
       },
       {
         field: 'partName',
-        headerName: isMobile ? 'Name' : 'Part Name',
-        width: 130,
+        headerName: 'Spare Name',
+        width: isMobile ? baseColumnWidth : baseColumnWidth * 1.5,
+        flex: isMobile ? 1.2 : 2,
         sortable: false,
         renderHeader: renderHeaderWithTooltip,
+      }
+    ];
+
+    // Add partNumber only for non-mobile view
+    if (!isMobile) {
+      columns.push({
+        field: 'partNumber',
+        headerName: 'Part Number',
+        width: baseColumnWidth,
+        flex: 1,
+        sortable: false,
+        renderHeader: renderHeaderWithTooltip,
+      });
+    }
+
+    // Add the rest of the columns
+    columns.push(
+      // On mobile, we'll use more compact money formatting
+      {
+        field: 'buyingPrice',
+        headerName: 'Purchase Rate',
+        width: isMobile ? 70 : baseColumnWidth,
+        flex: isMobile ? 0.7 : 1,
+        sortable: false,
+        renderHeader: renderHeaderWithTooltip,
+        renderCell: (params: GridCellParams) => {
+          const buyingPrice = Number(params.value);
+          return (
+            <Typography variant="body2" noWrap>
+              {isMobile ? `₹${buyingPrice}` : `₹${buyingPrice.toString()}`}
+            </Typography>
+          );
+        },
+      },
+      {
+        field: 'price',
+        headerName: 'Sale Rate',
+        width: isMobile ? 60 : baseColumnWidth,
+        flex: isMobile ? 0.7 : 1,
+        sortable: false,
+        renderHeader: renderHeaderWithTooltip,
+        renderCell: (params: GridCellParams) => {
+          const price = Number(params.value);
+          return (
+            <Typography variant="body2" noWrap>
+              {isMobile ? `₹${price}` : `₹${price.toString()}`}
+            </Typography>
+          );
+        },
+      },
+      {
+        field: 'gst',
+        headerName: 'GST%',
+        width: isMobile ? 50 : baseColumnWidth,
+        flex: isMobile ? 0.3 : 0.5,
+        sortable: false,
+        renderHeader: renderHeaderWithTooltip,
+        renderCell: (params: GridCellParams) => {
+          const gst = params.row.gst ? Number(params.row.gst) : 18;
+          return (
+            <Typography variant="body2" noWrap>
+              {gst}
+            </Typography>
+          );
+        },
       },
       {
         field: 'quantity',
-        headerName: 'Qty',
-        width: 80,
+        headerName: 'Stock Qty',
+        width: isMobile ? 60 : baseColumnWidth,
+        flex: isMobile ? 0.5 : 0.8,
         sortable: false,
         renderHeader: renderHeaderWithTooltip,
         renderCell: (params: GridCellParams) => {
@@ -246,9 +340,7 @@ const UserPartList: React.FC = () => {
               fontWeight: isLowStock ? 'bold' : 'normal',
             }}>
               {isLowStock && (
-                <Tooltip title="Low Stock">
-                  <WarningIcon color="error" fontSize="small" sx={{ mr: 0.5 }} />
-                </Tooltip>
+                <WarningIcon color="error" fontSize="small" sx={{ mr: isMobile ? 0 : 0.5 }} />
               )}
               {quantity}
             </Box>
@@ -256,50 +348,48 @@ const UserPartList: React.FC = () => {
         },
       },
       {
-        field: 'price',
-        headerName: 'Price',
-        width: 90,
+        field: 'viewSupplier',
+        headerName: 'Spare Supplier',
+        width: isMobile ? 150 : baseColumnWidth * 1.5,
+        flex: isMobile ? 1.5 : 1.5,
         sortable: false,
+        filterable: false,
+        renderCell: (params: GridCellParams) => (
+          <Box sx={{ 
+            pr: 2,
+            width: '100%',
+            display: 'flex',
+          }}>
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => params.row.manufacturer && window.open(`/admin/supplier/search/${params.row.manufacturer}`, '_blank')}
+              disabled={!params.row.manufacturer}
+              sx={{ 
+                backgroundColor: '#4caf50',
+                color: 'white',
+                textTransform: 'none',
+                '&:hover': {
+                  backgroundColor: '#45a049',
+                },
+                borderRadius: 1,
+                px: isMobile ? 1.5 : 2,
+                py: isMobile ? 0.25 : 'inherit',
+                fontSize: isMobile ? '0.65rem' : '0.875rem',
+                minWidth: isMobile ? '120px' : '120px',
+                whiteSpace: 'nowrap',
+                maxWidth: 'none',
+                overflow: 'visible',
+              }}
+            >
+              View Suppliers
+            </Button>
+          </Box>
+        ),
         renderHeader: renderHeaderWithTooltip,
-        renderCell: (params: GridCellParams) => {
-          const price = Number(params.value);
-          return (
-            <Typography variant="body2">
-              {'₹' + price.toString()}
-            </Typography>
-          );
-        },
-      },
-      {
-        field: 'manufacturer',
-        headerName: isMobile ? 'Manufacturer' : 'Manufacturer',
-        width: 110,
-        sortable: false,
-        renderHeader: renderHeaderWithTooltip,
-      },
-      {
-        field: 'description',
-        headerName: 'Description',
-        width: 150,
-        sortable: false,
-        renderHeader: renderHeaderWithTooltip,
-      },
-      {
-        field: 'buyingPrice',
-        headerName: isMobile ? 'Buy Price' : 'Purchase Rate',
-        width: 100,
-        sortable: false,
-        renderHeader: renderHeaderWithTooltip,
-        renderCell: (params: GridCellParams) => {
-          const buyingPrice = Number(params.value);
-          return (
-            <Typography variant="body2">
-              {'₹' + buyingPrice.toString()}
-            </Typography>
-          );
-        },
-      },
-    ];
+      }
+    );
 
     return columns;
   };
@@ -311,9 +401,19 @@ const UserPartList: React.FC = () => {
         maxWidth: '100%',
         margin: '0 auto',
         p: { xs: 1, sm: 2, md: 3 },
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
       }}
+      ref={containerRef}
     >
-      <Card elevation={3} sx={{ borderRadius: 2, overflow: 'hidden', mb: { xs: 2, md: 4 } }}>
+      <Card elevation={3} sx={{ 
+        borderRadius: 2, 
+        overflow: 'hidden', 
+        mb: { xs: 2, md: 4 },
+        width: '100%',
+        maxWidth: '100%'
+      }}>
         <Box 
           sx={{ 
             p: { xs: 1.5, sm: 2 }, 
@@ -344,7 +444,7 @@ const UserPartList: React.FC = () => {
           {/* Summary Cards */}
           <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
             <Grid container spacing={{ xs: 1, sm: 2 }}>
-              <Grid item xs={6} sm={6} md={4} lg={3}>
+              <Grid item xs={6} sm={6} md={3} lg={2}>
                 <Paper 
                   elevation={0} 
                   sx={{ 
@@ -352,6 +452,10 @@ const UserPartList: React.FC = () => {
                     borderRadius: 2, 
                     border: `1px solid ${theme.palette.divider}`,
                     bgcolor: alpha(theme.palette.primary.main, 0.05),
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
                   }}
                 >
                   <Typography variant={isMobile ? "caption" : "subtitle2"} color="text.secondary">Total Parts</Typography>
@@ -361,7 +465,7 @@ const UserPartList: React.FC = () => {
                 </Paper>
               </Grid>
               
-              <Grid item xs={6} sm={6} md={4} lg={3}>
+              <Grid item xs={6} sm={6} md={3} lg={2}>
                 <Paper 
                   elevation={0} 
                   sx={{ 
@@ -369,12 +473,57 @@ const UserPartList: React.FC = () => {
                     borderRadius: 2, 
                     border: `1px solid ${theme.palette.divider}`,
                     bgcolor: alpha(theme.palette.error.main, 0.05),
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
                   }}
                 >
                   <Typography variant={isMobile ? "caption" : "subtitle2"} color="text.secondary">Low Stock Items</Typography>
                   <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold" color="error.main" sx={{ mt: 1 }}>
                     {lowStockCount}
                   </Typography>
+                </Paper>
+              </Grid>
+              
+              <Grid item xs={12} sm={12} md={6} lg={8}>
+                <Paper 
+                  elevation={0} 
+                  sx={{ 
+                    p: { xs: 1.5, sm: 2 }, 
+                    borderRadius: 2, 
+                    border: `1px solid ${theme.palette.divider}`,
+                    bgcolor: alpha(theme.palette.info.main, 0.05),
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+                    <Typography variant={isMobile ? "caption" : "subtitle2"} color="text.secondary">Quick Actions</Typography>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button 
+                        variant="outlined" 
+                        size={isMobile ? "small" : "medium"}
+                        startIcon={<InventoryIcon />}
+                        onClick={() => navigate('/admin/transaction/add')}
+                        sx={{ borderRadius: 1.5 }}
+                      >
+                        Add Part
+                      </Button>
+                      <Button 
+                        variant="outlined" 
+                        color="secondary"
+                        size={isMobile ? "small" : "medium"}
+                        startIcon={<BusinessCenterIcon />}
+                        onClick={() => navigate('/admin/vendorManagement')}
+                        sx={{ borderRadius: 1.5 }}
+                      >
+                        Manage Suppliers
+                      </Button>
+                    </Box>
+                  </Box>
                 </Paper>
               </Grid>
             </Grid>
@@ -417,8 +566,11 @@ const UserPartList: React.FC = () => {
           {/* Data Grid */}
           <Box 
             sx={{ 
-              px: { xs: 1.5, sm: 3 }, 
-              pb: { xs: 1.5, sm: 3 },
+              px: { xs: 0.5, sm: 3 },  // Reduce padding on mobile 
+              pb: { xs: 1, sm: 3 },
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             <Box
@@ -428,11 +580,17 @@ const UserPartList: React.FC = () => {
                 borderRadius: 2,
                 overflow: 'hidden',
                 overflowX: 'auto',
+                display: 'flex',
+                flexGrow: 1,
+                WebkitOverflowScrolling: 'touch',
+                paddingRight: isMobile ? 1 : 0,
               }}
             >
               <div style={{ 
-                minWidth: isMobile ? 900 : 'auto', 
                 width: '100%',
+                flexGrow: 1,
+                display: 'flex',
+                minWidth: isMobile ? '500px' : 'auto',
               }}>
                 <DataGrid
                   rows={rows}
@@ -440,19 +598,27 @@ const UserPartList: React.FC = () => {
                   loading={loading}
                   autoHeight
                   disableRowSelectionOnClick
-                  hideFooter
+                  hideFooter={rows.length <= 25}
                   disableColumnMenu
                   disableColumnSorting
                   getRowClassName={(params) =>
                     params.row.quantity < 2 ? 'low-stock' : ''
                   }
+                  // Reduce row height on mobile for more compact view
+                  rowHeight={isMobile ? 42 : 52}
                   sx={{
                     border: 'none',
+                    width: '100%',
+                    flexGrow: 1,
+                    '& .MuiDataGrid-root': {
+                      width: '100%',
+                      flexGrow: 1,
+                    },
                     '& .MuiDataGrid-columnHeaders': {
                       backgroundColor: alpha(theme.palette.primary.main, 0.05),
                       borderBottom: `1px solid ${theme.palette.divider}`,
-                      height: isMobile ? '80px !important' : 'auto',
-                      maxHeight: isMobile ? '80px !important' : 'auto',
+                      height: isMobile ? '60px !important' : 'auto',
+                      maxHeight: isMobile ? '60px !important' : 'auto',
                       lineHeight: isMobile ? 1.1 : 'inherit',
                       whiteSpace: isMobile ? 'normal' : 'nowrap',
                     },
@@ -461,21 +627,27 @@ const UserPartList: React.FC = () => {
                       lineHeight: isMobile ? 1.1 : 'inherit',
                       fontWeight: 600,
                       color: theme.palette.text.primary,
-                      fontSize: isMobile ? '0.7rem' : 'inherit',
+                      fontSize: isMobile ? '0.65rem' : 'inherit',
                       textAlign: 'center',
                       whiteSpace: isMobile ? 'normal' : 'nowrap',
                       wordBreak: isMobile ? 'break-word' : 'normal',
                     },
                     '& .MuiDataGrid-columnHeader': {
-                      padding: isMobile ? '0 4px' : 'inherit',
+                      padding: isMobile ? '0 2px' : 'inherit',
                     },
                     '& .MuiDataGrid-columnSeparator': {
                       display: 'none',
                     },
                     '& .MuiDataGrid-cell': {
                       borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-                      fontSize: isMobile ? '0.75rem' : 'inherit',
-                      padding: isMobile ? '0 4px' : 'inherit',
+                      fontSize: isMobile ? '0.7rem' : 'inherit',
+                      padding: isMobile ? '0 2px' : 'inherit',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    },
+                    '& .MuiDataGrid-cell:last-child': {
+                      paddingRight: 1,
                     },
                     '& .MuiDataGrid-row': {
                       '&:hover': {
@@ -487,6 +659,34 @@ const UserPartList: React.FC = () => {
                       '&:hover': {
                         backgroundColor: alpha(theme.palette.error.main, 0.12),
                       },
+                    },
+                    '& .MuiDataGrid-main': {
+                      width: '100%',
+                      flexGrow: 1,
+                    },
+                    '& .MuiDataGrid-virtualScroller': {
+                      width: '100% !important',
+                    },
+                    '& .MuiDataGrid-footerContainer': {
+                      width: '100%',
+                    },
+                    '& .MuiDataGrid-virtualScrollerContent': {
+                      width: '100% !important',
+                    },
+                    '& .MuiDataGrid-virtualScrollerRenderZone': {
+                      width: '100% !important',
+                    },
+                    // Improve mobile scrolling
+                    '&::-webkit-scrollbar': {
+                      height: '8px',
+                      width: '8px',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                      borderRadius: '4px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.05),
                     },
                   }}
                 />
@@ -501,11 +701,25 @@ const UserPartList: React.FC = () => {
                 textAlign: 'center', 
                 py: 1,
                 borderTop: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-                backgroundColor: alpha(theme.palette.primary.main, 0.02),
+                backgroundColor: alpha(theme.palette.primary.main, 0.05),
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: '100%',
               }}
             >
-              <Typography variant="caption" color="text.secondary">
-                ← Swipe horizontally to view all columns →
+              <Typography 
+                variant="caption" 
+                color="text.secondary"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  fontSize: '0.65rem',
+                  fontWeight: 'bold',
+                }}
+              >
+                <span>←</span>Swipe horizontally to view all columns<span>→</span>
               </Typography>
             </Box>
           )}

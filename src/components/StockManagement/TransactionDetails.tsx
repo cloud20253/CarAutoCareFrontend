@@ -26,6 +26,7 @@ import {
   Avatar,
   Badge,
   Tooltip,
+  useMediaQuery,
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from 'Services/apiService';
@@ -42,6 +43,7 @@ import {
   Cancel as CancelIcon,
   CurrencyRupee as RupeeIcon,
   Description,
+  BusinessCenter as SupplierIcon,
 } from '@mui/icons-material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
@@ -80,6 +82,7 @@ export default function UserPartDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [userPart, setUserPart] = useState<UserPart | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -253,92 +256,135 @@ export default function UserPartDetail() {
             spacing={2} 
             alignItems={{ xs: 'flex-start', sm: 'center' }}
             justifyContent="space-between"
+            sx={{ flexWrap: { xs: 'wrap', md: 'nowrap' } }}
           >
             <Stack direction="row" spacing={2} alignItems="center">
               <Avatar
                 sx={{ 
                   bgcolor: theme.palette.primary.main,
-                  width: 56,
-                  height: 56
+                  width: { xs: 48, sm: 56 },
+                  height: { xs: 48, sm: 56 }
                 }}
               >
                 <Inventory fontSize="large" />
               </Avatar>
               <Box>
-                <Typography variant="h5" component="h1" fontWeight="bold">
+                <Typography 
+                  variant="h5" 
+                  component="h1" 
+                  fontWeight="bold"
+                  sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem', md: '1.8rem' } }}
+                >
                   {userPart?.partName || 'Part Details'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Part ID: {userPart?.userPartId} • Part Number: {userPart?.partNumber}
-          </Typography>
+                </Typography>
               </Box>
             </Stack>
-          <Box sx={{ display: 'flex', gap: 2 }}>
+            
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: 1.5, 
+                mt: { xs: 2, sm: 0 },
+                width: { xs: '100%', sm: 'auto' },
+                justifyContent: { xs: 'center', sm: 'flex-end' } 
+              }}
+            >
               <Button 
                 variant="outlined" 
-                startIcon={<ArrowBack />} 
-                onClick={() => navigate(-1)}
+                color="primary"
+                onClick={() => navigate('/admin/transaction-list')}
+                startIcon={<ArrowBack />}
+                size={isMobile ? "small" : "medium"}
                 sx={{ borderRadius: 2 }}
               >
-              Back
-            </Button>
-            {editMode ? (
-              <>
+                Back
+              </Button>
+              
+              <Button
+                variant="outlined"
+                color="secondary"
+                startIcon={<SupplierIcon />}
+                onClick={() => userPart?.manufacturer && window.open(`/admin/supplier/search/${userPart.manufacturer}`, '_blank')}
+                size={isMobile ? "small" : "medium"}
+                sx={{ borderRadius: 2 }}
+              >
+                View Supplier
+              </Button>
+              
+              {editMode ? (
+                <>
                   <Button 
                     variant="contained" 
                     color="success" 
                     startIcon={<SaveIcon />}
                     onClick={handleSave}
+                    size={isMobile ? "small" : "medium"}
                     sx={{ borderRadius: 2 }}
                   >
-                  Save
-                </Button>
+                    Save
+                  </Button>
                   <Button 
                     variant="outlined" 
                     color="secondary" 
                     startIcon={<CancelIcon />}
                     onClick={handleCancelEdit}
+                    size={isMobile ? "small" : "medium"}
                     sx={{ borderRadius: 2 }}
                   >
-                  Cancel
-                </Button>
-              </>
-            ) : (
-              <>
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <>
                   <Button 
                     variant="contained" 
                     color="primary" 
                     startIcon={<EditIcon />} 
                     onClick={handleEditClick}
+                    size={isMobile ? "small" : "medium"}
                     sx={{ borderRadius: 2 }}
                   >
-                  Edit
-                </Button>
+                    Edit
+                  </Button>
                   <Button 
                     variant="contained" 
                     color="error" 
                     startIcon={<DeleteIcon />} 
                     onClick={handleOpenDeleteDialog}
+                    size={isMobile ? "small" : "medium"}
                     sx={{ borderRadius: 2 }}
                   >
-                  Delete
-                </Button>
-              </>
-            )}
-          </Box>
-        </Stack>
+                    Delete
+                  </Button>
+                </>
+              )}
+            </Box>
+          </Stack>
         </Box>
 
-        <CardContent sx={{ p: 3 }}>
-        {userPart ? (
+        <CardContent sx={{ 
+          p: { xs: 2, sm: 3 } 
+        }}>
+          {userPart ? (
             <>
               {/* Status Info */}
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: 1, 
+                mb: 3,
+                justifyContent: { xs: 'center', sm: 'flex-start' } 
+              }}>
                 <Chip 
                   icon={<Inventory />}
                   label={`Quantity: ${userPart.quantity}`}
                   color={userPart.quantity < 5 ? "warning" : "success"}
                   variant="outlined"
+                  size={isMobile ? "small" : "medium"}
                   sx={{ fontWeight: 'medium' }}
                 />
                 <Chip 
@@ -346,19 +392,21 @@ export default function UserPartDetail() {
                   label={`Selling Price: ₹${userPart.price}`}
                   color="primary"
                   variant="outlined"
+                  size={isMobile ? "small" : "medium"}
                   sx={{ fontWeight: 'medium' }}
                 />
                 <Chip 
                   icon={<CalendarToday />}
                   label={`Updated: ${new Date(userPart.updateAt).toLocaleDateString()}`}
                   variant="outlined"
+                  size={isMobile ? "small" : "medium"}
                   sx={{ fontWeight: 'medium' }}
                 />
               </Box>
 
               {editMode ? (
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6} lg={8}>
                     <Paper 
                       elevation={0} 
                       sx={{ 
@@ -384,68 +432,68 @@ export default function UserPartDetail() {
                       </Typography>
                       <Grid container spacing={2}>
                         <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Part ID"
-                  name="userPartId"
-                  value={formData.userPartId}
-                  InputProps={{ readOnly: true }}
-                  variant="filled"
+                          <TextField
+                            fullWidth
+                            label="Part ID"
+                            name="userPartId"
+                            value={formData.userPartId}
+                            InputProps={{ readOnly: true }}
+                            variant="filled"
                             size="small"
                             sx={{ mb: 2 }}
-                />
-              </Grid>
+                          />
+                        </Grid>
                         <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Spare Part ID"
-                  value={userPart.sparePartId}
-                  InputProps={{ readOnly: true }}
-                  variant="filled"
+                          <TextField
+                            fullWidth
+                            label="Spare Part ID"
+                            value={userPart.sparePartId}
+                            InputProps={{ readOnly: true }}
+                            variant="filled"
                             size="small"
                             sx={{ mb: 2 }}
-                />
-              </Grid>
+                          />
+                        </Grid>
                         <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Part Number"
-                  name="partNumber"
-                  value={formData.partNumber}
-                  onChange={handleInputChange}
-                  variant="outlined"
+                          <TextField
+                            fullWidth
+                            label="Part Number"
+                            name="partNumber"
+                            value={formData.partNumber}
+                            onChange={handleInputChange}
+                            variant="outlined"
                             size="small"
                             sx={{ mb: 2 }}
-                />
-              </Grid>
+                          />
+                        </Grid>
                         <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Part Name"
-                  name="partName"
-                  value={formData.partName}
-                  onChange={handleInputChange}
-                  variant="outlined"
+                          <TextField
+                            fullWidth
+                            label="Part Name"
+                            name="partName"
+                            value={formData.partName}
+                            onChange={handleInputChange}
+                            variant="outlined"
                             size="small"
                             sx={{ mb: 2 }}
-                />
-              </Grid>
+                          />
+                        </Grid>
                         <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Manufacturer"
-                  name="manufacturer"
-                  value={formData.manufacturer}
-                  onChange={handleInputChange}
-                  variant="outlined"
+                          <TextField
+                            fullWidth
+                            label="Manufacturer"
+                            name="manufacturer"
+                            value={formData.manufacturer}
+                            onChange={handleInputChange}
+                            variant="outlined"
                             size="small"
-                />
-              </Grid>
+                          />
+                        </Grid>
                       </Grid>
                     </Paper>
                   </Grid>
                   
-              <Grid item xs={12} md={6}>
+                  <Grid item xs={12} md={6} lg={4}>
                     <Paper 
                       elevation={0} 
                       sx={{ 
@@ -471,50 +519,50 @@ export default function UserPartDetail() {
                       </Typography>
                       <Grid container spacing={2}>
                         <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Quantity"
-                  name="quantity"
-                  type="number"
-                  value={formData.quantity}
-                  onChange={handleInputChange}
-                  variant="outlined"
+                          <TextField
+                            fullWidth
+                            label="Quantity"
+                            name="quantity"
+                            type="number"
+                            value={formData.quantity}
+                            onChange={handleInputChange}
+                            variant="outlined"
                             size="small"
                             sx={{ mb: 2 }}
-                />
-              </Grid>
+                          />
+                        </Grid>
                         <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
+                          <TextField
+                            fullWidth
                             label="Selling Price (₹)"
-                  name="price"
-                  type="number"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  variant="outlined"
+                            name="price"
+                            type="number"
+                            value={formData.price}
+                            onChange={handleInputChange}
+                            variant="outlined"
                             size="small"
                             sx={{ mb: 2 }}
-                  InputProps={{
+                            InputProps={{
                               startAdornment: <RupeeIcon fontSize="small" sx={{ color: 'text.secondary', mr: 1 }} />,
-                  }}
-                />
-              </Grid>
+                            }}
+                          />
+                        </Grid>
                         <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
+                          <TextField
+                            fullWidth
                             label="Purchase Rate (₹)"
-                  name="buyingPrice"
-                  type="number"
-                  value={formData.buyingPrice}
-                  onChange={handleInputChange}
-                  variant="outlined"
+                            name="buyingPrice"
+                            type="number"
+                            value={formData.buyingPrice}
+                            onChange={handleInputChange}
+                            variant="outlined"
                             size="small"
                             sx={{ mb: 2 }}
-                  InputProps={{
+                            InputProps={{
                               startAdornment: <RupeeIcon fontSize="small" sx={{ color: 'text.secondary', mr: 1 }} />,
-                  }}
-                />
-              </Grid>
+                            }}
+                          />
+                        </Grid>
                         <Grid item xs={12} sm={6}>
                           <TextField
                             fullWidth
@@ -557,62 +605,62 @@ export default function UserPartDetail() {
                         <InfoOutlined color="primary" fontSize="small" /> Tax Information
                       </Typography>
                       <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label="CGST (%)"
-                  name="cGST"
-                  type="number"
-                  value={formData.cGST}
-                  onChange={handleInputChange}
-                  variant="outlined"
+                        <Grid item xs={12} md={4}>
+                          <TextField
+                            fullWidth
+                            label="CGST (%)"
+                            name="cGST"
+                            type="number"
+                            value={formData.cGST}
+                            onChange={handleInputChange}
+                            variant="outlined"
                             size="small"
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label="SGST (%)"
-                  name="sGST"
-                  type="number"
-                  value={formData.sGST}
-                  onChange={handleInputChange}
-                  variant="outlined"
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <TextField
+                            fullWidth
+                            label="SGST (%)"
+                            name="sGST"
+                            type="number"
+                            value={formData.sGST}
+                            onChange={handleInputChange}
+                            variant="outlined"
                             size="small"
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  label="Total GST (%)"
-                  name="totalGST"
-                  type="number"
-                  value={formData.totalGST}
-                  onChange={handleInputChange}
-                  variant="outlined"
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <TextField
+                            fullWidth
+                            label="Total GST (%)"
+                            name="totalGST"
+                            type="number"
+                            value={formData.totalGST}
+                            onChange={handleInputChange}
+                            variant="outlined"
                             size="small"
                           />
                         </Grid>
                       </Grid>
                     </Paper>
-              </Grid>
-            </Grid>
-          ) : (
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+                  </Grid>
+                </Grid>
+              ) : (
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6} lg={8}>
                     <Paper 
                       elevation={0} 
-                  sx={{
+                      sx={{
                         p: 3, 
                         height: '100%',
-                    borderRadius: 2,
+                        borderRadius: 2,
                         bgcolor: alpha(theme.palette.primary.main, 0.03),
                         border: `1px solid ${theme.palette.divider}`
-                  }}
-                >
+                      }}
+                    >
                       <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: theme.palette.primary.main, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Category fontSize="small" /> Basic Information
-                  </Typography>
+                      </Typography>
                       
                       <Stack spacing={2}>
                         <Box>
@@ -628,35 +676,35 @@ export default function UserPartDetail() {
                         <Box>
                           <Typography variant="body2" color="text.secondary">Part Number</Typography>
                           <Typography variant="body1" fontWeight="medium">{userPart.partNumber}</Typography>
-                </Box>
+                        </Box>
                         
                         <Box>
                           <Typography variant="body2" color="text.secondary">Part Name</Typography>
                           <Typography variant="body1" fontWeight="medium">{userPart.partName}</Typography>
-                </Box>
+                        </Box>
                         
                         <Box>
                           <Typography variant="body2" color="text.secondary">Manufacturer</Typography>
                           <Typography variant="body1" fontWeight="medium">{userPart.manufacturer}</Typography>
-                </Box>
+                        </Box>
                       </Stack>
                     </Paper>
-              </Grid>
+                  </Grid>
                   
-              <Grid item xs={12} md={6}>
+                  <Grid item xs={12} md={6} lg={4}>
                     <Paper 
                       elevation={0} 
-                  sx={{
+                      sx={{
                         p: 3, 
                         height: '100%',
-                    borderRadius: 2,
+                        borderRadius: 2,
                         bgcolor: alpha(theme.palette.info.main, 0.03),
                         border: `1px solid ${theme.palette.divider}`
-                  }}
-                >
+                      }}
+                    >
                       <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: theme.palette.info.main, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <PrecisionManufacturing fontSize="small" /> Inventory & Pricing
-                  </Typography>
+                      </Typography>
                       
                       <Stack spacing={2}>
                         <Box>
@@ -667,8 +715,8 @@ export default function UserPartDetail() {
                             color={userPart.quantity < 5 ? "warning.main" : "text.primary"}
                           >
                             {userPart.quantity} units
-                  </Typography>
-                </Box>
+                          </Typography>
+                        </Box>
                         
                         <Box>
                           <Typography variant="body2" color="text.secondary">Selling Price</Typography>
@@ -678,86 +726,86 @@ export default function UserPartDetail() {
                         <Box>
                           <Typography variant="body2" color="text.secondary">Purchase Rate</Typography>
                           <Typography variant="body1" fontWeight="medium">₹{userPart.buyingPrice}</Typography>
-                </Box>
+                        </Box>
                         
                         <Box>
                           <Typography variant="body2" color="text.secondary">Last Updated</Typography>
                           <Typography variant="body1" fontWeight="medium">{new Date(userPart.updateAt).toLocaleDateString()}</Typography>
-                </Box>
+                        </Box>
                         
                         <Box>
                           <Typography variant="body2" color="text.secondary">Last Update Info</Typography>
                           <Typography variant="body1" fontWeight="medium">{userPart.lastUpdate}</Typography>
-                </Box>
+                        </Box>
                       </Stack>
                     </Paper>
-              </Grid>
+                  </Grid>
                   
                   <Grid item xs={12}>
                     <Paper 
                       elevation={0} 
-                  sx={{
+                      sx={{
                         p: 3, 
-                    borderRadius: 2,
+                        borderRadius: 2,
                         bgcolor: alpha(theme.palette.success.main, 0.03),
                         border: `1px solid ${theme.palette.divider}`
-                  }}
-                >
+                      }}
+                    >
                       <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: theme.palette.success.main, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <InfoOutlined fontSize="small" /> Tax Information
-                  </Typography>
+                      </Typography>
                       
                       <Grid container spacing={3}>
                         <Grid item xs={12} md={4}>
                           <Box>
                             <Typography variant="body2" color="text.secondary">CGST</Typography>
                             <Typography variant="body1" fontWeight="medium">{userPart.cGST}%</Typography>
-                </Box>
-              </Grid>
+                          </Box>
+                        </Grid>
                         
-              <Grid item xs={12} md={4}>
+                        <Grid item xs={12} md={4}>
                           <Box>
                             <Typography variant="body2" color="text.secondary">SGST</Typography>
                             <Typography variant="body1" fontWeight="medium">{userPart.sGST}%</Typography>
-                </Box>
-              </Grid>
+                          </Box>
+                        </Grid>
                         
-              <Grid item xs={12} md={4}>
+                        <Grid item xs={12} md={4}>
                           <Box>
                             <Typography variant="body2" color="text.secondary">Total GST</Typography>
                             <Typography variant="body1" fontWeight="medium">{userPart.totalGST}%</Typography>
-                </Box>
-              </Grid>
+                          </Box>
+                        </Grid>
                       </Grid>
                     </Paper>
-              </Grid>
+                  </Grid>
                   
                   <Grid item xs={12}>
                     <Paper 
                       elevation={0} 
-                  sx={{
+                      sx={{
                         p: 3, 
-                    borderRadius: 2,
+                        borderRadius: 2,
                         bgcolor: alpha(theme.palette.grey[500], 0.03),
                         border: `1px solid ${theme.palette.divider}`
-                  }}
-                >
+                      }}
+                    >
                       <Typography variant="h6" fontWeight="bold" sx={{ mb: 3, color: theme.palette.text.primary, display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Description fontSize="small" /> Description
-                  </Typography>
+                      </Typography>
                       
                       <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                         {userPart.description || "No description available."}
-                  </Typography>
+                      </Typography>
                     </Paper>
-              </Grid>
-            </Grid>
+                  </Grid>
+                </Grid>
               )}
             </>
-        ) : (
+          ) : (
             <Box sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h6" color="error" align="center">
-            No details available
+              <Typography variant="h6" color="error" align="center">
+                No details available
               </Typography>
               <Button 
                 variant="contained" 
@@ -785,10 +833,10 @@ export default function UserPartDetail() {
           </Typography>
         </DialogTitle>
         <DialogContent sx={{ px: 3, py: 2 }}>
-            <DialogContentText>
-              Are you sure you want to delete this spare part? This action cannot be undone.
-            </DialogContentText>
-          </DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this spare part? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button 
             onClick={handleCloseDeleteDialog}
@@ -803,27 +851,27 @@ export default function UserPartDetail() {
             variant="contained"
             sx={{ borderRadius: 2 }}
           >
-              Delete
-            </Button>
-          </DialogActions>
-        </Dialog>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-        <Snackbar
-          open={!!feedback}
-          autoHideDuration={6000}
-          onClose={() => setFeedback(null)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
-          {feedback ? (
+      <Snackbar
+        open={!!feedback}
+        autoHideDuration={6000}
+        onClose={() => setFeedback(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        {feedback ? (
           <Alert 
             onClose={() => setFeedback(null)} 
             severity={feedback.severity} 
             sx={{ width: '100%', borderRadius: 2 }}
           >
-              {feedback.message}
-            </Alert>
-          ) : undefined}
-        </Snackbar>
+            {feedback.message}
+          </Alert>
+        ) : undefined}
+      </Snackbar>
 
       {showOverlay && (
         <Box
@@ -842,8 +890,8 @@ export default function UserPartDetail() {
         >
           <Paper elevation={4} sx={{ p: 4, borderRadius: 2, maxWidth: '400px', textAlign: 'center' }}>
             <Typography variant="h5" gutterBottom>
-            Spare part deleted successfully.
-          </Typography>
+              Spare part deleted successfully.
+            </Typography>
             <Typography variant="body2" color="text.secondary">
               Redirecting to parts list...
             </Typography>

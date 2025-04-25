@@ -44,6 +44,7 @@ interface CreateTransaction {
   transactionType: "CREDIT" | "DEBIT";
   userId?: number;
   vehicleRegId?: number;
+  vendorId?: number;
   partNumber: string;
   partName: string;
   manufacturer: string;
@@ -266,6 +267,7 @@ const TransactionAdd: React.FC = () => {
     setCreateData((prev) => ({
       ...prev,
       name: newValue ? newValue.name : "",
+      vendorId: newValue ? newValue.vendorId : undefined,
     }));
   };
 
@@ -367,14 +369,24 @@ const TransactionAdd: React.FC = () => {
   const handleCreateSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
+      if (!createData.vendorId) {
+        setFeedback({
+          message: "Please select a vendor",
+          severity: "error"
+        });
+        return;
+      }
+      
       const dataToSubmit = {
         ...createData,
         quantity: parseInt(createData.quantity),
         partName: createData.partName,
         partNumber: createData.partNumber,
-        description: createData.description
+        description: createData.description,
+        vendorId: createData.vendorId
       };
       
+      console.log("Submitting transaction with vendor ID:", dataToSubmit.vendorId);
       const response = await apiClient.post("/sparePartTransactions/add", dataToSubmit);
       
       const recentTransaction: RecentTransaction = {
@@ -385,9 +397,17 @@ const TransactionAdd: React.FC = () => {
 
       setRecentTransactions(prev => [...prev, recentTransaction]);
       updateGSTBreakdown(recentTransaction);
+      setFeedback({
+        message: "Transaction created successfully",
+        severity: "success"
+      });
       resetFormPartially();
     } catch (error: any) {
       console.error("Error creating transaction:", error);
+      setFeedback({
+        message: error.response?.data?.message || "Failed to create transaction",
+        severity: "error"
+      });
     }
   };
 
