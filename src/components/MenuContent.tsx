@@ -65,8 +65,8 @@ const mainListItems = [
     icon: <AssignmentIcon sx={{ color: "#00acc1" }} />,
     subMenu: [
       { text: "Customer Payment", icon: <BuildIcon sx={{ color: "#1976d2" }} />, link: "/admin/manageborrow" },
-      { text: "Bank Deposit", icon: <RepairIcon sx={{ color: "#388e3c" }} />, link: "/admin/manage-repair" },
-      { text: "Employee Payment", icon: <RepairIcon sx={{ color: "#f57c00" }} />, link: "/admin/manage-repair" },
+      { text: "Bank Deposit", icon: <RepairIcon sx={{ color: "#388e3c" }} />, link: "/admin/bank-deposits" },
+      { text: "Employee Payment", icon: <RepairIcon sx={{ color: "#f57c00" }} />, link: "/admin/manage-salary" },
     ]
   },
 ];

@@ -11,6 +11,10 @@ import EmployeeList from "pages/employee/EmployeeList";
 import AddCustomerPayment from "components/Borrow/AddCustomerPayment";
 import CustomerDetailsList from "components/Borrow/CustomerDetailsList";
 import ViewCustomerPayments from "components/Borrow/ViewCustomerPayments";
+import EmployeeSalaryList from "components/Employee/EmployeeSalaryList";
+import AddEmployeeSalary from "components/Employee/AddEmployeeSalary";
+import AddEmployeeAdvancePayment from "components/Employee/AddEmployeeAdvancePayment";
+import EmployeeAdvancePaymentList from "components/Employee/EmployeeAdvancePaymentList";
 const LoadingFallback = () => (
   <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
     <CircularProgress />
@@ -91,6 +95,10 @@ const SuperTechServiceReport = lazy(() => import("components/Reports/SuperTechSe
 const SuperTechServiceReportPDF = lazy(() => import("components/Reports/SuperTechServiceReportPDF"));
 const VehicalHistoryWithPDF = lazy(() => import("components/Reports/VehicalHistoryWithPDF"));
 const SpareSuppliersView = lazy(() => import("components/Vendor/SpareSuppliersView"));
+
+// Bank Deposit components
+const BankDepositList = lazy(() => import("pages/BankDepositList"));
+const AddBankDeposit = lazy(() => import("pages/AddBankDeposit"));
 
 const AppRoutes = () => {
     return(
@@ -194,6 +202,11 @@ const AppRoutes = () => {
                 <Route path="vehicle/edit/:id" element={<AddVehicle/>} />
                 <Route path="vehicle/view/:id" element={<VehicleDetailsView/>} />
                 <Route path="vehicle/add/sparepart/:id" element={<QuatationGrid/>} />
+                <Route path="manage-salary" element={<EmployeeSalaryList/>} />
+                <Route path="add-employee-salary" element={<AddEmployeeSalary/>} />
+                <Route path="add-employee-advance/:id" element={<AddEmployeeAdvancePayment/>} />
+                <Route path="employee-advance-list/:id" element={<EmployeeAdvancePaymentList/>} />
+                <Route path="/admin/edit-employee-salary/:id" element={<AddEmployeeSalary />} />
 
                 <Route path="vehicle/add/servicepart/:id" element={<AddVehiclePartService/>} />
                 <Route path="add-vehicle-part-service/:id" element={<AddVehiclePartService/>} />
@@ -203,6 +216,11 @@ const AppRoutes = () => {
                 <Route path="spare-part/transaction/add" element={<TransactionAdd />} />
                 <Route path="spare-part/transaction/list" element={<TransactionAll />} />
                 <Route path="spare-supplier/:partNumber/:manufacturer" element={<SpareSuppliersView />} />
+
+                {/* Bank Deposit Routes */}
+                <Route path="bank-deposits" element={<BankDepositList />} />
+                <Route path="add-bank-deposit" element={<AddBankDeposit />} />
+                <Route path="edit-bank-deposit/:id" element={<AddBankDeposit />} />
             </Route>
         </Routes>
         </Suspense>
