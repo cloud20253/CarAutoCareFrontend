@@ -9,6 +9,7 @@ import {
   Stack,
   Collapse,
   Tooltip,
+  Box,
 } from "@mui/material";
 import {
   HomeRounded as HomeIcon,
@@ -37,7 +38,7 @@ const mainListItems = [
       { text: "Manage Customer", icon: <RepairIcon sx={{ color: "#7b1fa2" }} />, link: "/admin/manage-customer" },
       { text: "Manage Notes", icon: <RepairIcon sx={{ color: "#00796b" }} />, link: "/admin/manage-Notes" },
       { text: "Manage Terms & Conditions", icon: <RepairIcon sx={{ color: "#c2185b" }} />, link: "/admin/manage-Terms" },
-      { text: "Spare Sale Stock", icon: <RepairIcon sx={{ color: "#0288d1" }} />, link: "/admin/manage-stock" },
+    //   { text: "Spare Sale Stock", icon: <RepairIcon sx={{ color: "#0288d1" }} />, link: "/admin/manage-stock" },
     ],
   },
   { 
@@ -63,12 +64,41 @@ const mainListItems = [
     text: "Payment",
     icon: <AssignmentIcon sx={{ color: "#00acc1" }} />,
     subMenu: [
-      { text: "Customer Payment", icon: <BuildIcon sx={{ color: "#1976d2" }} />, link: "/admin/manage-service" },
+      { text: "Customer Payment", icon: <BuildIcon sx={{ color: "#1976d2" }} />, link: "/admin/manageborrow" },
       { text: "Bank Deposit", icon: <RepairIcon sx={{ color: "#388e3c" }} />, link: "/admin/manage-repair" },
       { text: "Employee Payment", icon: <RepairIcon sx={{ color: "#f57c00" }} />, link: "/admin/manage-repair" },
     ]
   },
 ];
+
+// Shared styles for menu items to ensure text visibility
+const menuItemStyles = {
+  color: '#333 !important',
+  '&.Mui-selected': {
+    backgroundColor: 'rgba(25, 118, 210, 0.12)',
+    color: '#1976d2 !important'
+  },
+  '&:hover': {
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+    color: '#333 !important'
+  }
+};
+
+const listItemTextStyles = {
+  '& .MuiTypography-root': { 
+    color: '#333 !important',
+    fontWeight: 500
+  }
+};
+
+const subMenuItemStyles = {
+  pl: 4,
+  color: '#333 !important',
+  '&.Mui-selected': {
+    backgroundColor: 'rgba(25, 118, 210, 0.12)',
+    color: '#1976d2 !important'
+  }
+};
 
 export default function MenuContent() {
   const location = useLocation();
@@ -77,6 +107,11 @@ export default function MenuContent() {
   const [authorizedComponents, setAuthorizedComponents] = React.useState<string[]>([]);
   const [filteredMenu, setFilteredMenu] = React.useState(mainListItems);
   const { sidebarOpen, openSidebar } = useSidebar();
+  
+  // Check if we're in a mobile drawer based on URL parameters or component props
+  const isMobileMenu = React.useMemo(() => {
+    return window.innerWidth < 600 || location.search.includes('mobile=true');
+  }, [location.search]);
 
   React.useEffect(() => {
     // Get user permissions from userData
@@ -171,7 +206,7 @@ export default function MenuContent() {
       // For regular menu items without submenu
       return (
         <ListItem key={index} disablePadding sx={{ display: "block" }}>
-          {!sidebarOpen ? (
+          {!sidebarOpen && !isMobileMenu ? (
             <Tooltip title={item.text} placement="right" arrow enterDelay={500} leaveDelay={200}>
               <ListItemButton
                 component={NavLink}
@@ -182,6 +217,7 @@ export default function MenuContent() {
                   minHeight: 48,
                   justifyContent: sidebarOpen ? 'initial' : 'center',
                   px: 2.5,
+                  ...menuItemStyles,
                 }}
               >
                 <ListItemIcon
@@ -194,7 +230,13 @@ export default function MenuContent() {
                   {item.icon}
                 </ListItemIcon>
                 {sidebarOpen && (
-                  <ListItemText primary={item.text} sx={{ opacity: 1 }} />
+                  <ListItemText 
+                    primary={item.text} 
+                    sx={{ 
+                      opacity: 1,
+                      ...listItemTextStyles
+                    }} 
+                  />
                 )}
               </ListItemButton>
             </Tooltip>
@@ -207,6 +249,7 @@ export default function MenuContent() {
                 minHeight: 48,
                 justifyContent: sidebarOpen ? 'initial' : 'center',
                 px: 2.5,
+                ...menuItemStyles,
               }}
             >
               <ListItemIcon
@@ -218,7 +261,13 @@ export default function MenuContent() {
               >
                 {item.icon}
               </ListItemIcon>
-              <ListItemText primary={item.text} sx={{ opacity: 1 }} />
+              <ListItemText 
+                primary={item.text} 
+                sx={{ 
+                  opacity: 1,
+                  ...listItemTextStyles
+                }} 
+              />
             </ListItemButton>
           )}
         </ListItem>
@@ -228,7 +277,7 @@ export default function MenuContent() {
       return (
         <React.Fragment key={index}>
           <ListItem disablePadding sx={{ display: "block" }}>
-            {!sidebarOpen ? (
+            {!sidebarOpen && !isMobileMenu ? (
               <Tooltip title={item.text} placement="right" arrow enterDelay={500} leaveDelay={200}>
                 <ListItemButton
                   onClick={() => handleToggle(item.text)}
@@ -236,6 +285,7 @@ export default function MenuContent() {
                     minHeight: 48,
                     justifyContent: sidebarOpen ? 'initial' : 'center',
                     px: 2.5,
+                    ...menuItemStyles,
                   }}
                 >
                   <ListItemIcon
@@ -249,8 +299,18 @@ export default function MenuContent() {
                   </ListItemIcon>
                   {sidebarOpen && (
                     <>
-                      <ListItemText primary={item.text} sx={{ opacity: 1 }} />
-                      {openSubMenu === item.text ? <ExpandLess /> : <ExpandMore />}
+                      <ListItemText 
+                        primary={item.text} 
+                        sx={{ 
+                          opacity: 1,
+                          ...listItemTextStyles
+                        }} 
+                      />
+                      {openSubMenu === item.text ? (
+                        <ExpandLess sx={{ color: '#555 !important' }} />
+                      ) : (
+                        <ExpandMore sx={{ color: '#555 !important' }} />
+                      )}
                     </>
                   )}
                 </ListItemButton>
@@ -262,6 +322,7 @@ export default function MenuContent() {
                   minHeight: 48,
                   justifyContent: sidebarOpen ? 'initial' : 'center',
                   px: 2.5,
+                  ...menuItemStyles,
                 }}
               >
                 <ListItemIcon
@@ -273,25 +334,50 @@ export default function MenuContent() {
                 >
                   {item.icon}
                 </ListItemIcon>
-                <ListItemText primary={item.text} sx={{ opacity: 1 }} />
-                {openSubMenu === item.text ? <ExpandLess /> : <ExpandMore />}
+                <ListItemText 
+                  primary={item.text} 
+                  sx={{ 
+                    opacity: 1,
+                    ...listItemTextStyles
+                  }} 
+                />
+                {openSubMenu === item.text ? (
+                  <ExpandLess sx={{ color: '#555 !important' }} />
+                ) : (
+                  <ExpandMore sx={{ color: '#555 !important' }} />
+                )}
               </ListItemButton>
             )}
           </ListItem>
-          <Collapse in={openSubMenu === item.text && sidebarOpen} timeout="auto" unmountOnExit>
+          <Collapse in={openSubMenu === item.text} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               {item.subMenu.map((subItem: any, subIndex: number) => (
-                <ListItem key={subIndex} disablePadding sx={{ display: "block" }}>
-                  <ListItemButton
-                    component={NavLink}
-                    to={subItem.link}
-                    onClick={handleMenuClick}
-                    selected={location.pathname === subItem.link}
-                    sx={{ minHeight: 48, pl: 4 }}
+                <ListItemButton
+                  key={subIndex}
+                  component={NavLink}
+                  to={subItem.link}
+                  selected={location.pathname === subItem.link}
+                  sx={{
+                    ...subMenuItemStyles,
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: 3,
+                      justifyContent: 'center',
+                    }}
                   >
-                    <ListItemText primary={subItem.text} />
-                  </ListItemButton>
-                </ListItem>
+                    {subItem.icon}
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={subItem.text} 
+                    sx={{
+                      opacity: 1,
+                      ...listItemTextStyles
+                    }} 
+                  />
+                </ListItemButton>
               ))}
             </List>
           </Collapse>
@@ -301,10 +387,25 @@ export default function MenuContent() {
   };
 
   return (
-    <Stack sx={{ flexGrow: 1, p: { xs: 1, sm: 2 }, justifyContent: "space-between" }}>
-      <List dense sx={{ width: '100%' }}>
-        {filteredMenu.map((item, index) => renderMenuItem(item, index))}
+    <Box
+      sx={{
+        width: '100%',
+        backgroundColor: '#f5f5f5 !important',
+        '& *': {
+          color: '#333 !important',
+        }
+      }}
+    >
+      <List
+        sx={{
+          width: '100%',
+          bgcolor: '#f5f5f5 !important',
+          color: '#333 !important',
+          padding: 0
+        }}
+      >
+        {filteredMenu.map(renderMenuItem)}
       </List>
-    </Stack>
+    </Box>
   );
 }

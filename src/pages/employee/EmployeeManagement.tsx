@@ -303,40 +303,41 @@ const EmployeeManagement: React.FC = () => {
     setTouchedFields({});
   };
 
+  // Permissions list with descriptions of what each permission grants access to
   const permissionsList = [
-    'Dashboard',
-    'Manage User',
-    'Manage Services',
-    'Manage Repairs',
-    'Manage Spares Inventory',
-    'Manage Supplier',
-    'Manage Customer',
-    'Purchase',
-    'Job Sales Report',
-    'Counter Sales Report',
-    'Purchase Report',
-    'Vehicle Registration',
-    'Bookings',
-    'Service Queue',
-    'Service History',
-    'Counter Sale',
-    'Job Card',
-    'Spares',
-    'Services',
-    'Sale Account Report',
-    'Purchase Account Report',
-    'Manage Stock',
-    'Manage Sale',
-    'Customer Payment',
-    'Bank Deposit',
-    'Employee Payment',
-    'Manage Notes',
-    'Superwiser/Technician Service Report',
-    'Quotation',
-    'Manage Insurance',
-    'Spare Sale Stock',
-    'Manage Terms & Conditions',
-    'Vehicle History'
+    'Dashboard', // Can access none of the components
+    'Manage User', // Can access manage user tab in side menu
+    'Manage Services', // Access to service queue but NOT the spanner icon inside
+    'Manage Repairs', // The spanner icon inside the service queue will be accessible
+    'Manage Spares Inventory', // Manage spares tab in side menu will be accessible
+    'Manage Supplier', // Manage supplier tab in the side menu will be accessible
+    'Manage Customer', // Manage customer tab in side menu will be accessible
+    'Purchase', // Purchase card on dashboard will be accessible
+    'Job Sales Report', // In side menu under report tab job sale report tab will be accessible
+    'Counter Sales Report', // In side menu under report tab counter sale report tab will be accessible
+    'Purchase Report', // In side menu under report tab purchase report tab will be accessible
+    'Vehicle Registration', // Vehicle registration card on dashboard will be accessible
+    'Bookings', // Bookings card on dashboard will be accessible
+    'Service Queue', // Service Queue card on dashboard will be accessible
+    'Service History', // Service History card on dashboard will be accessible
+    'Counter Sale', // Counter sale card on dashboard will be accessible
+    'Job Card', // Access to job card functionality
+    'Spares', // Access to spares functionality
+    'Services', // Access to services functionality
+    'Sale Account Report', // In side menu under report tab Sale Account Report tab will be accessible
+    'Purchase Account Report', // In side menu under report tab Purchase Account Report tab will be accessible
+    'Manage Stock', // In side menu under master tab manage spares tab's "view all stock" card will be accessible
+    'Manage Sale', // Access to manage sale functionality
+    'Customer Payment', // In side menu under payments tab customer payment tab will be accessible
+    'Bank Deposit', // In side menu under payments tab Bank Deposit tab will be accessible
+    'Employee Payment', // In side menu under payments tab Employee Payment tab will be accessible
+    'Manage Notes', // In side menu under master tab Manage Notes tab will be accessible
+    'Superwiser/Technician Service Report', // In side menu under report tab Superwiser/Technician Service Report tab will be accessible
+    'Quotation', // In dashboard quotation card will be accessible
+    'Manage Insurance', // In dashboard insurance card will be accessible
+    'Spare Sale Stock', // Access to spare sale stock functionality
+    'Manage Terms & Conditions', // In side menu under master tab Manage Terms & Conditions tab will be accessible
+    'Vehicle History' // In side menu under Report tab Vehicle History tab will be accessible
   ];
 
   return (
@@ -378,7 +379,7 @@ const EmployeeManagement: React.FC = () => {
                     <MenuItem value="manager">Manager</MenuItem>
                     <MenuItem value="supervisor">Supervisor</MenuItem>
                     <MenuItem value="technician">Technician</MenuItem>
-                    <MenuItem value="staff">Staff</MenuItem>
+                    <MenuItem value="staff">Worker</MenuItem>
                   </Select>
                   {getFieldError('position') && <FormHelperText>Position is required</FormHelperText>}
                 </FormControl>

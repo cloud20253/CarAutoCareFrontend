@@ -169,44 +169,44 @@ export default function SignUpCard() {
     }
 
     if (!lname || lname.length < 1) {
-      setLNameError(true);
+        setLNameError(true);
       setLNameErrorMessage('Last Name is required');
-      isValid = false;
-    } else {
-      setLNameError(false);
-      setLNameErrorMessage('');
-    }
+        isValid = false;
+      } else {
+        setLNameError(false);
+        setLNameErrorMessage('');
+      }
 
     if (!mobileNo || !/^\d{10}$/.test(mobileNo)) {
-      setMobileNoError(true);
+        setMobileNoError(true);
       setMobileNoErrorMessage('Please enter a valid 10-digit mobile number');
-      isValid = false;
-    } else {
-      setMobileNoError(false);
-      setMobileNoErrorMessage('');
-    }
+        isValid = false;
+      } else {
+        setMobileNoError(false);
+        setMobileNoErrorMessage('');
+      }
 
     if (!address || address.length < 1) {
-      setAddressError(true);
+        setAddressError(true);
       setAddressErrorMessage('Address is required');
-      isValid = false;
-    } else {
-      setAddressError(false);
-      setAddressErrorMessage('');
-    }
+        isValid = false;
+      } else {
+        setAddressError(false);
+        setAddressErrorMessage('');
+      }
 
     return isValid;
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+    event.preventDefault(); 
+  
     if (!validateInputs()) {
-      return;
+      return; 
     }
 
     setIsLoading(true);
-
+  
     try {
       const formData = {
         fname: fname,
@@ -233,7 +233,7 @@ export default function SignUpCard() {
       setIsLoading(false);
     }
   };
-
+  
   const handleSendOtpToVerfyMail = async () => {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       setEmailError(true);
@@ -261,7 +261,7 @@ export default function SignUpCard() {
       alert("Failed to send OTP. Please try again.");
     } finally {
       setIsLoading(false);
-    }
+  }
   };
 
   const handleOpen = () => {
@@ -271,14 +271,14 @@ export default function SignUpCard() {
   const handleClose = () => {
     setOtpClosed(false);
   };
-
+  
   const handleVerifiedEmail = () => {
     setIsVerify(true);
   };
 
   const handleVerifySuccess = () => {
-    setIsVerify(true);
-    setOtpClosed(false);
+    setIsVerify(true); 
+    setOtpClosed(false); 
   };
 
   return (
@@ -286,10 +286,10 @@ export default function SignUpCard() {
       <LogoWrapper>
         <Logo>AC</Logo>
       </LogoWrapper>
-      
-      <Typography
-        component="h1"
-        variant="h4"
+ 
+          <Typography
+            component="h1"
+            variant="h4"
         sx={{
           width: '100%',
           textAlign: 'center',
@@ -325,23 +325,23 @@ export default function SignUpCard() {
           padding: 1,
           borderRadius: 1
         }}
-      >
+          >
         <InfoOutlined fontSize="small" />
         Email verification is required to create an account
-      </Typography>
+          </Typography>
       
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
         noValidate
         sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2 }}
-      >
+          >
         <Box sx={{ display: 'flex', gap: 2 }}>
           <FormControl variant="outlined" sx={{ flex: 1 }}>
             <FormLabel htmlFor="fname" sx={{ mb: 1, fontWeight: 500 }}>First Name</FormLabel>
-            <TextField
-              error={nameError}
-              helperText={nameErrorMessage}
+              <TextField
+                error={nameError}
+                helperText={nameErrorMessage}
               id="name"
               name="fname"
               placeholder="John"
@@ -358,14 +358,14 @@ export default function SignUpCard() {
                 ),
                 sx: { borderRadius: 1.5 }
               }}
-            />
-          </FormControl>
+              />
+            </FormControl>
           
           <FormControl variant="outlined" sx={{ flex: 1 }}>
             <FormLabel htmlFor="lname" sx={{ mb: 1, fontWeight: 500 }}>Last Name</FormLabel>
-            <TextField
-              error={lNameError}
-              helperText={lNameErrorMessage}
+              <TextField
+                error={lNameError}
+                helperText={lNameErrorMessage}
               id="lname"
               name="lname"
               placeholder="Doe"
@@ -382,8 +382,8 @@ export default function SignUpCard() {
                 ),
                 sx: { borderRadius: 1.5 }
               }}
-            />
-          </FormControl>
+              />
+            </FormControl>
         </Box>
 
         <FormControl variant="outlined">
@@ -394,7 +394,7 @@ export default function SignUpCard() {
             )}
           </FormLabel>
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <TextField
+              <TextField
               error={emailError}
               helperText={emailErrorMessage}
               id="email"
@@ -402,8 +402,8 @@ export default function SignUpCard() {
               type="email"
               placeholder="your@email.com"
               autoComplete="email"
-              required
-              fullWidth
+                required
+                fullWidth
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isVerify}
@@ -435,15 +435,15 @@ export default function SignUpCard() {
 
         <FormControl variant="outlined">
           <FormLabel htmlFor="mobileNo" sx={{ mb: 1, fontWeight: 500 }}>Mobile Number</FormLabel>
-          <TextField
+              <TextField
             error={mobileNoError}
             helperText={mobileNoErrorMessage}
             id="mobileNo"
             name="mobileNo"
             placeholder="1234567890"
             autoComplete="tel"
-            required
-            fullWidth
+                required
+                fullWidth
             value={mobileNo}
             onChange={(e) => setMobileNo(e.target.value)}
             InputProps={{
@@ -460,8 +460,8 @@ export default function SignUpCard() {
         <FormControl variant="outlined">
           <FormLabel htmlFor="password" sx={{ mb: 1, fontWeight: 500 }}>Password</FormLabel>
           <TextField
-            error={passwordError}
-            helperText={passwordErrorMessage}
+                error={passwordError}
+                helperText={passwordErrorMessage}
             id="password"
             name="password"
             type={showPassword ? 'text' : 'password'}
@@ -490,20 +490,20 @@ export default function SignUpCard() {
               ),
               sx: { borderRadius: 1.5 }
             }}
-          />
-        </FormControl>
+              />
+            </FormControl>
 
         <FormControl variant="outlined">
           <FormLabel htmlFor="address" sx={{ mb: 1, fontWeight: 500 }}>Address</FormLabel>
-          <TextField
+              <TextField
             error={addressError}
             helperText={addressErrorMessage}
             id="address"
-            name="address"
+                name="address"
             placeholder="Your address"
             autoComplete="street-address"
-            required
-            fullWidth
+                required
+                fullWidth
             multiline
             rows={2}
             value={address}
@@ -516,24 +516,24 @@ export default function SignUpCard() {
               ),
               sx: { borderRadius: 1.5 }
             }}
-          />
-        </FormControl>
+              />
+            </FormControl>
 
         <StyledButton 
-          type="submit" 
-          fullWidth 
-          variant="contained" 
+              type="submit"
+              fullWidth
+              variant="contained"
           disabled={isLoading || !isVerify}
           sx={{ mt: 3 }}
         >
           {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
         </StyledButton>
 
-        <Typography sx={{ textAlign: 'center' }}>
-          Already have an account?{' '}
-          <Link
-            component={RouterLink}
-            to="/signIn"
+            <Typography sx={{ textAlign: 'center' }}>
+              Already have an account?{' '}
+              <Link
+                component={RouterLink}
+                to="/signIn"
             sx={{ 
               fontWeight: 600, 
               color: theme.palette.primary.main,
@@ -542,17 +542,17 @@ export default function SignUpCard() {
                 textDecoration: 'underline',
               }
             }}
-          >
-            Sign in
-          </Link>
-        </Typography>
-      </Box>
+              >
+                Sign in
+              </Link>
+            </Typography>
+          </Box>
       <OTPComponent 
         open={otpOpen} 
         email={email}
         handleClose={handleClose}
         isVerifySuccess={handleVerifySuccess}
       />
-    </Card>
+        </Card>
   );
 }

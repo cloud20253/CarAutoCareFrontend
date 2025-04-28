@@ -109,35 +109,35 @@ export default function VehicleList() {
     return (
       <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
         <Tooltip title="Edit Vehicle">
-          <IconButton
-            color="primary"
+        <IconButton
+          color="primary"
             size="small"
             sx={{ 
               backgroundColor: alpha(theme.palette.primary.main, 0.1),
               '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.2) }
             }}
-            onClick={() => navigate(`/admin/vehicle/edit/${params.row.vehicleRegId}`)}
-          >
+          onClick={() => navigate(`/admin/vehicle/edit/${params.row.vehicleRegId}`)}
+        >
             <EditIcon fontSize="small" />
-          </IconButton>
+        </IconButton>
         </Tooltip>
         
         <Tooltip title="Delete Vehicle">
-          <IconButton
+        <IconButton
             color="error"
             size="small"
             sx={{ 
               backgroundColor: alpha(theme.palette.error.main, 0.1),
               '&:hover': { backgroundColor: alpha(theme.palette.error.main, 0.2) }
             }}
-            onClick={() => handleDelete(params.row.vehicleRegId)}
-          >
+          onClick={() => handleDelete(params.row.vehicleRegId)}
+        >
             <DeleteIcon fontSize="small" />
-          </IconButton>
+        </IconButton>
         </Tooltip>
         
         <Tooltip title="Manage Service Parts">
-          <IconButton
+        <IconButton
             color="info"
             size="small"
             sx={{ 
@@ -145,37 +145,37 @@ export default function VehicleList() {
               '&:hover': { backgroundColor: alpha(theme.palette.info.main, 0.2) }
             }}
             onClick={() => navigate(`/admin/vehicle/add/servicepart/${params.row.vehicleRegId}`)}
-          >
+        >
             <BuildIcon fontSize="small" />
-          </IconButton>
+        </IconButton>
         </Tooltip>
         
         <Tooltip title="View Details">
-          <IconButton
+        <IconButton
             color="success"
             size="small"
             sx={{ 
               backgroundColor: alpha(theme.palette.success.main, 0.1),
               '&:hover': { backgroundColor: alpha(theme.palette.success.main, 0.2) }
             }}
-            onClick={() => navigate(`/admin/vehicle/view/${params.row.vehicleRegId}`)}
-          >
+          onClick={() => navigate(`/admin/vehicle/view/${params.row.vehicleRegId}`)}
+        >
             <PreviewIcon fontSize="small" />
-          </IconButton>
+        </IconButton>
         </Tooltip>
         
         <Tooltip title="Print">
-          <IconButton
-            color="secondary"
+        <IconButton
+          color="secondary"
             size="small"
             sx={{ 
               backgroundColor: alpha(theme.palette.secondary.main, 0.1),
               '&:hover': { backgroundColor: alpha(theme.palette.secondary.main, 0.2) }
             }}
-            onClick={() => navigate(`/admin/vehicle/view/${params.row.vehicleRegId}`)}
-          >
+          onClick={() => navigate(`/admin/vehicle/view/${params.row.vehicleRegId}`)}
+        >
             <Print fontSize="small" />
-          </IconButton>
+        </IconButton>
         </Tooltip>
       </Box>
     );
@@ -441,8 +441,8 @@ export default function VehicleList() {
           >
             <Box>
               <Typography component="h1" variant="h5" fontWeight="bold" color="primary">
-                Vehicle List
-              </Typography>
+          Vehicle List
+        </Typography>
               <Typography variant="body2" color="text.secondary" mt={0.5}>
                 {listType === 'serviceQueue' 
                   ? 'Vehicles currently in service queue' 
@@ -462,28 +462,28 @@ export default function VehicleList() {
                 px: 3
               }}
             >
-              Add Vehicle
-            </Button>
-          </Stack>
+          Add Vehicle
+        </Button>
+      </Stack>
 
           {/* Quick Search Box Above the Data Grid */}
           <FormControl fullWidth sx={{ mb: 2 }}>
-            <OutlinedInput
-              size="small"
+          <OutlinedInput
+            size="small"
               placeholder="Quick search in results..."
-              value={localSearchTerm}
-              onChange={(e) => setLocalSearchTerm(e.target.value)}
-              startAdornment={
+            value={localSearchTerm}
+            onChange={(e) => setLocalSearchTerm(e.target.value)}
+            startAdornment={
                 <InputAdornment position="start" sx={{ color: 'text.secondary' }}>
-                  <SearchRoundedIcon fontSize="small" />
-                </InputAdornment>
-              }
+                <SearchRoundedIcon fontSize="small" />
+              </InputAdornment>
+            }
               sx={{ 
                 borderRadius: 2,
                 backgroundColor: alpha(theme.palette.common.white, 0.05)
               }}
-            />
-          </FormControl>
+          />
+        </FormControl>
 
           {/* Advanced search toggle */}
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
@@ -495,7 +495,7 @@ export default function VehicleList() {
             >
               {showAdvancedSearch ? "Hide Advanced Search" : "Show Advanced Search"}
             </Button>
-          </Box>
+      </Box>
 
           {/* Advanced search section */}
           {showAdvancedSearch && (
@@ -512,40 +512,40 @@ export default function VehicleList() {
                 <Grid item xs={12} md={3}>
                   <FormControl fullWidth>
                     <InputLabel>Search Type</InputLabel>
-                    <Select
-                      value={selectedType}
-                      onChange={(e) => setSelectedType(e.target.value)}
+            <Select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
                       size="small"
                       sx={{ borderRadius: 2 }}
-                    >
-                      <MenuItem value="Vehicle ID">Vehicle ID</MenuItem>
-                      <MenuItem value="Date Range">Date Range</MenuItem>
-                      <MenuItem value="Appointment Number">Appointment Number</MenuItem>
-                    </Select>
-                  </FormControl>
+            >
+              <MenuItem value="Vehicle ID">Vehicle ID</MenuItem>
+              <MenuItem value="Date Range">Date Range</MenuItem>
+              <MenuItem value="Appointment Number">Appointment Number</MenuItem>
+            </Select>
+          </FormControl>
                 </Grid>
 
-                {(selectedType === 'Vehicle ID' || selectedType === 'Appointment Number') && (
+          {(selectedType === 'Vehicle ID' || selectedType === 'Appointment Number') && (
                   <Grid item xs={12} md={6}>
                     <FormControl fullWidth variant="outlined">
-                      <OutlinedInput
-                        size="small"
-                        id="search"
+              <OutlinedInput
+                size="small"
+                id="search"
                         placeholder={selectedType === 'Vehicle ID' ? "Enter vehicle ID..." : "Enter appointment number..."}
-                        value={textInput}
-                        onChange={(e) => setTextInput(e.target.value)}
-                        startAdornment={
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                startAdornment={
                           <InputAdornment position="start" sx={{ color: 'text.secondary' }}>
-                            <SearchRoundedIcon fontSize="small" />
-                          </InputAdornment>
-                        }
+                    <SearchRoundedIcon fontSize="small" />
+                  </InputAdornment>
+                }
                         sx={{ borderRadius: 2 }}
-                      />
-                    </FormControl>
+              />
+            </FormControl>
                   </Grid>
-                )}
+          )}
 
-                {selectedType === 'Date Range' && (
+          {selectedType === 'Date Range' && (
                   <Grid item xs={12} md={6}>
                     <FormControl fullWidth>
                       <Box sx={{ 
@@ -564,19 +564,19 @@ export default function VehicleList() {
                           fontSize: '0.875rem'
                         }
                       }}>
-                        <ReactDatePicker
-                          selected={dateValue[0]}
-                          onChange={(update: [Date | null, Date | null]) => setDateValue(update)}
-                          startDate={dateValue[0]}
-                          endDate={dateValue[1]}
-                          selectsRange
-                          dateFormat="yyyy-MM-dd"
-                          placeholderText="Select date range"
-                        />
+                <ReactDatePicker
+                  selected={dateValue[0]}
+                  onChange={(update: [Date | null, Date | null]) => setDateValue(update)}
+                  startDate={dateValue[0]}
+                  endDate={dateValue[1]}
+                  selectsRange
+                  dateFormat="yyyy-MM-dd"
+                  placeholderText="Select date range"
+                />
                       </Box>
-                    </FormControl>
-                  </Grid>
-                )}
+              </FormControl>
+            </Grid>
+          )}
 
                 <Grid item xs={12} md={3}>
                   <Button 
@@ -586,10 +586,10 @@ export default function VehicleList() {
                     onClick={handleSearch}
                     sx={{ borderRadius: 2 }}
                   >
-                    Search
-                  </Button>
-                </Grid>
-              </Grid>
+            Search
+          </Button>
+        </Grid>
+      </Grid>
             </Paper>
           )}
 
@@ -622,7 +622,7 @@ export default function VehicleList() {
                     Loading vehicle data...
                   </Typography>
                 </Box>
-              </Box>
+            </Box>
             )}
             
             <CustomizedDataGrid 

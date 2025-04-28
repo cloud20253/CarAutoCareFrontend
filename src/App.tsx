@@ -15,6 +15,12 @@ import {
   User
 } from './utils/tokenUtils';
 
+// Import Borrow components
+import CustomerDetailsList from './components/Borrow/CustomerDetailsList';
+import AddCustomer from './components/Borrow/AddCustomer';
+import AddCustomerPayment from './components/Borrow/AddCustomerPayment';
+import ViewCustomerPayments from './components/Borrow/ViewCustomerPayments';
+
 const Header: React.FC<{ user: User, onLogout: () => void }> = ({ user, onLogout }) => {
   return (
     <Box sx={{ 
@@ -182,6 +188,40 @@ const App: React.FC = () => {
             element={
               <AuthGuard user={user} requiredRoles={['ADMIN']}>
                 <AddTermsAndConditions />
+              </AuthGuard>
+            } 
+          />
+          
+          {/* Customer Borrow Routes - Protected with AuthGuard */}
+          <Route 
+            path="/admin/customer/list" 
+            element={
+              <AuthGuard user={user} requiredRoles={['ADMIN', 'EMPLOYEE']}>
+                <CustomerDetailsList />
+              </AuthGuard>
+            } 
+          />
+          <Route 
+            path="/admin/customer/add" 
+            element={
+              <AuthGuard user={user} requiredRoles={['ADMIN', 'EMPLOYEE']}>
+                <AddCustomer />
+              </AuthGuard>
+            } 
+          />
+          <Route 
+            path="/admin/customer/payment/add/:id" 
+            element={
+              <AuthGuard user={user} requiredRoles={['ADMIN', 'EMPLOYEE']}>
+                <AddCustomerPayment />
+              </AuthGuard>
+            } 
+          />
+          <Route 
+            path="/admin/customer/payment/view/:id" 
+            element={
+              <AuthGuard user={user} requiredRoles={['ADMIN', 'EMPLOYEE']}>
+                <ViewCustomerPayments />
               </AuthGuard>
             } 
           />

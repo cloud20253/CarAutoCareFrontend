@@ -2,11 +2,15 @@ import React, { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 import { CircularProgress, Box } from "@mui/material";
 import WebHeader from "pages/Headers";
+import AddCustomer from "components/Borrow/AddCustomer";
 import AdminHeader from "pages/AdminHeader";
 import TermsAndConditionsList from "components/Terms/TermsAndConditionsList";
 import AddTermsAndConditions from "components/Terms/AddTermsAndConditions";
 import EmployeeManagement from "pages/employee/EmployeeManagement";
 import EmployeeList from "pages/employee/EmployeeList";
+import AddCustomerPayment from "components/Borrow/AddCustomerPayment";
+import CustomerDetailsList from "components/Borrow/CustomerDetailsList";
+import ViewCustomerPayments from "components/Borrow/ViewCustomerPayments";
 const LoadingFallback = () => (
   <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
     <CircularProgress />
@@ -119,10 +123,14 @@ const AppRoutes = () => {
             <Route path="/admin" element={<AdminHeader />}>
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="appointmentList" element={<AppointmentList />} />
+                <Route path="customer/add" element={<AddCustomer />} />
                 <Route path="jobCardgrid" element={<JobCardGrid />} />
                 <Route path="manageVendor" element={<VendorManagementGrid />} />
                 <Route path="billForm/:id" element={<InvoiceForm />} />
+                <Route path="customer/payment/view/:id" element={<ViewCustomerPayments />} />
+                <Route path="customer/payment/add/:id" element={<AddCustomerPayment />} />
                 <Route path="jobcardpdf" element={<JobCardPDF />} />
+                <Route path="manageborrow" element={<CustomerDetailsList />} />
                 <Route path="invoicepdfgenerator" element={<InvoicePDFGenerator />} />
                 <Route path="employeeManagement" element={<EmployeeManagement />} />
                 <Route path="employeeList" element={<EmployeeList />} />

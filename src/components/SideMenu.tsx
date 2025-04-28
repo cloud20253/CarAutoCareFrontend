@@ -7,12 +7,16 @@ import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import SelectContent from './SelectContent';
 import MenuContent from './MenuContent';
 import OptionsMenu from './OptionsMenu';
 import { useSidebar } from '../contexts/SidebarContext';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 // Adjust drawer width
 const drawerWidth = 240;
@@ -35,9 +39,29 @@ const StyledToggleButton = styled(IconButton)(({ theme }) => ({
 
 export default function SideMenu() {
   const { sidebarOpen, toggleSidebar } = useSidebar();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   
   // Define collapsed width in pixels
   const collapsedWidth = 56; // equivalent to theme.spacing(7)
+
+  const handleLogout = () => {
+    try {
+      // Force immediate redirect to prevent auth state issues
+      window.localStorage.removeItem('token');
+      window.localStorage.removeItem('userData');
+      window.sessionStorage.removeItem('token');
+      window.sessionStorage.removeItem('userData');
+      navigate('/signIn');
+      // Then call the context logout for complete cleanup
+      setTimeout(() => {
+        logout();
+      }, 100);
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/signIn';
+    }
+  };
 
   return (
     <>
@@ -102,7 +126,23 @@ export default function SideMenu() {
               borderColor: 'divider',
             }}
           >
-           
+            <Button
+              variant="outlined"
+              fullWidth
+              startIcon={<LogoutRoundedIcon />}
+              onClick={handleLogout}
+              sx={{
+                borderRadius: 1,
+                textTransform: 'none',
+                justifyContent: 'flex-start',
+                p: 1,
+                mb: 1,
+                color: 'primary.main',
+                borderColor: 'primary.main'
+              }}
+            >
+              Logout
+            </Button>
             <OptionsMenu />
           </Stack>
         )}

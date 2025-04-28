@@ -25,6 +25,10 @@ import {
   DialogTitle,
   CircularProgress,
   Container,
+  Grid,
+  Tab,
+  Tabs,
+  Badge,
 } from '@mui/material';
 import {
   DataGrid,
@@ -42,6 +46,8 @@ import EmailIcon from '@mui/icons-material/Email';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import LockIcon from '@mui/icons-material/Lock';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { apiClient } from '../../utils/apiClient';
 import { useNotification } from '../../components/common/Notification';
@@ -68,6 +74,8 @@ const EmployeeList: FC = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<number | null>(null);
   const [deleteInProgress, setDeleteInProgress] = useState(false);
+  const [filterPosition, setFilterPosition] = useState<string>('all');
+  const [refreshing, setRefreshing] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -88,6 +96,8 @@ const EmployeeList: FC = () => {
     try {
       if (showLoadingState) {
         setLoading(true);
+      } else {
+        setRefreshing(true);
       }
       console.log('Fetching employees data...');
       const response = await apiClient.get<EmployeeDTO[]>('/api/employees/getAll');
@@ -101,6 +111,7 @@ const EmployeeList: FC = () => {
       });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -200,7 +211,21 @@ const EmployeeList: FC = () => {
     navigate('/admin/employeeManagement');
   };
 
+  const handleRefresh = () => {
+    fetchEmployees(false);
+  };
+
+  const handleFilterChange = (event: React.SyntheticEvent, newValue: string) => {
+    setFilterPosition(newValue);
+  };
+
   const filteredEmployees = employees.filter((employee: EmployeeDTO) => {
+    // First apply position filter
+    if (filterPosition !== 'all' && employee.position.toLowerCase() !== filterPosition.toLowerCase()) {
+      return false;
+    }
+    
+    // Then apply search filter
     if (!searchTerm) return true;
     
     const searchLower = searchTerm.toLowerCase();
@@ -217,6 +242,14 @@ const EmployeeList: FC = () => {
       field && field.toString().toLowerCase().includes(searchLower)
     );
   });
+
+  // Get position counts for badges
+  const positionCounts = employees.reduce((acc, employee) => {
+    const position = employee.position.toLowerCase();
+    if (!acc[position]) acc[position] = 0;
+    acc[position]++;
+    return acc;
+  }, {} as {[key: string]: number});
 
   // Add serial number to employees
   const employeesWithIndex = filteredEmployees.map((employee, index) => ({
@@ -285,19 +318,38 @@ const EmployeeList: FC = () => {
       flex: 0.5,
       sortable: false,
       renderHeader: renderHeaderWithTooltip,
-      renderCell: (params) => (
-        <Chip 
-          label={params.value} 
-          size="small"
-          sx={{ fontSize: { xs: '0.6rem', sm: '0.75rem' }, height: { xs: '20px', sm: '24px' } }}
-          color={
-            params.value === 'Manager' ? 'primary' : 
-            params.value === 'Technician' ? 'info' : 
-            params.value === 'Superwiser' ? 'success' : 'default'
-          }
-          variant="outlined"
-        />
-      ),
+      renderCell: (params) => {
+        let color = 'default';
+        switch(params.value.toLowerCase()) {
+          case 'manager':
+            color = 'primary';
+            break;
+          case 'supervisor':
+            color = 'success';
+            break;
+          case 'technician':
+            color = 'info';
+            break;
+          case 'worker':
+            color = 'secondary';
+            break;
+          default:
+            color = 'default';
+        }
+        
+        return (
+          <Chip 
+            label={params.value} 
+            size="small"
+            sx={{ 
+              fontSize: { xs: '0.6rem', sm: '0.75rem' }, 
+              height: { xs: '20px', sm: '24px' },
+              fontWeight: 'medium',
+            }}
+            color={color as any}
+          />
+        );
+      },
     },
     { 
       field: 'contact', 
@@ -350,6 +402,14 @@ const EmployeeList: FC = () => {
       flex: 0.5,
       sortable: false,
       renderHeader: renderHeaderWithTooltip,
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <LockIcon sx={{ fontSize: '0.8rem', opacity: 0.7, mr: 0.5 }} />
+          <Typography variant="body2" sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>
+            {params.value || 'No password'}
+          </Typography>
+        </Box>
+      ),
     },
     {
       field: 'actions',
@@ -392,6 +452,139 @@ const EmployeeList: FC = () => {
     },
   ];
 
+  // Card view for mobile screens
+  const renderEmployeeCard = (employee: EmployeeDTO & { srNo: number }) => {
+    return (
+      <Card 
+        key={employee.id || employee.srNo} 
+        elevation={1}
+        sx={{ 
+          mb: 2, 
+          borderRadius: 2,
+          overflow: 'hidden',
+          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          '&:hover': {
+            transform: 'translateY(-2px)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+          }
+        }}
+      >
+        <Box sx={{ display: 'flex', p: 2, bgcolor: alpha(theme.palette.primary.light, 0.1) }}>
+          <Avatar 
+            sx={{ 
+              bgcolor: theme.palette.primary.main,
+              color: 'white',
+              width: 40,
+              height: 40
+            }}
+          >
+            {(employee.name?.[0] || 'U').toUpperCase()}
+          </Avatar>
+          <Box sx={{ ml: 2, flex: 1 }}>
+            <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 'bold' }}>
+              {employee.name || 'Unnamed'}
+            </Typography>
+            <Chip 
+              label={employee.position} 
+              size="small"
+              sx={{ 
+                fontSize: '0.7rem', 
+                height: '20px',
+                fontWeight: 'medium',
+                mt: 0.5
+              }}
+              color={
+                employee.position.toLowerCase() === 'manager' ? 'primary' : 
+                employee.position.toLowerCase() === 'supervisor' ? 'success' : 
+                employee.position.toLowerCase() === 'technician' ? 'info' : 
+                employee.position.toLowerCase() === 'worker' ? 'secondary' : 'default'
+              }
+            />
+          </Box>
+        </Box>
+        
+        <Divider />
+        
+        <Box sx={{ p: 2 }}>
+          <Grid container spacing={1}>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <PhoneIcon fontSize="small" sx={{ color: theme.palette.text.secondary, mr: 1, fontSize: '0.9rem' }} />
+                <Typography variant="body2">{employee.contact || 'No contact'}</Typography>
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <EmailIcon fontSize="small" sx={{ color: theme.palette.text.secondary, mr: 1, fontSize: '0.9rem' }} />
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    maxWidth: '100%'
+                  }}
+                >
+                  {employee.email || 'No email'}
+                </Typography>
+              </Box>
+            </Grid>
+            
+            <Grid item xs={6}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <AccountCircleIcon fontSize="small" sx={{ color: theme.palette.text.secondary, mr: 1, fontSize: '0.9rem' }} />
+                <Typography variant="body2">{employee.username || 'No username'}</Typography>
+              </Box>
+            </Grid>
+            
+            <Grid item xs={6}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <LockIcon fontSize="small" sx={{ color: theme.palette.text.secondary, mr: 1, fontSize: '0.9rem' }} />
+                <Typography variant="body2">{employee.password || 'No password'}</Typography>
+              </Box>
+            </Grid>
+          </Grid>
+        </Box>
+        
+        <Divider />
+        
+        <Box sx={{ display: 'flex', p: 1, bgcolor: alpha(theme.palette.background.default, 0.5) }}>
+          <Button 
+            startIcon={<EditIcon />}
+            onClick={() => handleEdit(employee.id)}
+            sx={{ 
+              flex: 1, 
+              mr: 1,
+              fontSize: '0.75rem',
+              py: 0.5
+            }}
+            color="primary"
+            variant="outlined"
+            size="small"
+          >
+            Edit
+          </Button>
+          <Button 
+            startIcon={<DeleteIcon />}
+            onClick={() => handleDeleteClick(employee.id)}
+            sx={{ 
+              flex: 1,
+              fontSize: '0.75rem',
+              py: 0.5
+            }}
+            color="error"
+            variant="outlined"
+            size="small"
+          >
+            Delete
+          </Button>
+        </Box>
+      </Card>
+    );
+  };
+
   // Polling mechanism to keep data fresh
   useEffect(() => {
     // Set up polling every 30 seconds to refresh data
@@ -416,6 +609,7 @@ const EmployeeList: FC = () => {
         sx={{
           transition: "width 0.3s ease-in-out, max-width 0.3s ease-in-out, margin 0.3s ease-in-out",
           height: "100%",
+          p: { xs: 1, sm: 2 }
         }}
         ref={containerRef}
       >
@@ -425,8 +619,9 @@ const EmployeeList: FC = () => {
             maxWidth: "100%",
             overflow: "hidden",
             boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
-            borderRadius: "8px",
+            borderRadius: "12px",
             height: "100%",
+            backgroundImage: `linear-gradient(to bottom, ${alpha(theme.palette.background.paper, 0.9)}, ${theme.palette.background.paper})`,
           }}
         >
           <CardContent
@@ -434,7 +629,7 @@ const EmployeeList: FC = () => {
               width: "100%",
               maxWidth: "100%",
               padding: { xs: "16px", sm: "24px" },
-              paddingBottom: "16px",
+              paddingBottom: "16px !important",
               overflow: "hidden",
               height: "100%",
               display: "flex",
@@ -451,40 +646,72 @@ const EmployeeList: FC = () => {
                 width: "100%",
               }}
             >
-              <Typography
-                variant="h5"
-                sx={{ 
-                  fontWeight: "bold", 
-                  fontSize: { xs: "1.2rem", sm: "1.5rem" },
-                  textAlign: { xs: "center", sm: "left" }
-                }}
-              >
-                Employee List
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <PersonIcon 
+                  sx={{ 
+                    color: theme.palette.primary.main, 
+                    mr: 1.5, 
+                    fontSize: { xs: '1.5rem', sm: '2rem' } 
+                  }} 
+                />
+                <Typography
+                  variant="h5"
+                  sx={{ 
+                    fontWeight: "600", 
+                    fontSize: { xs: "1.2rem", sm: "1.5rem" },
+                    color: theme.palette.text.primary,
+                    textAlign: { xs: "center", sm: "left" }
+                  }}
+                >
+                  Employee Management
+                </Typography>
+              </Box>
+
               <Stack 
                 direction={{ xs: "column", sm: "row" }} 
                 spacing={1}
                 width={{ xs: "100%", sm: "auto" }}
               >
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Tooltip title="Refresh">
+                    <IconButton 
+                      size="small" 
+                      onClick={handleRefresh} 
+                      disabled={refreshing}
+                      sx={{ 
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        color: theme.palette.primary.main,
+                        border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                        '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
+                      }}
+                    >
+                      {refreshing ? 
+                        <CircularProgress size={18} color="inherit" /> : 
+                        <RefreshIcon fontSize="small" />
+                      }
+                    </IconButton>
+                  </Tooltip>
             <TextField
               size="small"
-                  placeholder="Search employee..."
+                    placeholder="Search employee..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon fontSize="small" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    width: { xs: "100%", sm: "200px" },
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: "8px",
-                    },
-                  }}
-            />
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon fontSize="small" />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      width: { xs: "100%", sm: "200px" },
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "8px",
+                        bgcolor: 'white',
+                      },
+                    }}
+                  />
+                </Box>
             <Button
               variant="contained"
               color="primary"
@@ -492,132 +719,223 @@ const EmployeeList: FC = () => {
               onClick={handleAddNew}
                   sx={{
                     borderRadius: "8px",
-                    boxShadow: "none",
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                     whiteSpace: "nowrap",
-                    width: { xs: "100%", sm: "auto" }
+                    width: { xs: "100%", sm: "auto" },
+                    py: 1,
                   }}
-            >
-                  Add New
+                >
+                  Add New Employee
             </Button>
               </Stack>
             </Stack>
 
-            <Box
-              sx={{
-                width: "100%",
-                position: "relative",
-                overflowX: "auto",
-                flexGrow: 1,
-                display: "flex",
-                flexDirection: "column",
-                '&::-webkit-scrollbar': {
-                  height: '8px',
-                },
-                '&::-webkit-scrollbar-thumb': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                  borderRadius: '8px',
-                },
-              }}
-            >
-        <DataGrid
-                rows={employeesWithIndex}
-          columns={columns}
-                getRowId={(row) => row.id || Math.random()} // Fallback for missing IDs
-          autoHeight
-                hideFooter={employeesWithIndex.length <= 25}
-          loading={loading}
-                disableColumnMenu
-                disableRowSelectionOnClick
-          sx={{
-                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                  '& .MuiDataGrid-columnHeaderTitleContainer': {
-                    padding: { xs: '0 4px', sm: '0 8px' }
-                  },
-                  '& .MuiDataGrid-root': {
-                    border: "none",
-                    minWidth: { xs: "600px", md: "100%" },
-                    maxWidth: "none",
-                  },
-            '& .MuiDataGrid-cell': {
-                    borderBottom: "none",
-                    padding: { xs: '6px 8px', sm: '16px' }
-            },
-                  '& .MuiDataGrid-columnHeaders': {
-                    backgroundColor: "#F3F4F6",
-                    borderRadius: "8px",
-                    borderBottom: "none",
-            },
-            '& .MuiDataGrid-virtualScroller': {
-                    marginTop: "10px !important",
-            },
-            '& .MuiDataGrid-footerContainer': {
-                    borderTop: "none",
-                  },
-                  '& .MuiDataGrid-virtualScrollerRenderZone': {
-                    '& .MuiDataGrid-row': {
-                      '&:nth-of-type(2n)': {
-                        backgroundColor: "#F3F4F6",
-                      },
-                      '&:hover': {
-                        backgroundColor: "#E5E7EB",
-                      },
-                    },
-                  },
-                  '& .MuiDataGrid-columnHeader': {
-                    padding: { xs: '0 4px', sm: '0 16px' }
-                  },
-                  width: "100%",
-                  flex: 1,
+            <Box sx={{ mb: 2, overflow: 'auto', display: { xs: 'flex', sm: 'block' } }}>
+              <Tabs
+                value={filterPosition}
+                onChange={handleFilterChange}
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
+                aria-label="employee position filter tabs"
+                sx={{ 
+                  minHeight: '42px',
+                  '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' },
+                  '& .MuiTab-root': { minHeight: '42px', py: 0 }
                 }}
-                slots={{
-                  noRowsOverlay: () => (
-                    <Stack
-                      height="100%"
-                      alignItems="center"
-                      justifyContent="center"
-                      padding="40px"
-                    >
-                      <Typography color="text.secondary">
-                        {loading ? "Loading employees..." : "No employees found"}
-                      </Typography>
-                    </Stack>
-                  ),
-          }}
-        />
+              >
+                <Tab 
+                  label="All"
+                  value="all"
+                  sx={{ 
+                    textTransform: 'none', 
+                    fontWeight: filterPosition === 'all' ? 'bold' : 'normal',
+                    fontSize: '0.875rem'
+                  }}
+                />
+                <Tab 
+                  label="Manager" 
+                  value="manager"
+                  sx={{ 
+                    textTransform: 'none', 
+                    fontWeight: filterPosition === 'manager' ? 'bold' : 'normal',
+                    fontSize: '0.875rem'
+                  }}
+                />
+                <Tab 
+                  label="Supervisor"
+                  value="supervisor"
+                  sx={{ 
+                    textTransform: 'none', 
+                    fontWeight: filterPosition === 'supervisor' ? 'bold' : 'normal',
+                    fontSize: '0.875rem'
+                  }}
+                />
+                <Tab 
+                  label="Technician"
+                  value="technician"
+                  sx={{ 
+                    textTransform: 'none', 
+                    fontWeight: filterPosition === 'technician' ? 'bold' : 'normal',
+                    fontSize: '0.875rem'
+                  }}
+                />
+                <Tab 
+                  label="Worker"
+                  value="worker"
+                  sx={{ 
+                    textTransform: 'none', 
+                    fontWeight: filterPosition === 'worker' ? 'bold' : 'normal',
+                    fontSize: '0.875rem'
+                  }}
+                />
+              </Tabs>
+        </Box>
 
-              {/* Mobile scroll indicator */}
+            {/* For tablets and desktop: Table view */}
+            {!isMobile && (
               <Box
                 sx={{
-                  display: { xs: "block", md: "none" },
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: "4px",
-                  background:
-                    "linear-gradient(to right, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 100%)",
-                  borderRadius: "0 0 8px 8px",
                   width: "100%",
+                  position: "relative",
+                  overflowX: "auto",
+                  flexGrow: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  '&::-webkit-scrollbar': {
+                    height: '8px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.2),
+                    borderRadius: '8px',
+                  },
                 }}
-              />
-            </Box>
-            
-            {/* Mobile scroll helper text */}
-            <Box
-              sx={{
-                display: { xs: "flex", md: "none" },
-                justifyContent: "center",
-                alignItems: "center",
-                mt: 1,
-                color: "text.secondary",
-                fontSize: "0.75rem"
-              }}
-            >
-              <Typography variant="caption">← Swipe to see more →</Typography>
-            </Box>
+              >
+                <DataGrid
+                  rows={employeesWithIndex}
+                  columns={columns}
+                  getRowId={(row) => row.id || Math.random()} // Fallback for missing IDs
+          autoHeight
+                  hideFooter={employeesWithIndex.length <= 25}
+          loading={loading}
+                  disableColumnMenu
+                  disableRowSelectionOnClick
+          sx={{
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    '& .MuiDataGrid-columnHeaderTitleContainer': {
+                      padding: { xs: '0 4px', sm: '0 8px' }
+                    },
+                    '& .MuiDataGrid-root': {
+                      border: "none",
+                      minWidth: { xs: "600px", md: "100%" },
+                      maxWidth: "none",
+                    },
+            '& .MuiDataGrid-cell': {
+                      borderBottom: "none",
+                      padding: { xs: '10px 8px', sm: '16px' },
+                      display: 'flex',
+                      alignItems: 'center'
+                    },
+                    '& .MuiDataGrid-columnHeaders': {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                      borderRadius: "8px",
+                      borderBottom: "none",
+            },
+            '& .MuiDataGrid-virtualScroller': {
+                      marginTop: "10px !important",
+            },
+            '& .MuiDataGrid-footerContainer': {
+                      borderTop: "none",
+                    },
+                    '& .MuiDataGrid-virtualScrollerRenderZone': {
+                      '& .MuiDataGrid-row': {
+                        '&:nth-of-type(2n)': {
+                          backgroundColor: alpha(theme.palette.background.default, 0.5),
+                        },
+                        '&:hover': {
+                          backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                        },
+                      },
+                    },
+                    '& .MuiDataGrid-columnHeader': {
+                      padding: { xs: '0 4px', sm: '0 16px' }
+                    },
+                    width: "100%",
+                    flex: 1,
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                  }}
+                  slots={{
+                    noRowsOverlay: () => (
+                      <Stack
+                        height="100%"
+                        alignItems="center"
+                        justifyContent="center"
+                        padding="40px"
+                      >
+                        <Typography color="text.secondary">
+                          {loading ? "Loading employees..." : "No employees found"}
+                        </Typography>
+                      </Stack>
+                    ),
+                  }}
+                />
+
+                {/* Mobile scroll indicator for tablets */}
+                {isTablet && !isMobile && (
+                  <Box
+                    sx={{
+                      display: { xs: "block", md: "none" },
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: "4px",
+                      background:
+                        "linear-gradient(to right, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 100%)",
+                      borderRadius: "0 0 8px 8px",
+                      width: "100%",
+                    }}
+                  />
+                )}
+
+                {/* Mobile scroll helper text for tablets */}
+                {isTablet && !isMobile && (
+                  <Box
+                    sx={{
+                      display: { xs: "flex", md: "none" },
+                      justifyContent: "center",
+                      alignItems: "center",
+                      mt: 1,
+                      color: "text.secondary",
+                      fontSize: "0.75rem"
+                    }}
+                  >
+                    <Typography variant="caption">← Swipe to see more →</Typography>
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            {/* For mobile: Card view */}
+            {isMobile && (
+              <Box sx={{ mt: 1 }}>
+                {loading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                    <CircularProgress size={32} />
+                  </Box>
+                ) : employeesWithIndex.length === 0 ? (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography color="text.secondary">No employees found</Typography>
+                  </Box>
+                ) : (
+                  employeesWithIndex.map(renderEmployeeCard)
+                )}
+              </Box>
+            )}
           </CardContent>
         </Card>
-    </Box>
+      </Box>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
@@ -625,17 +943,30 @@ const EmployeeList: FC = () => {
         onClose={handleDeleteCancel}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+          }
+        }}
       >
-        <DialogTitle id="alert-dialog-title">
-          Confirm Delete
+        <DialogTitle id="alert-dialog-title" sx={{ pb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <DeleteIcon color="error" sx={{ mr: 1 }} />
+            Confirm Delete
+    </Box>
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             Are you sure you want to delete this employee? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel} color="primary">
+        <DialogActions sx={{ p: 2, pt: 1 }}>
+          <Button 
+            onClick={handleDeleteCancel} 
+            color="primary"
+            variant="outlined"
+          >
             Cancel
           </Button>
           <Button

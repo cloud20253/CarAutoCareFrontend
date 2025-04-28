@@ -24,6 +24,8 @@ import {
   Alert,
   AlertTitle,
   Grid,
+  useMediaQuery,
+  Stack,
 } from '@mui/material';
 import apiClient from 'Services/apiService';
 import SearchIcon from '@mui/icons-material/Search';
@@ -77,6 +79,8 @@ const InsuranceList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
   // Fetch data from both API endpoints using the custom API service
   const fetchInsuranceData = async () => {
@@ -123,6 +127,116 @@ const InsuranceList: React.FC = () => {
     });
   };
 
+  const renderMobileCard = (item: VehicleRegDto) => {
+    // Calculate if insurance is going to expire soon (within next 30 days)
+    const expiryDate = item.insuredTo ? new Date(item.insuredTo) : null;
+    const today = new Date();
+    const daysUntilExpiry = expiryDate 
+      ? Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) 
+      : null;
+    const expiringSoon = daysUntilExpiry !== null && daysUntilExpiry > 0 && daysUntilExpiry <= 30;
+    
+    return (
+      <Paper
+        key={item.vehicleRegId}
+        elevation={0}
+        sx={{
+          p: 2,
+          mb: 2,
+          borderRadius: 2,
+          border: `1px solid ${theme.palette.divider}`,
+          borderLeft: tabValue === 0 
+            ? `4px solid ${theme.palette.error.main}` 
+            : expiringSoon 
+              ? `4px solid ${theme.palette.warning.main}`
+              : `4px solid ${theme.palette.success.main}`
+        }}
+      >
+        <Grid container spacing={1}>
+          <Grid item xs={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+              <DirectionsCarIcon fontSize="small" color="primary" />
+              <Typography variant="caption" color="text.secondary">Vehicle</Typography>
+            </Box>
+            <Typography variant="body2" fontWeight="medium">
+              {item.vehicleNumber}
+            </Typography>
+          </Grid>
+          
+          <Grid item xs={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+              <EventIcon fontSize="small" color="primary" />
+              <Typography variant="caption" color="text.secondary">Insurance</Typography>
+            </Box>
+            {tabValue === 0 ? (
+              <Chip 
+                icon={<WarningAmberIcon />}
+                label="Expired" 
+                size="small" 
+                color="error"
+                variant="outlined"
+                sx={{ height: 24 }}
+              />
+            ) : expiringSoon ? (
+              <Chip 
+                icon={<AutorenewIcon />}
+                label={item.insuredTo 
+                  ? new Date(item.insuredTo).toLocaleDateString('en-GB')
+                  : 'N/A'
+                } 
+                size="small"
+                color="warning"
+                variant="outlined"
+                sx={{ height: 24 }}
+              />
+            ) : (
+              <Chip 
+                icon={<VerifiedUserIcon />}
+                label={item.insuredTo 
+                  ? new Date(item.insuredTo).toLocaleDateString('en-GB')
+                  : 'N/A'
+                } 
+                size="small"
+                color="success"
+                variant="outlined"
+                sx={{ height: 24 }}
+              />
+            )}
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Divider sx={{ my: 1 }} />
+          </Grid>
+          
+          <Grid item xs={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+              <PersonIcon fontSize="small" color="primary" />
+              <Typography variant="caption" color="text.secondary">Customer</Typography>
+            </Box>
+            <Typography variant="body2">{item.customerName}</Typography>
+          </Grid>
+          
+          <Grid item xs={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+              <PhoneIcon fontSize="small" color="primary" />
+              <Typography variant="caption" color="text.secondary">Contact</Typography>
+            </Box>
+            <Typography variant="body2">{item.customerMobileNumber}</Typography>
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="caption" color="text.secondary">Vehicle Model</Typography>
+              <Typography variant="body2">
+                {item.vehicleModelName || 'N/A'} {item.vehicleBrand ? `(${item.vehicleBrand})` : ''}
+              </Typography>
+            </Box>
+          </Grid>
+        </Grid>
+      </Paper>
+    );
+  };
+
   const renderTable = (data: VehicleRegDto[]) => {
     const filteredData = filterData(data);
 
@@ -146,6 +260,15 @@ const InsuranceList: React.FC = () => {
       );
     }
 
+    // For mobile devices, render cards instead of table
+    if (isMobile) {
+      return (
+        <Box sx={{ mt: 2 }}>
+          {filteredData.map(item => renderMobileCard(item))}
+        </Box>
+      );
+    }
+
     return (
       <TableContainer 
         component={Paper} 
@@ -154,35 +277,36 @@ const InsuranceList: React.FC = () => {
           marginTop: 2, 
           borderRadius: 2,
           border: `1px solid ${theme.palette.divider}`,
-          overflow: 'hidden'
+          overflow: 'auto',   // Enable horizontal scrolling on smaller screens
+          WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
         }}
       >
-        <Table>
+        <Table sx={{ minWidth: isTablet ? 650 : 800 }}>
           <TableHead sx={{ 
             backgroundColor: alpha(theme.palette.primary.main, 0.05),
             borderBottom: `1px solid ${theme.palette.divider}`
           }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>
+              <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <DirectionsCarIcon fontSize="small" color="primary" />
                   Vehicle Number
                 </Box>
               </TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Vehicle Model</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>
+              <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Vehicle Model</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <PersonIcon fontSize="small" color="primary" />
                   Customer
                 </Box>
               </TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>
+              <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <PhoneIcon fontSize="small" color="primary" />
                   Mobile
                 </Box>
               </TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>
+              <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <EventIcon fontSize="small" color="primary" />
                   Insured Until
@@ -212,7 +336,7 @@ const InsuranceList: React.FC = () => {
                         : `4px solid ${theme.palette.success.main}`
                   }}
                 >
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     <Typography variant="body2" fontWeight="medium">
                       {item.vehicleNumber}
                     </Typography>
@@ -225,13 +349,15 @@ const InsuranceList: React.FC = () => {
                       {item.vehicleBrand || ''}
                     </Typography>
                   </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">{item.customerName}</Typography>
+                  <TableCell sx={{ maxWidth: isTablet ? '120px' : '160px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <Tooltip title={item.customerName}>
+                      <Typography variant="body2" noWrap>{item.customerName}</Typography>
+                    </Tooltip>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     <Typography variant="body2">{item.customerMobileNumber}</Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     {tabValue === 0 ? (
                       <Chip 
                         icon={<WarningAmberIcon />}
@@ -346,14 +472,18 @@ const InsuranceList: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
+    <Box sx={{ width: '100%', maxWidth: '1200px', margin: '0 auto', p: { xs: 1, sm: 2 } }}>
       <Card elevation={3} sx={{ borderRadius: 2, overflow: 'hidden', mb: 3 }}>
         <Box sx={{ 
-          p: 2, 
+          p: { xs: 1.5, sm: 2 }, 
           backgroundColor: alpha(theme.palette.primary.main, 0.05),
           borderBottom: `1px solid ${theme.palette.divider}`
         }}>
-          <Typography variant="h5" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography 
+            variant={isMobile ? "h6" : "h5"} 
+            fontWeight="bold" 
+            sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+          >
             <VerifiedUserIcon color="primary" /> Insurance Vehicle Lists
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -371,21 +501,22 @@ const InsuranceList: React.FC = () => {
             sx={{ 
               borderBottom: `1px solid ${theme.palette.divider}`,
               '& .MuiTab-root': {
-                py: 2
+                py: { xs: 1, sm: 2 },
+                minHeight: { xs: 48, sm: 'auto' }
               }
             }}
           >
             <Tab 
               label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <ErrorOutlineIcon fontSize="small" />
-                  <span>Expired Insurance</span>
+                  <span>{isMobile ? "Expired" : "Expired Insurance"}</span>
                   {!loading && expiredInsurances.length > 0 && (
                     <Chip 
                       label={expiredInsurances.length} 
                       size="small" 
                       color="error" 
-                      sx={{ ml: 1, minWidth: 30, height: 20 }}
+                      sx={{ ml: 0.5, minWidth: 30, height: 20 }}
                     />
                   )}
                 </Box>
@@ -393,15 +524,15 @@ const InsuranceList: React.FC = () => {
             />
             <Tab 
               label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <VerifiedUserIcon fontSize="small" />
-                  <span>Active Insurance</span>
+                  <span>{isMobile ? "Active" : "Active Insurance"}</span>
                   {!loading && activeInsurances.length > 0 && (
                     <Chip 
                       label={activeInsurances.length} 
                       size="small" 
                       color="success" 
-                      sx={{ ml: 1, minWidth: 30, height: 20 }}
+                      sx={{ ml: 0.5, minWidth: 30, height: 20 }}
                     />
                   )}
                 </Box>
@@ -409,15 +540,15 @@ const InsuranceList: React.FC = () => {
             />
           </Tabs>
           
-          <Box sx={{ p: 3 }}>
+          <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
             {/* Search Box */}
             <TextField 
-              label="Search Insurance Records"
+              label={isMobile ? "Search" : "Search Insurance Records"}
               variant="outlined"
               fullWidth
               size="small"
               onChange={handleSearchChange}
-              placeholder="Search by vehicle number, model, customer name, phone..."
+              placeholder={isMobile ? "Vehicle, Customer, etc..." : "Search by vehicle number, model, customer name, phone..."}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -471,6 +602,19 @@ const InsuranceList: React.FC = () => {
                   </Box>
                 )}
               </>
+            )}
+            
+            {/* Mobile scroll indicator */}
+            {!isMobile && isTablet && filterData(tabValue === 0 ? expiredInsurances : activeInsurances).length > 0 && (
+              <Box sx={{ 
+                textAlign: 'center', 
+                mt: 1, 
+                opacity: 0.6 
+              }}>
+                <Typography variant="caption">
+                  ← Swipe horizontally to view all columns →
+                </Typography>
+              </Box>
             )}
           </Box>
         </CardContent>
