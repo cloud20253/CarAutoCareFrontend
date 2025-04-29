@@ -21,7 +21,8 @@ import {
   VisibilityOff
 } from "@mui/icons-material";
 import storageUtils from '../utils/storageUtils';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import logger from '../utils/logger';
 import secureStorage from '../utils/secureStorage';
 import { InputAdornment, IconButton, Paper, useTheme, alpha, CircularProgress } from '@mui/material';
@@ -109,9 +110,7 @@ const BackLink = styled(RouterLink)(({ theme }) => ({
 export default function SignInCard() {
   const theme = useTheme();
   const [emailError, setEmailError] = useState(false);
-  const [emailErrorMessage, setEmailErrorMessage] = useState('');
   const [passwordError, setPasswordError] = useState(false);
-  const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -147,7 +146,13 @@ export default function SignInCard() {
       };
       
       const response = await SignInUser(data);
-     const decodedToken = jwtDecode<MyJwtPayload>(response);
+      
+      // Make sure we have a valid response
+      if (!response) {
+        throw new Error("No response received from server");
+      }
+      
+      const decodedToken = jwtDecode<MyJwtPayload>(response);
 
       // Use storageUtils instead of direct secureStorage
       storageUtils.clearAuthData(); // Clear any existing data first
@@ -166,11 +171,33 @@ export default function SignInCard() {
         toast.success("Welcome back! Your session has been restored.");
       } else {
         // Default navigation
-      navigate("/");
+        navigate("/");
         toast.success("Signed in successfully!");
       }
-    } catch (err) {
-      logger.error("Sign-in failed", err);
+    } catch (error: any) {
+      logger.error("Sign-in failed", error);
+      
+      // Handle different types of errors with explicit toast messages
+      if (error.response) {
+        // Server responded with an error
+        const errorMessage = error.response.data?.message || 
+                             error.response.data?.error || 
+                             "Invalid email or password";
+        toast.error(errorMessage);
+      } else if (error.request) {
+        // No response received
+        toast.error("Server is not responding. Please check if the server is running.");
+      } else if (error.message && error.message.includes('ERR_CONNECTION_REFUSED')) {
+        // Connection refused
+        toast.error("Unable to connect to the server. Please check if the server is running.");
+      } else {
+        // Any other error
+        toast.error(error.message || "An unexpected error occurred. Please try again.");
+      }
+      
+      // Visual feedback in the form
+      setEmailError(true);
+      setPasswordError(true);
       toast.error("Sign-in failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
@@ -183,21 +210,19 @@ export default function SignInCard() {
     // Email validation
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       setEmailError(true);
-      setEmailErrorMessage('Please enter a valid email address');
+      toast.error('Please enter a valid email address');
       isValid = false;
     } else {
       setEmailError(false);
-      setEmailErrorMessage('');
     }
 
     // Password validation
     if (!password || password.length < 6) {
       setPasswordError(true);
-      setPasswordErrorMessage('Password must be at least 6 characters long');
+      toast.error('Password must be at least 6 characters long');
       isValid = false;
     } else {
       setPasswordError(false);
-      setPasswordErrorMessage('');
     }
 
     return isValid;
@@ -217,6 +242,7 @@ export default function SignInCard() {
           : 'linear-gradient(to bottom right, #f7fafc, #ebf4ff)'
       }}
     >
+      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} />
       <BackLink to="/">
         <ArrowBack sx={{ mr: 1, fontSize: 20 }} /> Back to Home
       </BackLink>
@@ -260,7 +286,6 @@ export default function SignInCard() {
             <FormLabel htmlFor="email" sx={{ mb: 1, fontWeight: 500 }}>Email Address</FormLabel>
           <TextField
             error={emailError}
-            helperText={emailErrorMessage}
             id="email"
             type="email"
             name="email"
@@ -270,18 +295,18 @@ export default function SignInCard() {
             required
             fullWidth
             variant="outlined"
-              size="medium"
+            size="medium"
             color={emailError ? 'error' : 'primary'}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <EmailIcon color="action" />
-                  </InputAdornment>
-                ),
-                sx: { borderRadius: 1.5 }
-              }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailIcon color="action" />
+                </InputAdornment>
+              ),
+              sx: { borderRadius: 1.5 }
+            }}
           />
         </FormControl>
           
@@ -293,45 +318,44 @@ export default function SignInCard() {
               type="button"
               onClick={handleClickOpen}
               variant="body2"
-                sx={{ alignSelf: 'baseline', color: theme.palette.primary.main }}
+              sx={{ alignSelf: 'baseline', color: theme.palette.primary.main }}
             >
-                Forgot password?
+              Forgot password?
             </Link>
           </Box>
           <TextField
             error={passwordError}
-            helperText={passwordErrorMessage}
             name="password"
-              placeholder="••••••••"
-              type={showPassword ? 'text' : 'password'}
+            placeholder="••••••••"
+            type={showPassword ? 'text' : 'password'}
             id="password"
             autoComplete="current-password"
             required
             fullWidth
             variant="outlined"
-              size="medium"
+            size="medium"
             color={passwordError ? 'error' : 'primary'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LockIcon color="action" />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={handleTogglePasswordVisibility}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-                sx: { borderRadius: 1.5 }
-              }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockIcon color="action" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleTogglePasswordVisibility}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+              sx: { borderRadius: 1.5 }
+            }}
           />
         </FormControl>
           
