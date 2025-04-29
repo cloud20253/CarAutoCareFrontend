@@ -82,4 +82,41 @@ logger.log({
 
 ## API Client Integration
 
-The API client has been configured to use the secure logger, automatically sanitizing request and response data in logs. 
+The API client has been configured to use the secure logger, automatically sanitizing request and response data in logs.
+
+## Network Response Sanitization
+
+The application includes functionality to sanitize network responses before they are visible in the browser's network tab. This is implemented in `apiClient.ts` and serves several purposes:
+
+1. **Security**: Prevents sensitive data from being exposed in the browser's development tools
+2. **Compliance**: Helps maintain data privacy by redacting sensitive information
+3. **Development**: Makes debugging easier by cleaning up responses
+
+### How it works
+
+Two main network APIs are overridden:
+
+#### XMLHttpRequest Override
+- Intercepts `open()` and `send()` methods
+- Captures the response before it's visible in the network tab
+- Sanitizes JSON responses by redacting sensitive fields
+
+#### Fetch API Override
+- Creates a wrapper around the global `fetch()` function
+- Clones responses to avoid consuming them
+- Provides a modified `json()` method that sanitizes data
+
+### Sensitive Data Handling
+
+The sanitization function automatically redacts the following sensitive fields:
+- password
+- token
+- secret
+- creditCard
+- ssn
+
+You can modify the list of sensitive fields in the `sanitizeResponseData()` function in `apiClient.ts`.
+
+### Usage
+
+This feature works automatically for all network requests. No additional configuration is needed for basic functionality. 

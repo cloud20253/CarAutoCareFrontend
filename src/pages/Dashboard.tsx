@@ -690,7 +690,6 @@ export default function Dashboard() {
     setIsLoggingOut(true);
     
     storageUtils.clearAuthData();
-    sessionStorage.clear(); 
     
     clearAllCookies();
     

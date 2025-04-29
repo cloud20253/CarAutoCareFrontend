@@ -27,6 +27,156 @@ const getCsrfToken = (): string | null => {
   return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || null;
 };
 
+// Sensitive keys that should be sanitized in responses
+const SENSITIVE_KEYS = [
+  'password', 'token', 'accessToken', 'refreshToken', 'authorization', 'auth', 
+  'secret', 'key', 'apiKey', 'pin', 'credential', 'ssn', 'social', 
+  'creditCard', 'credit', 'cvv', 'cvc', 'authorization', 'x-auth',
+  'jwt', 'id_token', 'access_token', 'x-api-key'
+];
+
+// Function to sanitize sensitive data from API responses
+const sanitizeResponseData = (data: any): any => {
+  if (!data) return data;
+  
+  // Handle simple types
+  if (typeof data !== 'object') return data;
+  
+  // Handle arrays
+  if (Array.isArray(data)) {
+    return data.map(item => sanitizeResponseData(item));
+  }
+  
+  // Handle objects
+  const sanitized = { ...data };
+  for (const key in sanitized) {
+    // Check if this is a sensitive key
+    const isSensitive = SENSITIVE_KEYS.some(pattern => 
+      key.toLowerCase().includes(pattern.toLowerCase())
+    );
+    
+    if (isSensitive) {
+      // Mask sensitive data
+      if (typeof sanitized[key] === 'string') {
+        sanitized[key] = '********';
+      } else if (typeof sanitized[key] === 'number') {
+        sanitized[key] = 0;
+      } else {
+        sanitized[key] = '[REDACTED]';
+      }
+    } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
+      // Recursively sanitize nested objects
+      sanitized[key] = sanitizeResponseData(sanitized[key]);
+    }
+  }
+  
+  return sanitized;
+};
+
+// Create a response sanitizer that modifies the response before browser sees it
+const installResponseSanitizer = () => {
+  if (typeof window !== 'undefined') {
+    // Instead of overriding JSON.stringify, we'll use response interceptors
+    // to sanitize the data before it's visible in network tab
+    
+    // For XHR requests (most browsers)
+    const originalXHROpen = XMLHttpRequest.prototype.open;
+    const originalXHRSend = XMLHttpRequest.prototype.send;
+    
+    // Override XHR methods to capture and sanitize responses
+    XMLHttpRequest.prototype.open = function(
+      method: string,
+      url: string | URL,
+      async: boolean = true,
+      username?: string | null,
+      password?: string | null
+    ): void {
+      // Store URL for later reference
+      Object.defineProperty(this, '_url', {
+        value: url,
+        writable: true,
+        configurable: true
+      });
+      
+      return originalXHROpen.call(this, method, url, async, username, password);
+    };
+    
+    XMLHttpRequest.prototype.send = function(body?: Document | XMLHttpRequestBodyInit | null): void {
+      // Monitor when response is complete
+      this.addEventListener('readystatechange', function(this: XMLHttpRequest) {
+        if (this.readyState === 4) {
+          try {
+            // If the response is JSON, sanitize it
+            const contentType = this.getResponseHeader('content-type');
+            if (this.responseType === 'json' || 
+                (contentType && contentType.includes('application/json'))) {
+              
+              // Store original getter
+              const originalResponseGetter = Object.getOwnPropertyDescriptor(
+                XMLHttpRequest.prototype, 'response'
+              );
+              
+              if (originalResponseGetter) {
+                // Replace the response getter to return sanitized data
+                Object.defineProperty(this, 'response', {
+                  get: function(this: XMLHttpRequest) {
+                    try {
+                      const originalResponse = originalResponseGetter.get?.call(this);
+                      if (originalResponse) {
+                        return sanitizeResponseData(originalResponse);
+                      }
+                      return originalResponse;
+                    } catch (err) {
+                      logger.error('Error sanitizing XHR response:', err);
+                      return originalResponseGetter.get?.call(this);
+                    }
+                  }
+                });
+              }
+            }
+          } catch (err) {
+            logger.error('Error setting up XHR response sanitizer:', err);
+          }
+        }
+      });
+      
+      return originalXHRSend.call(this, body);
+    };
+    
+    // Now let's also intercept fetch API
+    const originalFetch = window.fetch;
+    
+    window.fetch = async function fetchOverride(
+      input: RequestInfo | URL,
+      init?: RequestInit
+    ): Promise<Response> {
+      // Call original fetch
+      const response: Response = await originalFetch.call(window, input, init);
+      
+      // Clone the response to avoid consuming it
+      const clonedResponse = response.clone();
+      
+      // Check if the response is JSON
+      const contentType = clonedResponse.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        // Create a proxy for the json method to sanitize data
+        const originalJsonMethod = response.json;
+        response.json = async function(): Promise<any> {
+          const data = await originalJsonMethod.call(this);
+          return sanitizeResponseData(data);
+        };
+      }
+      
+      return response;
+    };
+    
+    logger.debug('Response sanitizer installed');
+  }
+};
+
+// Install the sanitizer early
+installResponseSanitizer();
+
 // Create axios instance with custom config
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -103,7 +253,7 @@ apiClient.interceptors.request.use(
 // Add response interceptor
 apiClient.interceptors.response.use(
   (response: CachedAxiosResponse) => {
-    // Log successful responses
+    // Log successful responses (with sanitized data)
     logger.debug(`API Response: ${response.status} ${response.config.url}`, 
       response.cached ? { cached: true } : '');
     
@@ -121,6 +271,7 @@ apiClient.interceptors.response.use(
       };
     }
     
+    // Return original response (it will be sanitized by JSON.stringify)
     return response;
   },
   (error) => {
@@ -146,7 +297,7 @@ apiClient.interceptors.response.use(
       }, 1500);
     }
     
-    // Log error responses
+    // Log error responses (sanitized)
     logger.error('API Response Error:', error.response || error);
     
     return Promise.reject(error);

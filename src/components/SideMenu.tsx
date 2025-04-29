@@ -50,8 +50,6 @@ export default function SideMenu() {
       // Force immediate redirect to prevent auth state issues
       window.localStorage.removeItem('token');
       window.localStorage.removeItem('userData');
-      window.sessionStorage.removeItem('token');
-      window.sessionStorage.removeItem('userData');
       navigate('/signIn');
       // Then call the context logout for complete cleanup
       setTimeout(() => {

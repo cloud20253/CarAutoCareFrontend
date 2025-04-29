@@ -104,6 +104,12 @@ const StyledTable = styled(Box)(({ theme }) => ({
   '& tr:hover': {
     backgroundColor: theme.palette.action.selected,
   },
+  [theme.breakpoints.down('sm')]: {
+    '& th, & td': {
+      padding: theme.spacing(0.75, 1),
+      fontSize: '0.875rem',
+    },
+  },
 }));
 
 interface Service {
@@ -231,11 +237,11 @@ const ServiceTab = () => {
   }, []);
 
   useEffect(() => {
-    if (vehicleId) {
-      setLoading(true);
-      apiClient
-        .get(`/serviceUsed/getByVehicleId/${vehicleId}`)
-        .then((res) => {
+    const fetchServices = async () => {
+      if (vehicleId) {
+        setLoading(true);
+        try {
+          const res = await apiClient.get(`/serviceUsed/getByVehicleId/${vehicleId}`);
           const mapped: InvoiceService[] = res.data.map((item: any) => ({
             serviceId: item.serviceId,
             serviceName: item.serviceName,
@@ -251,18 +257,24 @@ const ServiceTab = () => {
             ...mapped,
             ...prev.filter((s) => s.newService)
           ]);
+        } catch (error) {
+          // If 404, just handle it silently (no services exist yet for this vehicle)
+          const axiosError = error as { response?: { status: number } };
+          if (axiosError.response?.status !== 404) {
+            console.error("Error fetching services:", error);
+            showNotification({
+              message: "Failed to load services for this vehicle.",
+              type: "error"
+            });
+          }
+        } finally {
           setLoading(false);
-        })
-        .catch(error => {
-          console.error("Error fetching services:", error);
-          setLoading(false);
-          showNotification({
-            message: "Failed to load services for this vehicle.",
-            type: "error"
-          });
-        });
-    }
-  }, [vehicleId, showNotification]);
+        }
+      }
+    };
+
+    fetchServices();
+  }, [vehicleId]); // Remove showNotification from dependencies to prevent infinite loops
 
   const addService = (service: Service) => {
     if (services.some((s) => s.serviceId === service.serviceId)) {
@@ -412,7 +424,7 @@ const ServiceTab = () => {
   };
 
   return (
-    <Box sx={{ p: 2, width: '100%' }}>
+    <Box sx={{ width: "100%", p: { xs: 1, sm: 2 } }}>
       <Box sx={{ mb: 2 }}>
         <Typography variant="subtitle1" color="textSecondary">
           Vehicle ID: {vehicleId}
@@ -421,7 +433,7 @@ const ServiceTab = () => {
 
       {renderHeaderCards()}
 
-      <Paper elevation={3} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
+      <Paper elevation={3} sx={{ p: { xs: 1.5, sm: 3 }, borderRadius: 2, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
           Manage Vehicle Services
         </Typography>
@@ -470,12 +482,12 @@ const ServiceTab = () => {
                     <thead>
                       <tr>
                         <th style={{ width: isMobile ? '10%' : '5%', textAlign: 'center' }}>#</th>
-                        <th style={{ width: '30%' }}>Service Name</th>
-                        <th style={{ width: '15%', textAlign: 'center' }}>Quantity</th>
-                        <th style={{ width: '15%', textAlign: 'right' }}>Rate</th>
+                        <th style={{ width: isMobile ? '40%' : '30%' }}>Service Name</th>
+                        <th style={{ width: isMobile ? '20%' : '15%', textAlign: 'center' }}>Qty</th>
+                        <th style={{ width: isMobile ? '20%' : '15%', textAlign: 'right' }}>Rate</th>
                         {!isMobile && <th style={{ width: '10%', textAlign: 'right' }}>GST</th>}
-                        <th style={{ width: '15%', textAlign: 'right' }}>Total</th>
-                        <th style={{ width: '10%', textAlign: 'center' }}>Actions</th>
+                        <th style={{ width: isMobile ? '20%' : '15%', textAlign: 'right' }}>Total</th>
+                        <th style={{ width: isMobile ? '15%' : '10%', textAlign: 'center' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -489,18 +501,18 @@ const ServiceTab = () => {
                                 size="small"
                                 variant="outlined"
                                 onClick={() => updateQuantity(service.serviceId, Math.max(1, service.quantity - 1))}
-                                sx={{ minWidth: '30px', p: 0 }}
+                                sx={{ minWidth: isMobile ? '24px' : '30px', p: 0, fontSize: isMobile ? '0.75rem' : '0.875rem' }}
                               >
                                 -
                               </Button>
-                              <Box sx={{ mx: 1, display: 'flex', alignItems: 'center' }}>
+                              <Box sx={{ mx: 1, display: 'flex', alignItems: 'center', fontSize: isMobile ? '0.75rem' : '0.875rem' }}>
                                 {service.quantity}
                               </Box>
                               <Button
                                 size="small"
                                 variant="outlined"
                                 onClick={() => updateQuantity(service.serviceId, service.quantity + 1)}
-                                sx={{ minWidth: '30px', p: 0 }}
+                                sx={{ minWidth: isMobile ? '24px' : '30px', p: 0, fontSize: isMobile ? '0.75rem' : '0.875rem' }}
                               >
                                 +
                               </Button>
@@ -515,8 +527,9 @@ const ServiceTab = () => {
                               color="error"
                               size="small"
                               onClick={() => removeNewService(service.serviceId)}
+                              sx={{ fontSize: isMobile ? '0.7rem' : '0.8rem', py: 0.5, px: isMobile ? 1 : 2 }}
                             >
-                              Delete
+                              {isMobile ? 'Del' : 'Delete'}
                             </Button>
                           </td>
                         </tr>
@@ -538,12 +551,12 @@ const ServiceTab = () => {
                       <tr>
                         <th style={{ width: isMobile ? '10%' : '5%', textAlign: 'center' }}>#</th>
                         {!isMobile && <th style={{ width: '10%', textAlign: 'center' }}>ID</th>}
-                        <th style={{ width: '30%' }}>Service Name</th>
-                        <th style={{ width: '10%', textAlign: 'center' }}>Quantity</th>
-                        <th style={{ width: '15%', textAlign: 'right' }}>Rate</th>
+                        <th style={{ width: isMobile ? '40%' : '30%' }}>Service Name</th>
+                        <th style={{ width: isMobile ? '15%' : '10%', textAlign: 'center' }}>Qty</th>
+                        <th style={{ width: isMobile ? '20%' : '15%', textAlign: 'right' }}>Rate</th>
                         {!isMobile && <th style={{ width: '10%', textAlign: 'right' }}>GST</th>}
-                        <th style={{ width: '15%', textAlign: 'right' }}>Total</th>
-                        <th style={{ width: '10%', textAlign: 'center' }}>Actions</th>
+                        <th style={{ width: isMobile ? '20%' : '15%', textAlign: 'right' }}>Total</th>
+                        <th style={{ width: isMobile ? '15%' : '10%', textAlign: 'center' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -566,8 +579,9 @@ const ServiceTab = () => {
                               color="error"
                               size="small"
                               onClick={() => deleteUsedService(service.vehicleServicesUsedId)}
+                              sx={{ fontSize: isMobile ? '0.7rem' : '0.8rem', py: 0.5, px: isMobile ? 1 : 2 }}
                             >
-                              Delete
+                              {isMobile ? 'Del' : 'Delete'}
                             </Button>
                           </td>
                         </tr>
@@ -593,7 +607,7 @@ const ServiceTab = () => {
                 color="primary"
                 onClick={saveInvoice}
                 disabled={newServices.length === 0}
-                sx={{ mt: isMobile ? 2 : 0 }}
+                sx={{ mt: isMobile ? 2 : 0, py: 1 }}
               >
                 Save Service Invoice
               </Button>

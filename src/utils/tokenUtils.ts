@@ -137,13 +137,9 @@ export const getUserFromToken = (): User => {
 
 // Clear auth data and redirect to login
 export const clearAuthData = (): void => {
-  // Clear storage
+  // Clear storage from secureStorage (which is now using localStorage)
   secureStorage.removeItem('token');
   secureStorage.removeItem('userData');
-  
-  // Also clear from localStorage for safety
-  localStorage.removeItem('token');
-  localStorage.removeItem('userData');
 };
 
 // Handle logout by clearing token and session

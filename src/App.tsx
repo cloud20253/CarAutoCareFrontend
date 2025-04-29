@@ -10,6 +10,7 @@ import SignInSide from './pages/SignInSide';
 import SessionExpirationHandler from './components/navigation/SessionExpirationHandler';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import TokenValidityChecker from './components/common/TokenValidityChecker';
+import { initDevToolsProtection } from './utils/devToolsProtection';
 import { 
   getUserFromToken, 
   logout,
@@ -23,6 +24,14 @@ import CustomerDetailsList from './components/Borrow/CustomerDetailsList';
 import AddCustomer from './components/Borrow/AddCustomer';
 import AddCustomerPayment from './components/Borrow/AddCustomerPayment';
 import ViewCustomerPayments from './components/Borrow/ViewCustomerPayments';
+
+// Initialize DevTools protection with appropriate settings
+// This will help protect sensitive data in the browser
+initDevToolsProtection({
+  action: 'warn',
+  warningMessage: 'Developer tools usage is being logged for security purposes.',
+  useDebuggerTrap: false, // Disable debugger trap as it can be disruptive
+});
 
 const Header: React.FC<{ user: User, onLogout: () => void }> = ({ user, onLogout }) => {
   return (
@@ -99,12 +108,13 @@ const AuthGuard: React.FC<{
   requiredRoles?: string[];
   children: React.ReactNode;
 }> = ({ user, requiredRoles = [], children }) => {
-  // Check token validity first - this ensures that even if the user state
-  // still shows authenticated but the token is expired, the user is redirected
+  // Only check if token is completely invalid (expired/malformed), 
+  // not simply to enforce re-login on page reload
   const isValid = isTokenValid();
   
-  if (!isValid) {
-    // If token is invalid, force token check which will handle redirection
+  if (!isValid && user.isAuthenticated) {
+    // If token is explicitly invalid but user state shows authenticated,
+    // only then force a token check and redirection
     forceCheckTokenValidity();
     return null; // Return null while redirection is happening
   }
@@ -149,10 +159,8 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    // Check token validity before getting user
-    forceCheckTokenValidity();
-    
-    // Get user from token
+    // Instead of forcing a token check immediately, just get the user from token
+    // if it's valid. This prevents unnecessary redirect when the app loads.
     const currentUser = getUserFromToken();
     setUser(currentUser);
   }, []);

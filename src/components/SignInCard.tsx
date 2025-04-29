@@ -119,16 +119,12 @@ export default function SignInCard() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Check for expired tokens on component mount
   useEffect(() => {
-    // Clear any existing tokens if they're expired
     forceCheckTokenValidity();
   }, []);
 
-  // Set up event listener for when user closes the tab or browser
   useEffect(() => {
     const handleBeforeUnload = () => {
-      // Clear auth data when tab/browser is closed
       storageUtils.clearAuthData();
     };
 
@@ -168,7 +164,6 @@ export default function SignInCard() {
       
       const response = await SignInUser(data);
       
-      // Make sure we have a valid response
       if (!response) {
         throw new Error("No response received from server");
       }
@@ -176,7 +171,6 @@ export default function SignInCard() {
       try {
         const decodedToken = jwtDecode<MyJwtPayload>(response);
         
-        // Check if token is valid and not expired
         const expTime = decodedToken.exp ? Number(decodedToken.exp) * 1000 : 0;
         const currentTime = Date.now();
         
@@ -185,23 +179,17 @@ export default function SignInCard() {
           return;
         }
 
-        // Use storageUtils instead of direct secureStorage
-        storageUtils.clearAuthData(); // Clear any existing data first
+        storageUtils.clearAuthData(); 
         
-        // Set the new token and user data in secureStorage
         secureStorage.setItem("token", response);
         secureStorage.setItem("userData", decodedToken);
         
-        // Check if there's a redirect path saved
         const redirectPath = secureStorage.getItem("redirectAfterLogin");
         if (redirectPath) {
-          // Clear the redirect path
           secureStorage.removeItem("redirectAfterLogin");
-          // Navigate to the saved path
           navigate(redirectPath);
           toast.success("Welcome back! Your session has been restored.");
         } else {
-          // Default navigation
           navigate("/");
           toast.success("Signed in successfully!");
         }
@@ -212,25 +200,20 @@ export default function SignInCard() {
     } catch (error: any) {
       logger.error("Sign-in failed", error);
       
-      // Handle different types of errors with explicit toast messages
       if (error.response) {
-        // Server responded with an error
         const errorMessage = error.response.data?.message || 
                              error.response.data?.error || 
                              "Invalid email or password";
         toast.error(errorMessage);
       } else if (error.request) {
-        // No response received
         toast.error("Server is not responding. Please check if the server is running.");
       } else if (error.message && error.message.includes('ERR_CONNECTION_REFUSED')) {
-        // Connection refused
+        
         toast.error("Unable to connect to the server. Please check if the server is running.");
       } else {
-        // Any other error
         toast.error(error.message || "An unexpected error occurred. Please try again.");
       }
       
-      // Visual feedback in the form
       setEmailError(true);
       setPasswordError(true);
       toast.error("Sign-in failed. Please check your credentials.");
@@ -242,7 +225,6 @@ export default function SignInCard() {
   const validateInputs = () => {
     let isValid = true;
 
-    // Email validation
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       setEmailError(true);
       toast.error('Please enter a valid email address');
@@ -251,7 +233,6 @@ export default function SignInCard() {
       setEmailError(false);
     }
 
-    // Password validation
     if (!password || password.length < 6) {
       setPasswordError(true);
       toast.error('Password must be at least 6 characters long');
