@@ -92,62 +92,69 @@ const SessionExpirationHandler: React.FC<SessionExpirationHandlerProps> = ({
       clearTimeout(inactivityTimerRef.current);
     }
     
-    // Set new timer (30 minutes of inactivity)
+    // Set new timer (2 hours of inactivity - increased from 30 minutes)
     inactivityTimerRef.current = setTimeout(() => {
       logger.warn('User inactive for too long, logging out');
       performSecureLogout();
-    }, 30 * 60 * 1000);
+    }, 2 * 60 * 60 * 1000); // 2 hours
   };
 
   // Check token expiration and set up timers
-    const checkExpiration = () => {
-      const expTime = getTimeUntilExpiration();
-      
-      if (expTime === null) {
-        // Token is invalid or already expired
-      performSecureLogout();
-        return;
-      }
-      
-      setTimeLeft(expTime);
+  const checkExpiration = () => {
+    const expTime = getTimeUntilExpiration();
     
+    // Only perform immediate logout if token is actually expired
+    // Not if it's just missing (which might happen on refresh)
+    if (expTime !== null && expTime <= 0) {
+      performSecureLogout();
+      return;
+    }
+    
+    if (expTime === null) {
+      // Token missing or invalid, but don't immediately logout
+      // This prevents immediate logout on page refresh
+      return;
+    }
+    
+    setTimeLeft(expTime);
+  
     // Clear existing timers
     if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
     if (criticalTimerRef.current) clearTimeout(criticalTimerRef.current);
-      
-      // Set up warning timer
-      if (expTime > warningTime) {
+    
+    // Set up warning timer
+    if (expTime > warningTime) {
       warningTimerRef.current = setTimeout(() => {
-          setWarningOpen(true);
-        }, expTime - warningTime);
-        
-        // Set up critical warning timer
-      criticalTimerRef.current = setTimeout(() => {
-          setWarningOpen(false);
-          setCriticalOpen(true);
-        }, expTime - criticalTime);
-      } else if (expTime > criticalTime) {
-        // Already past warning time but not critical
         setWarningOpen(true);
-        
-        // Set up critical warning timer
+      }, expTime - warningTime);
+      
+      // Set up critical warning timer
       criticalTimerRef.current = setTimeout(() => {
-          setWarningOpen(false);
-          setCriticalOpen(true);
-        }, expTime - criticalTime);
-      } else {
-        // Already in critical time
+        setWarningOpen(false);
         setCriticalOpen(true);
-      }
-    };
+      }, expTime - criticalTime);
+    } else if (expTime > criticalTime) {
+      // Already past warning time but not critical
+      setWarningOpen(true);
+      
+      // Set up critical warning timer
+      criticalTimerRef.current = setTimeout(() => {
+        setWarningOpen(false);
+        setCriticalOpen(true);
+      }, expTime - criticalTime);
+    } else {
+      // Already in critical time
+      setCriticalOpen(true);
+    }
+  };
     
   // Set up event listeners and timers
   useEffect(() => {
     // Initial check
     checkExpiration();
     
-    // Set up interval to check every minute
-    intervalRef.current = setInterval(checkExpiration, 60 * 1000);
+    // Set up interval to check every 5 minutes instead of every minute
+    intervalRef.current = setInterval(checkExpiration, 5 * 60 * 1000);
     
     // Set up user activity listeners
     const activityEvents = ['mousedown', 'keypress', 'scroll', 'touchstart'];

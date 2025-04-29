@@ -1,10 +1,10 @@
 /**
  * Secure Storage Utility
  * 
- * This file provides a more secure alternative to localStorage that encrypts
+ * This file provides a more secure alternative to direct localStorage that encrypts
  * sensitive data before storing it.
  * 
- * Now using sessionStorage to ensure tokens expire when the tab/browser is closed.
+ * Now using localStorage to ensure tokens persist when the tab/browser is closed.
  */
 
 import CryptoJS from 'crypto-js';
@@ -15,7 +15,7 @@ import logger from './logger';
 const SECRET_KEY = process.env.REACT_APP_STORAGE_KEY || 'car-auto-care-secret-key';
 
 /**
- * SecureStorage class that encrypts data before storing it in sessionStorage
+ * SecureStorage class that encrypts data before storing it in localStorage
  */
 class SecureStorage {
   /**
@@ -25,7 +25,7 @@ class SecureStorage {
    */
   getItem(key: string): any {
     try {
-      const encryptedData = sessionStorage.getItem(key);
+      const encryptedData = localStorage.getItem(key);
       
       if (!encryptedData) {
         return null;
@@ -43,10 +43,10 @@ class SecureStorage {
     } catch (error) {
       logger.error(`Error retrieving item from secure storage: ${key}`, error);
       
-      // In development, fall back to regular sessionStorage to avoid blocking development
+      // In development, fall back to regular localStorage to avoid blocking development
       if (isDevelopment) {
         try {
-          const item = sessionStorage.getItem(key);
+          const item = localStorage.getItem(key);
           return item ? JSON.parse(item) : null;
         } catch {
           return null;
@@ -70,17 +70,17 @@ class SecureStorage {
       // Encrypt the data
       const encryptedData = CryptoJS.AES.encrypt(valueStr, SECRET_KEY).toString();
       
-      // Store in sessionStorage
-      sessionStorage.setItem(key, encryptedData);
+      // Store in localStorage
+      localStorage.setItem(key, encryptedData);
     } catch (error) {
       logger.error(`Error setting item in secure storage: ${key}`, error);
       
-      // In development, fall back to regular sessionStorage to avoid blocking development
+      // In development, fall back to regular localStorage to avoid blocking development
       if (isDevelopment) {
         try {
-          sessionStorage.setItem(key, JSON.stringify(value));
+          localStorage.setItem(key, JSON.stringify(value));
         } catch (e) {
-          logger.error('Fallback sessionStorage save failed', e);
+          logger.error('Fallback localStorage save failed', e);
         }
       }
     }
@@ -92,7 +92,7 @@ class SecureStorage {
    */
   removeItem(key: string): void {
     try {
-      sessionStorage.removeItem(key);
+      localStorage.removeItem(key);
     } catch (error) {
       logger.error(`Error removing item from secure storage: ${key}`, error);
     }
@@ -103,7 +103,7 @@ class SecureStorage {
    */
   clear(): void {
     try {
-      sessionStorage.clear();
+      localStorage.clear();
     } catch (error) {
       logger.error('Error clearing secure storage', error);
     }
@@ -115,7 +115,7 @@ class SecureStorage {
    */
   keys(): string[] {
     try {
-      return Object.keys(sessionStorage);
+      return Object.keys(localStorage);
     } catch (error) {
       logger.error('Error getting keys from secure storage', error);
       return [];

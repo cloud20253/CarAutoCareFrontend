@@ -10,10 +10,8 @@ import logger from './logger';
  */
 const ConsoleSanitizer = () => {
   useEffect(() => {
-    // Temporarily disabled console sanitization
-    // Uncomment the code below when you want to re-enable sanitization
-
-    /*
+    // Console sanitization is now enabled
+    
     if (isProduction) {
       // Store original console methods
       const originalConsole = {
@@ -58,7 +56,6 @@ const ConsoleSanitizer = () => {
         console.debug = originalConsole.debug;
       };
     }
-    */
   }, []);
 
   // This component doesn't render anything

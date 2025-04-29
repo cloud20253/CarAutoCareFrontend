@@ -1,47 +1,22 @@
 /**
  * Storage Utility Functions
  * 
- * This file provides utilities to help with the transition from localStorage
- * to sessionStorage (via secureStorage) while maintaining backward compatibility.
+ * This file provides utilities to help with managing authentication data in localStorage
+ * via secureStorage wrapper.
  */
 
 import secureStorage from './secureStorage';
 import logger from './logger';
 
 /**
- * Get user data with fallback to localStorage for backward compatibility
- * during the transition period
+ * Get user data from secureStorage
  */
 export const getUserData = (): any => {
   try {
-    // First try to get from secureStorage (now sessionStorage)
+    // Get from secureStorage (localStorage with encryption)
     const secureData = secureStorage.getItem('userData');
     if (secureData) {
       return secureData;
-    }
-    
-    // Fall back to localStorage if not in secureStorage
-    const localData = localStorage.getItem('userData');
-    if (localData) {
-      try {
-        // Parse the data
-        const parsedData = JSON.parse(localData);
-        
-        // Migrate to secureStorage for next time
-        secureStorage.setItem('userData', parsedData);
-        
-        // Schedule removal from localStorage immediately
-        try {
-          localStorage.removeItem('userData');
-        } catch (e) {
-          // Ignore errors
-        }
-        
-        return parsedData;
-      } catch (e) {
-        logger.error('Error parsing user data from localStorage:', e);
-        return null;
-      }
     }
     
     return null;
@@ -52,30 +27,14 @@ export const getUserData = (): any => {
 };
 
 /**
- * Get auth token with fallback to localStorage for backward compatibility
+ * Get auth token from secureStorage
  */
 export const getAuthToken = (): string | null => {
   try {
-    // First try to get from secureStorage
+    // Get from secureStorage
     const secureToken = secureStorage.getItem('token');
     if (secureToken) {
       return secureToken;
-    }
-    
-    // Fall back to localStorage if not in secureStorage
-    const localToken = localStorage.getItem('token');
-    if (localToken) {
-      // Migrate to secureStorage for next time
-      secureStorage.setItem('token', localToken);
-      
-      // Remove from localStorage immediately
-      try {
-        localStorage.removeItem('token');
-      } catch (e) {
-        // Ignore errors
-      }
-      
-      return localToken;
     }
     
     return null;
@@ -86,23 +45,14 @@ export const getAuthToken = (): string | null => {
 };
 
 /**
- * Get generic item from storage with fallback
+ * Get generic item from storage
  */
 export const getItem = (key: string): string | null => {
   try {
-    // First try to get from secureStorage
+    // Get from secureStorage
     const secureValue = secureStorage.getItem(key);
     if (secureValue) {
       return secureValue;
-    }
-    
-    // Fall back to localStorage
-    const localValue = localStorage.getItem(key);
-    if (localValue) {
-      // Migrate to secureStorage
-      secureStorage.setItem(key, localValue);
-      localStorage.removeItem(key);
-      return localValue;
     }
     
     return null;
@@ -117,20 +67,15 @@ export const getItem = (key: string): string | null => {
  */
 export const setItem = (key: string, value: string): void => {
   try {
-    // Store only in secureStorage (sessionStorage)
+    // Store in secureStorage (encrypted localStorage)
     secureStorage.setItem(key, value);
-    
-    // Remove from localStorage if it exists
-    if (localStorage.getItem(key)) {
-      localStorage.removeItem(key);
-    }
   } catch (e) {
     logger.error(`Error setting item ${key}:`, e);
   }
 };
 
 /**
- * Remove both token and userData from both storage methods
+ * Remove both token and userData from storage
  * to ensure clean logout
  */
 export const clearAuthData = () => {
@@ -138,10 +83,6 @@ export const clearAuthData = () => {
     // Clear from secureStorage
     secureStorage.removeItem('token');
     secureStorage.removeItem('userData');
-    
-    // Also clear from localStorage for safety
-    localStorage.removeItem('token');
-    localStorage.removeItem('userData');
   } catch (e) {
     logger.error('Error in clearAuthData:', e);
   }

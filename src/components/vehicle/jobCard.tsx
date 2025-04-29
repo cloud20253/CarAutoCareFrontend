@@ -43,6 +43,10 @@ const StyledTextArea = styled(TextareaAutosize)(({ theme }) => ({
     outline: `2px solid ${theme.palette.primary.main}`,
     borderColor: "transparent",
   },
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(1),
+    fontSize: "0.813rem",
+  },
 }));
 
 // HeaderCard styled component for navigation cards
@@ -340,7 +344,7 @@ const JobCard: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: "100%", p: 2 }}>
+    <Box sx={{ width: "100%", p: { xs: 1, sm: 2 } }}>
       <Box sx={{ mb: 2 }}>
         <Typography variant="subtitle1" color="textSecondary">
           Vehicle Registration ID: {id}
@@ -349,7 +353,7 @@ const JobCard: React.FC = () => {
       
       {renderHeaderCards()}
       
-      <Paper elevation={3} sx={{ borderRadius: 0, p: 3, width: "100%" }}>
+      <Paper elevation={3} sx={{ borderRadius: 0, p: { xs: 1.5, sm: 3 }, width: "100%" }}>
         <Typography
           variant="h6"
           gutterBottom
@@ -359,11 +363,12 @@ const JobCard: React.FC = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            fontSize: { xs: '1rem', sm: '1.25rem' },
           }}
         >
-          <Task sx={{ mr: 1 }} />
+          <Task sx={{ mr: 1, fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
           Job Card
-          <RemoveCircleOutline sx={{ ml: 1, color: "#ffcccb" }} />
+          <RemoveCircleOutline sx={{ ml: 1, color: "#ffcccb", fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
         </Typography>
 
         <Autocomplete
@@ -396,7 +401,7 @@ const JobCard: React.FC = () => {
           noOptionsText="No jobs found. Try a different search term."
         />
         {selectedJobs.length > 0 && (
-          <Paper elevation={1} sx={{ p: 2, mb: 2, width: "100%" }}>
+          <Paper elevation={1} sx={{ p: { xs: 1, sm: 2 }, mb: 2, width: "100%" }}>
             {!isMobile && (
               <Grid container spacing={2} sx={{ fontWeight: 600 }}>
                 <Grid item xs={4}>
@@ -416,14 +421,14 @@ const JobCard: React.FC = () => {
 
             {selectedJobs.map((job) =>
               isMobile ? (
-                <Paper key={job.jobCardId} elevation={1} sx={{ p: 2, mb: 2 }}>
-                  <Typography variant="subtitle2">
+                <Paper key={job.jobCardId} elevation={1} sx={{ p: 1.5, mb: 1.5 }}>
+                  <Typography variant="subtitle2" sx={{ fontSize: '0.8rem' }}>
                     <strong>Job Name:</strong> {job.jobName}
                   </Typography>
-                  <Typography variant="subtitle2">
+                  <Typography variant="subtitle2" sx={{ fontSize: '0.8rem', mt: 0.5 }}>
                     <strong>Job Type:</strong> {job.jobType}
                   </Typography>
-                  <Typography variant="subtitle2">
+                  <Typography variant="subtitle2" sx={{ fontSize: '0.8rem', mt: 0.5 }}>
                     <strong>Job Card ID:</strong> {job.jobCardId}
                   </Typography>
                   <FormControl fullWidth size="small" sx={{ mt: 1 }}>
@@ -492,14 +497,14 @@ const JobCard: React.FC = () => {
           />
         </Box>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, md: 3 }}>
           <Grid item xs={12} md={6}>
             <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
-              <NoteAdd sx={{ mr: 1, fontSize: 20, verticalAlign: "bottom" }} />
+              <NoteAdd sx={{ mr: 1, fontSize: { xs: 18, sm: 20 }, verticalAlign: "bottom" }} />
               Customer Note
             </Typography>
             <StyledTextArea
-              minRows={3}
+              minRows={isMobile ? 2 : 3}
               placeholder="Enter customer comments..."
               value={customerNote}
               onChange={(e) => setCustomerNote(e.target.value)}
@@ -508,11 +513,11 @@ const JobCard: React.FC = () => {
 
           <Grid item xs={12} md={6}>
             <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
-              <Delete sx={{ mr: 1, fontSize: 20, verticalAlign: "bottom" }} />
+              <Delete sx={{ mr: 1, fontSize: { xs: 18, sm: 20 }, verticalAlign: "bottom" }} />
               Workshop Note
             </Typography>
             <StyledTextArea
-              minRows={3}
+              minRows={isMobile ? 2 : 3}
               placeholder="Enter workshop instructions..."
               value={workshopNote}
               onChange={(e) => setWorkshopNote(e.target.value)}
@@ -521,11 +526,20 @@ const JobCard: React.FC = () => {
         </Grid>
 
         <Box sx={{ mt: 3 }}>
-          <Stack direction="row" spacing={2} justifyContent="flex-end">
-            <Button variant="contained" startIcon={<Save />} sx={{ borderRadius: 2 }} onClick={handleSave}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1, sm: 2 }} justifyContent="flex-end">
+            <Button 
+              variant="contained" 
+              startIcon={<Save />} 
+              sx={{ borderRadius: 2, width: { xs: '100%', sm: 'auto' } }} 
+              onClick={handleSave}
+            >
               Save Changes
             </Button>
-            <Button variant="outlined" startIcon={<Task />} sx={{ borderRadius: 2 }}>
+            <Button 
+              variant="outlined" 
+              startIcon={<Task />} 
+              sx={{ borderRadius: 2, width: { xs: '100%', sm: 'auto' } }}
+            >
               Inspection
             </Button>
           </Stack>
@@ -539,31 +553,46 @@ const JobCard: React.FC = () => {
           </Box>
         )}
       </Paper>
-      <Paper elevation={3} sx={{ mt: 4, p: 3 }}>
-        <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+      <Paper elevation={3} sx={{ mt: 4, p: { xs: 1.5, sm: 3 } }}>
+        <Typography variant="h6" gutterBottom sx={{ mb: 2, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
           Job Cards for Vehicle Number: {vehicleId}
         </Typography>
-        <TableContainer component={Paper} sx={{ maxWidth: "100%", overflowX: "auto" }}>
+        <TableContainer 
+          component={Paper} 
+          sx={{ 
+            maxWidth: "100%", 
+            overflowX: "auto",
+            '& .MuiTableCell-root': {
+              px: { xs: 1, sm: 2 },
+              py: { xs: 0.75, sm: 1.5 },
+              fontSize: { xs: '0.75rem', sm: '0.875rem' }
+            }
+          }}
+        >
           <Table>
             <TableHead>
               <TableRow>
                 <TableCell><strong>Job Name</strong></TableCell>
-                <TableCell><strong>Vehicle Number</strong></TableCell>
+                {!isMobile && <TableCell><strong>Vehicle Number</strong></TableCell>}
                 <TableCell><strong>Customer Note</strong></TableCell>
-                <TableCell><strong>Workshop Note</strong></TableCell>
+                {!isMobile && <TableCell><strong>Workshop Note</strong></TableCell>}
                 <TableCell><strong>Job Type</strong></TableCell>
-                <TableCell><strong>Job Card ID</strong></TableCell>
+                {!isMobile && <TableCell><strong>Job Card ID</strong></TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
               {jobCards.map((job) => (
                 <TableRow key={job.vehicleJobCardId}>
                   <TableCell>{job.jobName}</TableCell>
-                  <TableCell>{job.vehicleNumber}</TableCell>
-                  <TableCell>{job.customerNote}</TableCell>
-                  <TableCell>{job.workShopNote}</TableCell>
+                  {!isMobile && <TableCell>{job.vehicleNumber}</TableCell>}
+                  <TableCell>
+                    {isMobile && job.customerNote.length > 20
+                      ? `${job.customerNote.substring(0, 20)}...`
+                      : job.customerNote}
+                  </TableCell>
+                  {!isMobile && <TableCell>{job.workShopNote}</TableCell>}
                   <TableCell>{job.jobType}</TableCell>
-                  <TableCell>{job.jobCardId}</TableCell>
+                  {!isMobile && <TableCell>{job.jobCardId}</TableCell>}
                 </TableRow>
               ))}
             </TableBody>

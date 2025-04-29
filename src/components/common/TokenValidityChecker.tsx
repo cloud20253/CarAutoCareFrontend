@@ -14,10 +14,11 @@ const TokenValidityChecker: React.FC<TokenValidityCheckerProps> = ({ children })
     // Check token validity immediately when component mounts
     forceCheckTokenValidity();
     
-    // Set up periodic token validity check every 30 seconds
+    // Set up periodic token validity check every 5 minutes
+    // This is mainly just to catch expired tokens, not to force logout on refresh
     const intervalId = setInterval(() => {
       forceCheckTokenValidity();
-    }, 30 * 1000); // 30 seconds
+    }, 5 * 60 * 1000); // 5 minutes
     
     // Clean up interval on unmount
     return () => {

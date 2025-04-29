@@ -7,10 +7,11 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
+import HomeIcon from '@mui/icons-material/Home';
 import MenuButton from './MenuButton';
 import MenuContent from './MenuContent';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import storageUtils from '../utils/storageUtils';
 
 interface SideMenuMobileProps {
@@ -26,21 +27,16 @@ export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobilePro
 
   // Get username immediately on component mount and whenever auth changes
   React.useEffect(() => {
-    console.log('Auth context in SideMenuMobile:', auth);
-    console.log('userName from context:', userName);
-    
     // Try to get username from token if not available in context
     try {
       const userData = storageUtils.getUserData();
       if (userData && userData.firstname) {
         setDisplayName(userData.firstname);
-        console.log('Got username from token:', userData.firstname);
       } else if (userName) {
         setDisplayName(userName);
-        console.log('Using userName from context:', userName);
       }
     } catch (error) {
-      console.error('Error getting username:', error);
+      // Silent error handling
     }
   }, [auth, userName]);
 
@@ -50,17 +46,20 @@ export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobilePro
       // Force immediate redirect to prevent auth state issues
       window.localStorage.removeItem('token');
       window.localStorage.removeItem('userData');
-      window.sessionStorage.removeItem('token');
-      window.sessionStorage.removeItem('userData');
       navigate('/signIn');
       // Then call the context logout for complete cleanup
       setTimeout(() => {
         logout();
       }, 100);
     } catch (error) {
-      console.error('Logout error:', error);
+      // Silent error handling
       window.location.href = '/signIn';
     }
+  };
+  
+  const handleHomeClick = () => {
+    toggleDrawer(false)();
+    navigate('/');
   };
 
   // Force dark text globally within the drawer
@@ -186,6 +185,36 @@ export default function SideMenuMobile({ open, toggleDrawer }: SideMenuMobilePro
             <NotificationsRoundedIcon />
           </MenuButton>
         </Stack>
+        
+        {/* Home navigation button */}
+        <Stack 
+          component="div" 
+          sx={{ px: 2, py: 1.5, bgcolor: '#f5f5f5 !important' }}
+        >
+          <Button
+            variant="contained"
+            fullWidth
+            startIcon={<HomeIcon />}
+            onClick={handleHomeClick}
+            aria-label="Go to home page"
+            sx={{
+              textTransform: 'none',
+              borderRadius: 1.5,
+              py: 1,
+              boxShadow: 2,
+              fontWeight: 500,
+              background: 'linear-gradient(45deg, #1976d2, #42a5f5)',
+              color: 'white !important',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #1565c0, #1976d2)',
+                boxShadow: 3,
+              }
+            }}
+          >
+            Home
+          </Button>
+        </Stack>
+        
         <Divider sx={{ my: 1 }} />
         <Stack 
           component="div"
