@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 import { CircularProgress, Box } from "@mui/material";
 import WebHeader from "pages/Headers";
+
 import AddCustomer from "components/Borrow/AddCustomer";
 import AdminHeader from "pages/AdminHeader";
 import TermsAndConditionsList from "components/Terms/TermsAndConditionsList";
@@ -20,6 +21,76 @@ const LoadingFallback = () => (
     <CircularProgress />
   </Box>
 );
+
+import MyAddSparePart from "pages/MyAddSparePart";
+import SparePart from "pages/SparePart";
+import EditSparePart from "pages/EditSparePart";
+import BookAppointment from "pages/BookAppointment";
+import SparePartDetails from "pages/SparePartDetails";
+import VehicleRegistration from "pages/VehicleRegistraction";
+import VehicleReg from 'pages/vehiclereg';
+import VehicleById from 'pages/VehicleById';
+import VehicleByDate from 'pages/vechiclebydate';
+import Vehiclestatus from 'pages/vechiclestatus';
+import VehicleByAppointmentId from 'pages/VehicleByAppointmentId';
+import ManageRepairPage from "components/RepairsComponent/ManageRepairPage";
+import VehicleList from "components/vehicle/VehicleList";
+import QuatationList from "components/Quatation/QuatationList";
+
+import AddVehicle from "components/vehicle/AddVehicle";
+import TransactionAdd from "pages/TransactionManagement/TransactionAdd";
+import TransactionAll from "pages/TransactionManagement/TransactionAll";
+import AddVehiclePartService from "components/vehicle/AddVehiclePartService";
+import QuatationGrid from "components/Quatation/QuatationGrid";
+
+import StockManageGrid from "components/StockManagement/StockManageGrid";
+import TransactionList from "components/StockManagement/TransactionList";
+import VehicleDetailsView from "components/vehicle/VehicleDetailsView";
+import InvoiceForm from "components/vehicle/InvoiceForm";
+import BillForm from "components/vehicle/BillForm";
+import AddNewQuotation from "components/Quatation/QutationForm";
+import TransactionDetails from "components/StockManagement/TransactionDetails";
+import CounterSaleForm from "components/StockManagement/CounterSaleForm";
+import CounterBillPDF from "components/StockManagement/CounterBillPDF";
+import SupplierListPage from "components/Vendor/SupplierListPage";
+import AddNewSupplierPage from "components/Vendor/VendorManagementPage";
+import VendorUpdatePage from "components/Vendor/VendorUpdatePage";
+import InvoiceList from "components/StockManagement/InvoiceList";
+import InvoiceEditForm from "components/StockManagement/InvoiceEditForm";
+import AppointmentList from "components/Appointments/AppointmentList";
+import JobCard from "components/vehicle/jobCard";
+import EditJobOptionForm from "components/JobCard/EditJobOptionForm";
+import JobCardGrid from "components/JobCard/JobCardsGrid";
+import JobOptionForm from "components/JobCard/JobOptionForm";
+import JobCardList from "components/JobCard/JobCardList";
+import ManageServiceGrid from "components/ManageServices/ManageServiceGrid";
+import AddService from "components/ManageServices/AddService";
+import GetAllServices from "components/ManageServices/GetAllServices";
+import EditService from "components/ManageServices/EditServices";
+import JobCardPDF from "components/vehicle/jobcardpdf";
+import InvoiceTable from "components/vehicle/ServiceTab";
+import ServiceTab from "components/vehicle/ServiceTab";
+import QuatationServiceTab from "components/Quatation/QuatationServiceTab";
+import SpareTab from "components/Quatation/SpareTab";
+import CustomerList from "components/Customer/CustomerList";
+import InsuranceList from "components/InsuranceList";
+import VendorManagementGrid from "components/Vendor/VendorManagementGrid";
+// import InvoiceDetailsWrapper from "pages/TransactionManagement/InvoiceDetailsWrapper";
+import InvoicePDFGenerator from "components/vehicle/InvoicePDFGenerator";
+// import PDFGenerator from "components/pdf/PDFGenerator";
+import UserManagement from "pages/UserMangement";
+import AddUserForm from "components/User/AddUserForm";
+import QuatationPDFGeneration from "components/Quatation/QuatationPDFGeneration";
+import QuatationEdit from "components/Quatation/QuatationEdit";
+import AddCustomerForm from "components/Customer/Customers";
+import ReportForm from "components/Reports/ReportForm";
+import CounterSaleReport from "components/Reports/CounterSaleReport";
+import CounterSalesReportPDF from "components/Reports/CounterSalesReportPDF";
+import JobSaleReport from "components/Reports/JobSaleReport";
+import JobSaleReportPDF from "components/Reports/JobSaleReportPDF";
+import PurchaseReport from "components/Reports/PurchaseReport";
+import PurchaseReportPDF from "components/Reports/PurchaseReportPDF";
+
 
 const SignIn = lazy(() => import("./pages/SignInSide"));
 const Home = lazy(() => import("./pages/Home"));
@@ -215,12 +286,19 @@ const AppRoutes = () => {
                 <Route path="services" element={<ManageServiceGrid/>} />
                 <Route path="spare-part/transaction/add" element={<TransactionAdd />} />
                 <Route path="spare-part/transaction/list" element={<TransactionAll />} />
+
                 <Route path="spare-supplier/:partNumber/:manufacturer" element={<SpareSuppliersView />} />
 
                 {/* Bank Deposit Routes */}
                 <Route path="bank-deposits" element={<BankDepositList />} />
                 <Route path="add-bank-deposit" element={<AddBankDeposit />} />
                 <Route path="edit-bank-deposit/:id" element={<AddBankDeposit />} />
+
+                {/* <Route path="pdf" element={<PDFGenerator />} /> */}
+                <Route path="user/list" element={<UserManagement />} />
+                <Route path="user/add" element={<AddUserForm />} />
+
+
             </Route>
         </Routes>
         </Suspense>

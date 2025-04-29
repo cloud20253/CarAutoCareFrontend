@@ -26,7 +26,11 @@ import { useSidebar } from '../contexts/SidebarContext';
 
 const mainListItems = [
   { text: "Dashboard", icon: <HomeIcon sx={{ color: "#1976d2" }} />, link: "/admin/dashboard" },
+
   { text: "Manage User", icon: <AnalyticsIcon sx={{ color: "#388e3c" }} />, link: "/admin/employeeList", adminOnly: true },
+
+  { text: "Manage User", icon: <AnalyticsIcon sx={{ color: "#388e3c" }} />, link: "/admin/user/list" },
+
   {
     text: "Master",
     icon: <PeopleIcon sx={{ color: "#f57c00" }} />,
