@@ -15,6 +15,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import apiClient from 'Services/apiService';
+import storageUtils from '../../utils/storageUtils';
 
 interface Vehicle {
   vehicleRegId: string;
@@ -78,9 +79,10 @@ const VehicalHistoryWithPDF: React.FC = () => {
     console.log(`Attempting to fetch data for vehicle: ${vehicleId}`);
     
     try {
+      const token = storageUtils.getAuthToken();
       const config = {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       };

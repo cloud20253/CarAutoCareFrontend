@@ -238,13 +238,13 @@ const JobSaleReport: React.FC = () => {
   };
 
   function renderActionButtons(params: GridCellParams) {
-    return (
-      <IconButton
-        color="secondary"
+        return (
+            <IconButton
+              color="secondary"
         onClick={() => handleSafePrint(params.row.invoiceNumber)}
-      >
-        <Print />
-      </IconButton>
+            >
+              <Print />
+            </IconButton>
     );
   }
 
@@ -268,7 +268,7 @@ const JobSaleReport: React.FC = () => {
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '1700px' } }}>
       <Typography variant="h4" gutterBottom>
-        Job Sale Report
+     Job Sale Report
       </Typography>
       <Stack direction="row" alignItems="center" justifyContent="flex-start" spacing={2} sx={{ mb: 2 }}>
         <FormControl>
@@ -331,27 +331,27 @@ const JobSaleReport: React.FC = () => {
           </TableFooter>
         </Table>
       </TableContainer>
-      
-      <div style={{ marginTop: '20px', textAlign: 'center' }}>
-        <button
-          style={{
-            border: 'none',
-            borderRadius: '5px',
-            padding: '10px 20px',
+
+        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+    <button
+      style={{
+        border: 'none',
+        borderRadius: '5px',
+        padding: '10px 20px',
             backgroundColor: '#60B5FF',
             color: '#fff',
-            fontSize: '1rem',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            transition: 'background-color 0.3s ease',
-          }}
+        fontSize: '1rem',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        transition: 'background-color 0.3s ease',
+      }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#AFDDFF')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#60B5FF')}
           onClick={handlePrintAll}
         >
           Print All
-        </button>
-      </div>
+    </button>
+</div>
       <Copyright />
     </Box>
   );

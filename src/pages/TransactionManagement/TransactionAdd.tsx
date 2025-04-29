@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect, FormEvent } from "react";
 import apiClient from "Services/apiService";
+import storageUtils from '../../utils/storageUtils';
 
 import {
   Box,
@@ -43,6 +44,7 @@ interface CreateTransaction {
   transactionType: "CREDIT" | "DEBIT";
   userId?: number;
   vehicleRegId?: number;
+  vendorId?: number;
   partNumber: string;
   partName: string;
   manufacturer: string;
@@ -56,6 +58,7 @@ interface CreateTransaction {
   sgst: number;
   igst: number;
   totalAmount: number;
+  description?: string;
 }
 
 interface Feedback {
@@ -197,10 +200,9 @@ const TransactionAdd: React.FC = () => {
   const navigate = useNavigate();
 
   let userRole: string = "";
-  const storedDecodedToken = localStorage.getItem("userData");
-  if (storedDecodedToken) {
-    const parsedToken = JSON.parse(storedDecodedToken);
-    userRole = parsedToken.authorities[0];
+  const userData = storageUtils.getUserData();
+  if (userData) {
+    userRole = userData.authorities?.[0] || "";
   }
 
   useEffect(() => {
@@ -243,13 +245,21 @@ const TransactionAdd: React.FC = () => {
 
   const handleSelectPart = (event: any, newValue: SparePartDto | null) => {
     setSelectedPart(newValue);
-    setCreateData((prev) => ({
-      ...prev,
-      manufacturer: newValue ? newValue.manufacturer : "",
-      partNumber: newValue ? newValue.partNumber : "",
-  
-      partName: newValue ? newValue.partName : "",
-    }));
+    if (newValue) {
+      setCreateData((prev) => ({
+        ...prev,
+        manufacturer: newValue.manufacturer,
+        partNumber: newValue.partNumber,
+        partName: newValue.partName,
+        description: newValue.description || "",
+      }));
+    } else {
+      setCreateData(prev => ({
+        ...initialCreateData,
+        name: prev.name,
+        billNo: prev.billNo
+      }));
+    }
   };
 
   const handleSelectVendor = (event: any, newValue: Vendor | null) => {
@@ -257,6 +267,7 @@ const TransactionAdd: React.FC = () => {
     setCreateData((prev) => ({
       ...prev,
       name: newValue ? newValue.name : "",
+      vendorId: newValue ? newValue.vendorId : undefined,
     }));
   };
 
@@ -358,11 +369,24 @@ const TransactionAdd: React.FC = () => {
   const handleCreateSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
+      if (!createData.vendorId) {
+        setFeedback({
+          message: "Please select a vendor",
+          severity: "error"
+        });
+        return;
+      }
+      
       const dataToSubmit = {
         ...createData,
-        quantity: parseInt(createData.quantity)
+        quantity: parseInt(createData.quantity),
+        partName: createData.partName,
+        partNumber: createData.partNumber,
+        description: createData.description,
+        vendorId: createData.vendorId
       };
       
+      console.log("Submitting transaction with vendor ID:", dataToSubmit.vendorId);
       const response = await apiClient.post("/sparePartTransactions/add", dataToSubmit);
       
       const recentTransaction: RecentTransaction = {
@@ -373,9 +397,17 @@ const TransactionAdd: React.FC = () => {
 
       setRecentTransactions(prev => [...prev, recentTransaction]);
       updateGSTBreakdown(recentTransaction);
+      setFeedback({
+        message: "Transaction created successfully",
+        severity: "success"
+      });
       resetFormPartially();
     } catch (error: any) {
       console.error("Error creating transaction:", error);
+      setFeedback({
+        message: error.response?.data?.message || "Failed to create transaction",
+        severity: "error"
+      });
     }
   };
 
@@ -498,30 +530,40 @@ const TransactionAdd: React.FC = () => {
           </FormGrid>
 
           <FormGrid item xs={12} md={6}>
-            <FormLabel htmlFor="price">
-              Price
-            </FormLabel>
+            <FormLabel htmlFor="description">Description</FormLabel>
             <OutlinedInput
-              name="price"
-              value={createData.price}
-              onChange={handlePriceChange}
-              type="number"
+              name="description"
+              value={createData.description}
+              onChange={handleCreateChange}
+              placeholder="Description"
               size="small"
-              required
+              disabled
             />
           </FormGrid>
 
           <FormGrid item xs={12} md={6}>
-            <FormLabel htmlFor="gstPercentage">
-              GST%
-            </FormLabel>
+            <FormLabel htmlFor="price">Price</FormLabel>
+            <OutlinedInput
+              name="price"
+              value={createData.price || ''}
+              onChange={handlePriceChange}
+              type="number"
+              size="small"
+              required
+              inputProps={{ min: 0 }}
+            />
+          </FormGrid>
+
+          <FormGrid item xs={12} md={6}>
+            <FormLabel htmlFor="gstPercentage">GST%</FormLabel>
             <OutlinedInput
               name="gstPercentage"
-              value={createData.gstPercentage}
+              value={createData.gstPercentage || ''}
               onChange={handleGSTChange}
               type="number"
               size="small"
               required
+              inputProps={{ min: 0 }}
             />
           </FormGrid>
 

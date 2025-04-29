@@ -6,6 +6,55 @@ import { Print } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 
+// Add print styles to hide elements when printing
+const printStyles = `
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    #print-container, #print-container * {
+      visibility: visible;
+    }
+    #print-container {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      padding: 20px;
+    }
+    #print-header {
+      display: block !important;
+      visibility: visible;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #print-header h1 {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    #print-header p {
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    .MuiPaper-root {
+      box-shadow: none !important;
+      border: none !important;
+    }
+    .print-hide {
+      display: none !important;
+    }
+    .MuiTableCell-root {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+    }
+    .MuiTableHead-root .MuiTableCell-root {
+      font-weight: bold;
+      background-color: #f5f5f5;
+    }
+  }
+`;
+
 interface InvoiceItem {
   id: number;
   spareName: string;
@@ -90,7 +139,7 @@ const CounterSaleReport: React.FC = () => {
             taxable: totalTaxable, 
           };
         });
-
+  
         console.log("Formatted rows with taxable amounts:", formattedRows);
   
         setRows(formattedRows);
@@ -106,15 +155,9 @@ const CounterSaleReport: React.FC = () => {
       if (fromDate && toDate) {
         fetchInvoices();
       }
-    }, [fromDate, toDate]); 
+  }, [fromDate, toDate]); 
   
   const handlePrint = (invoiceId?: number, invoiceNumber?: string) => {
-    let dataToSend: {
-      fromDate: string;
-      toDate: string;
-      reportData: Invoice[];
-    };
-
     if (invoiceId && invoiceNumber) {
       console.log(`Printing individual invoice: ${invoiceNumber} with ID: ${invoiceId}`);
       
@@ -126,22 +169,22 @@ const CounterSaleReport: React.FC = () => {
         return;
       }
       
-      dataToSend = {
-        fromDate,
-        toDate,
-        reportData: [invoice]
-      };
-    } else {
-    dataToSend = {
+      const dataToSend = {
       fromDate,
       toDate,
-        reportData: rows
+        reportData: [invoice]
     };
-    }
 
-    console.log('Sending data to print:', dataToSend);
+      console.log('Sending data to print individual invoice:', dataToSend);
     const query = encodeURIComponent(JSON.stringify(dataToSend));
-    window.open(`/admin/countersalereportPdf?data=${query}`, '_blank');
+      window.open(`/admin/countersalereportPdf?data=${query}`, '_blank');
+    } else {
+      // For 'Print All', use the browser's native print functionality
+      console.log('Printing all invoices using browser print');
+      setTimeout(() => {
+        window.print();
+      }, 300);
+    }
   };
 
   function renderActionButtons(params: GridCellParams) {
@@ -154,6 +197,7 @@ const CounterSaleReport: React.FC = () => {
       </IconButton>
     );
   }
+
   const totals = useMemo(() => {
     return rows.reduce(
       (sums, row) => {
@@ -167,12 +211,21 @@ const CounterSaleReport: React.FC = () => {
     );
   }, [rows]);
 
+  const formattedFromDate = fromDate ? new Date(fromDate).toLocaleDateString() : '';
+  const formattedToDate = toDate ? new Date(toDate).toLocaleDateString() : '';
+
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '1700px' } }}>
-      <Typography variant="h4" gutterBottom>
+      {/* Add print styles */}
+      <style>{printStyles}</style>
+      
+      {/* Only one title for screen view */}
+      <Typography variant="h4" gutterBottom className="print-hide">
         Counter Sale Report
       </Typography>
-      <Stack direction="row" alignItems="center" justifyContent="flex-start" spacing={2} sx={{ mb: 2 }}>
+      
+      {/* Date filters - hidden when printing */}
+      <Stack direction="row" alignItems="center" justifyContent="flex-start" spacing={2} sx={{ mb: 2 }} className="print-hide">
         <FormControl>
           <TextField
             type="date"
@@ -193,52 +246,62 @@ const CounterSaleReport: React.FC = () => {
         {loading && <p>Loading...</p>}
       </Stack>
       
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Sr.No</TableCell>
-              <TableCell>Invoice No</TableCell>
-              <TableCell>Invoice Date</TableCell>
-              <TableCell>Total Quantity</TableCell>
-              <TableCell>Taxable</TableCell>
-              <TableCell>Grand Total</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((row, index) => (
-              <TableRow key={row.id}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{row.invoiceNumber}</TableCell>
-                <TableCell>{row.invDate}</TableCell>
-                <TableCell>{row.totalQuantity}</TableCell>
-                <TableCell>₹{Number(row.taxable).toFixed(2)}</TableCell>
-                <TableCell>₹{Number(row.totalAmount || 0).toFixed(2)}</TableCell>
-                <TableCell>
-                  <IconButton
-                    color="secondary"
-                    onClick={() => handlePrint(row.id, row.invoiceNumber)}
-                  >
-                    <Print />
-                  </IconButton>
-                </TableCell>
+      {/* Main container for printing */}
+      <div id="print-container">
+        {/* Print header */}
+        <div id="print-header" style={{ display: 'none' }}>
+          <h1>Counter Sale Report</h1>
+          <p>From {formattedFromDate} To {formattedToDate}</p>
+        </div>
+        
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Sr.No</TableCell>
+                <TableCell>Invoice No</TableCell>
+                <TableCell>Invoice Date</TableCell>
+                <TableCell>Total Quantity</TableCell>
+                <TableCell>Taxable</TableCell>
+                <TableCell>Grand Total</TableCell>
+                <TableCell className="print-hide">Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-          <TableFooter>
-            <TableRow>
-              <TableCell colSpan={3} align="right" sx={{ fontWeight: 'bold' }}>Total</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>{totals.quantity}</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>₹{Number(totals.taxable).toFixed(2)}</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>₹{Number(totals.total).toFixed(2)}</TableCell>
-              <TableCell></TableCell>
-            </TableRow>
-          </TableFooter>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {rows.map((row, index) => (
+                <TableRow key={row.id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{row.invoiceNumber}</TableCell>
+                  <TableCell>{row.invDate}</TableCell>
+                  <TableCell>{row.totalQuantity}</TableCell>
+                  <TableCell>₹{Number(row.taxable).toFixed(2)}</TableCell>
+                  <TableCell>₹{Number(row.totalAmount || 0).toFixed(2)}</TableCell>
+                  <TableCell className="print-hide">
+                    <IconButton
+                      color="secondary"
+                      onClick={() => handlePrint(row.id, row.invoiceNumber)}
+                    >
+                      <Print />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={3} align="right" sx={{ fontWeight: 'bold' }}>Total</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>{totals.quantity}</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>₹{Number(totals.taxable).toFixed(2)}</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>₹{Number(totals.total).toFixed(2)}</TableCell>
+                <TableCell className="print-hide"></TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </TableContainer>
+      </div>
 
-      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+      {/* Print button - hidden when printing */}
+      <div style={{ marginTop: '20px', textAlign: 'center' }} className="print-hide">
         <button
           style={{
             border: 'none',
@@ -258,7 +321,11 @@ const CounterSaleReport: React.FC = () => {
           Print All
         </button>
       </div>
+      
+      {/* Copyright - hidden when printing */}
+      <div className="print-hide">
       <Copyright />
+      </div>
     </Box>
   );
 };

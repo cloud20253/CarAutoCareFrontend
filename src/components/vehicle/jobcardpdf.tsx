@@ -14,6 +14,7 @@ import {
   FormControl,
   FormLabel,FormGroup,Checkbox,
   styled,
+  CircularProgress,
 } from "@mui/material";
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -98,9 +99,9 @@ const JobCardPDF: React.FC = () => {
 
   const [jobCardDetails, setJobCardDetails] = useState<any | null>(null); 
   const [vehicledata, setVehicleData] = useState<any | null>(null); 
+  const [isLoading, setIsLoading] = useState(true);
 
   const storedJobCardDetails = localStorage.getItem("jobCardDetails");
-
 
   const invoiceRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -111,15 +112,49 @@ const JobCardPDF: React.FC = () => {
       const parsedJobCardDetails = JSON.parse(storedJobCardDetails);
       console.log("Job Card Details:", parsedJobCardDetails);
       setJobCardDetails(parsedJobCardDetails);
+    } else {
+      // Create default empty job card data
+      setJobCardDetails({
+        vehicleJobCardId: "N/A",
+        jobName: "No Job Selected",
+        customerName: "N/A",
+        jobStatus: "N/A",
+        customerNote: "N/A",
+        workShopNote: "N/A"
+      });
     }
+    
     if (storedVehicleDataDetails) {
       setVehicleData(JSON.parse(storedVehicleDataDetails));
+    } else {
+      // Create default empty vehicle data
+      setVehicleData({
+        vehicleNumber: "N/A",
+        customerMobileNumber: "N/A",
+        customerAadharNo: "N/A",
+        customerAddress: "N/A",
+        email: "N/A",
+        customerGstin: "N/A",
+        vehicleModelName: "N/A",
+        kmsDriven: "N/A",
+        superwiser: "N/A",
+        technician: "N/A"
+      });
     }
+    
+    // Set loading false after data processing
+    setIsLoading(false);
   }, []);
 
-  if (!jobCardDetails || !vehicledata ) {
-    return <div>Loading job card details...</div>; 
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
+        <CircularProgress size={60} />
+        <Typography variant="h6" sx={{ mt: 2 }}>Loading job card details...</Typography>
+      </Box>
+    );
   }
+
   const generatePDF = async () => {
     const invoiceElement = invoiceRef.current;
     if (!invoiceElement) {

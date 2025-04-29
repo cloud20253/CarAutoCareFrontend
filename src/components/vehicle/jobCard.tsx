@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Paper,
@@ -24,10 +24,14 @@ import {
   TableContainer,
   useMediaQuery,
   useTheme,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
-import { Task, NoteAdd, Delete, Save, RemoveCircleOutline } from "@mui/icons-material";
+import { Task, NoteAdd, Delete, Save, RemoveCircleOutline, Description } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import apiClient from "Services/apiService";
+import JobOptionForm from "components/JobCard/JobOptionForm";
 
 const StyledTextArea = styled(TextareaAutosize)(({ theme }) => ({
   width: "100%",
@@ -38,6 +42,26 @@ const StyledTextArea = styled(TextareaAutosize)(({ theme }) => ({
   "&:focus": {
     outline: `2px solid ${theme.palette.primary.main}`,
     borderColor: "transparent",
+  },
+}));
+
+// HeaderCard styled component for navigation cards
+const HeaderCard = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  textAlign: "center",
+  cursor: "pointer",
+  borderRadius: theme.shape.borderRadius,
+  transition: "transform 0.3s, box-shadow 0.3s",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+  height: 120, // Fixed height for consistency
+  width: '100%', // Use full width of the grid item
+  boxShadow: theme.shadows[2],
+  "&:hover": {
+    transform: "scale(1.03)",
+    boxShadow: theme.shadows[4],
   },
 }));
 
@@ -73,8 +97,9 @@ const JobCard: React.FC = () => {
   const [customerNote, setCustomerNote] = useState("");
   const [workshopNote, setWorkshopNote] = useState("");
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error" | "">("");
   const [jobCards, setJobCards] = useState<JobCardData[]>([]);
-  const [vehicleData, setVehicleData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -83,12 +108,33 @@ const JobCard: React.FC = () => {
     console.log("VehicleRegId from URL:", id);
   }, [id]);
 
+  const fetchJobCards = useCallback(async () => {
+    try {
+      const response = await apiClient.get(`/api/vehicleJobCards/getByVehicleId?vehicleId=${vehicleId}`);
+      if (response.data && Array.isArray(response.data)) {
+        setJobCards(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching job cards:", error);
+      setMessage("Error fetching job cards.");
+    }
+  }, [vehicleId]);
+
+  const fetchVehicleData = useCallback(async () => {
+    try {
+      await apiClient.get(`http://localhost:8080/vehicle-reg/getById?vehicleRegId=${vehicleId}`);
+    } catch (error) {
+      console.error("Error fetching vehicle data:", error);
+      setMessage("Error fetching vehicle data.");
+    }
+  }, [vehicleId]);
+
   useEffect(() => {
     if (vehicleId !== 0) {
       fetchJobCards();
       fetchVehicleData();
     }
-  }, [vehicleId]);
+  }, [vehicleId, fetchJobCards, fetchVehicleData]);
 
   // Debounce
   useEffect(() => {
@@ -101,50 +147,59 @@ const JobCard: React.FC = () => {
   }, [jobSearch]);
 
   useEffect(() => {
-    if (debouncedSearch.length >= 1) {
+    if (debouncedSearch.trim()) {
       fetchJobOptions(debouncedSearch);
     } else {
-      setJobOptions([]);
+      // Only fetch all jobs when no search is active
+      fetchAllJobOptions();
     }
   }, [debouncedSearch]);
 
-
-
-  const fetchVehicleData = async () => {
+  // Fetch all job options
+  const fetchAllJobOptions = async () => {
     try {
-      const vehicleRegId =vehicleId;
-      const response = await apiClient.get(`http://localhost:8080/vehicle-reg/getById?vehicleRegId=${vehicleRegId}`);
-      setVehicleData(response.data.data);
-      localStorage.setItem("vehicleData", JSON.stringify(response.data.data));
-
+      setIsLoading(true);
+      const jobResponse = await apiClient.get("/registerJobCard/getAll");
+      const data = jobResponse.data;
+      
+      if (data && Array.isArray(data)) {
+        setJobOptions(data);
+      } else {
+        setJobOptions([]);
+      }
     } catch (error) {
-      console.error("Error fetching vehicle data:", error);
-      setMessage("Error fetching vehicle data.");
+      console.error("Error fetching all job options:", error);
+      setMessage("Error fetching job options.");
+      setMessageType("error");
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  // Fetch job options based on search
   const fetchJobOptions = async (query: string) => {
     try {
-      const response = await apiClient.get(`/registerJobCard/search?query=${query}`);
-      console.log("Fetched job options:", response.data);
-      setJobOptions(response.data);
-    } catch (error: any) {
-      console.error("Error fetching job options:", error);
+      setIsLoading(true);
+      // Use the new search endpoint
+      const jobResponse = await apiClient.get(`/registerJobCard/search?query=${query}`);
+      const data = jobResponse.data;
+      
+      if (data && Array.isArray(data)) {
+        setJobOptions(data);
+      } else {
+        setJobOptions([]);
+      }
+    } catch (error) {
+      console.error("Error searching job options:", error);
+      setMessage("Error searching job options.");
+      setMessageType("error");
+      // Fallback to getAllJobs if search fails
+      fetchAllJobOptions();
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const fetchJobCards = async () => {
-    try {
-      const response = await apiClient.get(`/api/vehicleJobCards/getByVehicleId?vehicleId=${vehicleId}`);
-      const data = response.data;
-      console.log("Fetched job cards:", data);
-      setJobCards(Array.isArray(data) ? data : [data]);
-    } catch (error: any) {
-      console.error("Error fetching job cards:", error);
-    }
-  };
-
-
-  
   const handleJobSelect = (
     event: React.SyntheticEvent,
     newValue: JobOption | null
@@ -168,6 +223,14 @@ const JobCard: React.FC = () => {
   };
 
   const handleSave = async () => {
+    // Validation
+    if (selectedJobs.length === 0) {
+      setMessage("Please select at least one job.");
+      setMessageType("error");
+      return;
+    }
+
+    setIsLoading(true);
     const jobCardData = {
       vehicleId: vehicleId,
       vehicleNumber: localStorage.getItem("vehicleNumber") || null,
@@ -182,7 +245,36 @@ const JobCard: React.FC = () => {
     try {
       const response = await apiClient.post("/api/vehicleJobCards/add", jobCardData);
       setMessage("Job card created successfully!");
+      setMessageType("success");
       localStorage.setItem("jobCardDetails", JSON.stringify(response.data));
+      
+      // Create empty PDF data to ensure PDF generation even without data
+      const emptyJobCard = {
+        vehicleJobCardId: response.data?.vehicleJobCardId || "N/A",
+        jobName: response.data?.jobName || "N/A",
+        customerName: "N/A",
+        jobStatus: response.data?.jobStatus || "N/A",
+        customerNote: response.data?.customerNote || "N/A",
+        workShopNote: response.data?.workShopNote || "N/A"
+      };
+      
+      // Ensure we have data for the PDF by storing empty data if needed
+      if (!response.data) {
+        localStorage.setItem("jobCardDetails", JSON.stringify(emptyJobCard));
+      }
+      
+      // Store vehicle data for PDF if not already stored
+      if (!localStorage.getItem("vehicleData")) {
+        localStorage.setItem("vehicleData", JSON.stringify({
+          vehicleNumber: jobCardData.vehicleNumber || "N/A",
+          customerMobileNumber: "N/A",
+          customerAddress: "N/A",
+          email: "N/A",
+          superwiser: "N/A",
+          technician: "N/A"
+        }));
+      }
+      
       setSelectedJobs([]);
       setCustomerNote("");
       setWorkshopNote("");
@@ -193,11 +285,70 @@ const JobCard: React.FC = () => {
         "Error creating job card: " +
           (error.response?.data?.message || error.message)
       );
+      setMessageType("error");
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // Function to render header cards
+  const renderHeaderCards = () => {
+    const headerCards = [
+      {
+        label: "Job Card",
+        icon: <Task fontSize="large" color="primary" />,
+        value: "jobCard",
+        onClick: () => {}, // already on job card
+      },
+      {
+        label: "Spare",
+        icon: <Description fontSize="large" color="primary" />,
+        value: "spare",
+        onClick: () => navigate(`/admin/add-vehicle-part-service/${id}`),
+      },
+      {
+        label: "Service",
+        icon: <NoteAdd fontSize="large" color="primary" />,
+        value: "service",
+        onClick: () => navigate(`/admin/serviceTab/${id}`),
+      },
+    ];
+
+    return (
+      <Box sx={{ width: '100%', mb: 3 }}>
+        <Grid container spacing={3} justifyContent="center" sx={{ maxWidth: '900px', mx: 'auto' }}>
+          {headerCards.map((card) => (
+            <Grid item xs={12} sm={4} md={4} key={card.value}>
+              <HeaderCard 
+                onClick={card.onClick}
+                sx={{
+                  border: card.value === 'jobCard' ? '2px solid' : 'none',
+                  borderColor: 'primary.main',
+                  backgroundColor: card.value === 'jobCard' ? 'rgba(25, 118, 210, 0.08)' : 'white',
+                }}
+              >
+                <Box sx={{ mb: 1 }}>{card.icon}</Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1rem' }}>
+                  {card.label}
+                </Typography>
+              </HeaderCard>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+    );
   };
 
   return (
     <Box sx={{ width: "100%", p: 2 }}>
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle1" color="textSecondary">
+          Vehicle Registration ID: {id}
+        </Typography>
+      </Box>
+      
+      {renderHeaderCards()}
+      
       <Paper elevation={3} sx={{ borderRadius: 0, p: 3, width: "100%" }}>
         <Typography
           variant="h6"
@@ -223,9 +374,26 @@ const JobCard: React.FC = () => {
           onInputChange={(event, newInputValue) => {
             setJobSearch(newInputValue);
           }}
+          loading={isLoading}
           renderInput={(params) => (
-            <TextField {...params} label="Search Job Name" variant="outlined" fullWidth sx={{ mb: 2 }} />
+            <TextField 
+              {...params} 
+              label="Search Job Name" 
+              variant="outlined" 
+              fullWidth 
+              sx={{ mb: 2 }} 
+              InputProps={{
+                ...params.InputProps,
+                endAdornment: (
+                  <>
+                    {isLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                    {params.InputProps.endAdornment}
+                  </>
+                ),
+              }}
+            />
           )}
+          noOptionsText="No jobs found. Try a different search term."
         />
         {selectedJobs.length > 0 && (
           <Paper elevation={1} sx={{ p: 2, mb: 2, width: "100%" }}>
@@ -365,9 +533,9 @@ const JobCard: React.FC = () => {
 
         {message && (
           <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" color="primary">
+            <Alert severity={messageType || "info"} sx={{ width: "100%" }}>
               {message}
-            </Typography>
+            </Alert>
           </Box>
         )}
       </Paper>

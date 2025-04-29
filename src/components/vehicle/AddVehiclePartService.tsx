@@ -20,14 +20,19 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import CustomizedDataGrid from "components/CustomizedDataGrid";
 import { GridCellParams, GridRowsProp, GridColDef } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CancelIcon from "@mui/icons-material/Cancel";
+import CloseIcon from "@mui/icons-material/Close";
 import SparePartDeleteModel from "./SparePartDeleteModel";
-import { Task, Description, NoteAdd } from "@mui/icons-material";
+import { Task, Description, NoteAdd, ErrorOutline } from "@mui/icons-material";
 
 // Styled components
 const FormGrid = styled(Grid)(({ theme }) => ({
@@ -45,10 +50,11 @@ const HeaderCard = styled(Paper)(({ theme }) => ({
   flexDirection: "column",
   justifyContent: "center",
   alignItems: "center",
-  minHeight: 150,
+  height: 120,
+  width: '100%',
   boxShadow: theme.shadows[2],
   "&:hover": {
-    transform: "scale(1.05)",
+    transform: "scale(1.03)",
     boxShadow: theme.shadows[4],
   },
 }));
@@ -105,16 +111,13 @@ const AddVehiclePartService: React.FC = () => {
   const [searchKeyword, setSearchKeyword] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [currentTab, setCurrentTab] = useState<string>("spare");
+  const [errorDialogOpen, setErrorDialogOpen] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const navigate = useNavigate();
   const { id } = useParams(); 
 
-  useEffect(() => {
-    if (id) {
-      fetchSparePartList();
-    }
-  }, [id]);
-  const fetchSparePartList = async () => {
+  const fetchSparePartList = useCallback(async () => {
     try {
       const responsePart = await apiClient.get(
         `/sparePartTransactions/vehicleRegId?vehicleRegId=${id}` );
@@ -140,7 +143,16 @@ const AddVehiclePartService: React.FC = () => {
         sgst: resData.sgst || 0, }));
       setRows([...newTransactions]);
     } catch (err) {
-      console.error("Error fetching transactions:", err);  } };
+      console.error("Error fetching transactions:", err);  
+    } 
+  }, [id, rows.length]);
+
+  useEffect(() => {
+    if (id) {
+      fetchSparePartList();
+    }
+  }, [id, fetchSparePartList]);
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchKeyword);
@@ -204,7 +216,8 @@ const AddVehiclePartService: React.FC = () => {
       const updatedData = {
         ...createData,
         vehicleRegId: Number(id),
-        userId: null,  };
+        userId: null,
+      };
       const response = await apiClient.post("/sparePartTransactions/add", updatedData);
       const sparePartTransactionId = response.data?.data?.sparePartTransactionId;
       const newTransaction = {
@@ -219,7 +232,8 @@ const AddVehiclePartService: React.FC = () => {
         vehicleRegId: updatedData.vehicleRegId,
         sparePartTransactionId,
         cgst: updatedData.cgst,
-        sgst: updatedData.sgst,  };
+        sgst: updatedData.sgst,
+      };
       setRows((prevRows) => [...prevRows, newTransaction]);
       setFeedback({
         message: response.data.message || "Transaction created successfully",
@@ -227,9 +241,22 @@ const AddVehiclePartService: React.FC = () => {
       });
       setCreateData(initialCreateData);
     } catch (error: any) {
-      setFeedback({
-        message: error.response?.data?.message || "Failed to create transaction",
-        severity: "error", }); } };
+      console.error("Transaction error:", error.response?.data);
+      
+      const errorData = error.response?.data;
+      if (errorData?.exception && 
+          (errorData.exception.includes("Insufficient stock") || 
+           errorData.exception.includes("stock"))) {
+        setErrorMessage(errorData.exception);
+        setErrorDialogOpen(true);
+      } else {
+        setFeedback({
+          message: errorData?.message || errorData?.exception || "Failed to create transaction",
+          severity: "error",
+        });
+      }
+    }
+  };
   const handleCloseSnackbar = () => {
     setFeedback(null); }; 
   const handleDelete = (id: number) => {
@@ -284,22 +311,54 @@ const AddVehiclePartService: React.FC = () => {
       sortable: false,
       renderCell: (params) => renderActionButtons(params), }, ];
   const grandTotal = rows.reduce((acc, row) => acc + (row.total as number), 0);
-  const headerCards = [
-    {
-      label: "Job Card",
-      icon: <Task fontSize="large" color="primary" />,
-      value: "jobCard",
-      onClick: () => navigate(`/admin/job-card/${id}`),  },
-    {
-      label: "Spare",
-      icon: <Description fontSize="large" color="primary" />,
-      value: "spare",
-      onClick: () => setCurrentTab("spare"), },
-    {
-      label: "Service",
-      icon: <NoteAdd fontSize="large" color="primary" />,
-      value: "service",
-      onClick: () => navigate(`/admin/serviceTab/${id}`), }, ];
+
+  const renderHeaderCards = () => {
+    const headerCards = [
+      {
+        label: "Job Card",
+        icon: <Task fontSize="large" color="primary" />,
+        value: "jobCard",
+        onClick: () => navigate(`/admin/job-card/${id}`),
+      },
+      {
+        label: "Spare",
+        icon: <Description fontSize="large" color="primary" />,
+        value: "spare",
+        onClick: () => setCurrentTab("spare"),
+      },
+      {
+        label: "Service",
+        icon: <NoteAdd fontSize="large" color="primary" />,
+        value: "service",
+        onClick: () => navigate(`/admin/serviceTab/${id}`),
+      },
+    ];
+
+    return (
+      <Box sx={{ width: '100%', mb: 3 }}>
+        <Grid container spacing={3} justifyContent="center" sx={{ maxWidth: '900px', mx: 'auto' }}>
+          {headerCards.map((card) => (
+            <Grid item xs={12} sm={4} md={4} key={card.value}>
+              <HeaderCard 
+                onClick={card.onClick}
+                sx={{
+                  border: currentTab === card.value ? '2px solid' : 'none',
+                  borderColor: 'primary.main',
+                  backgroundColor: currentTab === card.value ? 'rgba(25, 118, 210, 0.08)' : 'white',
+                }}
+              >
+                <Box sx={{ mb: 1 }}>{card.icon}</Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1rem' }}>
+                  {card.label}
+                </Typography>
+              </HeaderCard>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+    );
+  };
+
   return (
     <Box
       sx={{
@@ -315,24 +374,9 @@ const AddVehiclePartService: React.FC = () => {
           Vehicle Registration ID: {id}
         </Typography>
       </Box>
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        {headerCards.map((card) => (
-          <Grid item xs={12} sm={6} md={3} key={card.value}>
-            <HeaderCard onClick={card.onClick}>
-              <Box sx={{ mb: 1 }}>{card.icon}</Box>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {card.label}
-              </Typography>
-            </HeaderCard>
-          </Grid>
-        ))}
-      </Grid>
-      {currentTab === "jobCard" && (
-        <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 3, width: "100%" }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Job Card Content
-          </Typography>
-        </Paper> )}
+      
+      {renderHeaderCards()}
+      
       {currentTab === "spare" && (<>
           <Stack
             direction="row"
@@ -494,6 +538,55 @@ const AddVehiclePartService: React.FC = () => {
         deleteItemId={selectedId}
         onDelete={handleDeleteConfirmed}
       />
+      <Dialog 
+        open={errorDialogOpen}
+        onClose={() => setErrorDialogOpen(false)}
+        aria-labelledby="error-dialog-title"
+        aria-describedby="error-dialog-description"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            width: '400px',
+            maxWidth: '90vw',
+          }
+        }}
+      >
+        <DialogTitle id="error-dialog-title" sx={{ 
+          backgroundColor: '#ffebee', 
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <Box display="flex" alignItems="center">
+            <ErrorOutline sx={{ color: '#d32f2f', mr: 1 }} />
+            <Typography variant="h6" component="div" color="error">
+              Insufficient Stock
+            </Typography>
+          </Box>
+          <IconButton 
+            aria-label="close" 
+            onClick={() => setErrorDialogOpen(false)}
+            sx={{ color: '#d32f2f' }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2, pb: 1 }}>
+          <Typography variant="body1" sx={{ py: 1 }}>
+            {errorMessage}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, justifyContent: 'center' }}>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => setErrorDialogOpen(false)}
+            sx={{ minWidth: '120px', borderRadius: 2 }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
       {feedback && (
         <Snackbar
           open={!!feedback}
