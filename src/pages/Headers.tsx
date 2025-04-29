@@ -31,7 +31,6 @@ const WebHeader = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu when location changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
@@ -52,7 +51,7 @@ const WebHeader = () => {
           >
             <Car className="h-8 w-8 text-blue-500" strokeWidth={1.5} />
             <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-              AutoCareCare
+              AutoCarCarePoint
             </span>
           </Link>
 

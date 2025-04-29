@@ -2,9 +2,12 @@ import axios, { AxiosResponse } from 'axios';
 import logger from './logger';
 import { isDevelopment } from './environment';
 import storageUtils from './storageUtils';
+import secureStorage from './secureStorage';
+import { isTokenValid, forceCheckTokenValidity } from './tokenUtils';
+import { toast } from 'react-toastify';
 
 // Configuration for development mode
-const DEBUG_DISABLE_LOGOUT_ON_401 = true; // Set to true to disable automatic logout during development
+const DEBUG_DISABLE_LOGOUT_ON_401 = false; // Changed to false to ensure proper token validation in all environments
 
 // Define custom response type with cached property
 interface CachedAxiosResponse<T = any> extends AxiosResponse<T> {
@@ -41,10 +44,22 @@ apiClient.interceptors.request.use(
     logger.debug(`API Request: ${config.method?.toUpperCase()} ${config.url}`, 
       config.params ? { params: config.params } : '');
     
-    // Add auth token if available
+    // Always check token validity before every request
+    if (window.location.pathname !== '/signIn' && !config.url?.includes('auth/login')) {
+      if (!isTokenValid()) {
+        // If token is invalid, reject the request and redirect
+        forceCheckTokenValidity();
+        return Promise.reject(new Error('Token expired'));
+      }
+    }
+    
+    // Check if token is valid before making the request
     const token = storageUtils.getAuthToken();
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (token) {      
+      // Token is valid, add to headers
+      if (config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     
     // Add CSRF token for non-GET requests if available
@@ -113,12 +128,22 @@ apiClient.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       logger.warn('Received 401 Unauthorized - Token may be expired or invalid');
       
-      // In development, we might want to disable auto-logout for testing
-      if (!isDevelopment || !DEBUG_DISABLE_LOGOUT_ON_401) {
-        // Clear token and redirect to login
-        storageUtils.clearAuthData();
-        window.location.href = '/signIn';
+      // Store current path for redirect after login if not on login page
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/signIn') {
+        secureStorage.setItem('redirectAfterLogin', currentPath);
       }
+      
+      // Clear token and redirect to login
+      storageUtils.clearAuthData();
+      
+      // Show toast notification
+      toast.error('Your session has expired. Please sign in again.');
+      
+      // Small delay to allow toast to be seen before redirect
+      setTimeout(() => {
+        window.location.href = '/signIn';
+      }, 1500);
     }
     
     // Log error responses

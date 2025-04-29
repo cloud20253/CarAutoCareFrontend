@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import MuiCard from '@mui/material/Card';
@@ -26,6 +26,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import logger from '../utils/logger';
 import secureStorage from '../utils/secureStorage';
 import { InputAdornment, IconButton, Paper, useTheme, alpha, CircularProgress } from '@mui/material';
+import { forceCheckTokenValidity } from '../utils/tokenUtils';
 
 interface MyJwtPayload extends JwtPayload {
   authorities: string[];
@@ -118,6 +119,26 @@ export default function SignInCard() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Check for expired tokens on component mount
+  useEffect(() => {
+    // Clear any existing tokens if they're expired
+    forceCheckTokenValidity();
+  }, []);
+
+  // Set up event listener for when user closes the tab or browser
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Clear auth data when tab/browser is closed
+      storageUtils.clearAuthData();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   const handleClickOpen = () => {
     setOpen(true);
   };
@@ -152,27 +173,41 @@ export default function SignInCard() {
         throw new Error("No response received from server");
       }
       
-      const decodedToken = jwtDecode<MyJwtPayload>(response);
+      try {
+        const decodedToken = jwtDecode<MyJwtPayload>(response);
+        
+        // Check if token is valid and not expired
+        const expTime = decodedToken.exp ? Number(decodedToken.exp) * 1000 : 0;
+        const currentTime = Date.now();
+        
+        if (!decodedToken.exp || expTime <= currentTime) {
+          toast.error("Session token is expired. Please sign in again.");
+          return;
+        }
 
-      // Use storageUtils instead of direct secureStorage
-      storageUtils.clearAuthData(); // Clear any existing data first
-      
-      // Set the new token and user data in secureStorage directly
-      secureStorage.setItem("token", response);
-      secureStorage.setItem("userData", decodedToken);
-      
-      // Check if there's a redirect path saved
-      const redirectPath = secureStorage.getItem("redirectAfterLogin");
-      if (redirectPath) {
-        // Clear the redirect path
-        secureStorage.removeItem("redirectAfterLogin");
-        // Navigate to the saved path
-        navigate(redirectPath);
-        toast.success("Welcome back! Your session has been restored.");
-      } else {
-        // Default navigation
-        navigate("/");
-        toast.success("Signed in successfully!");
+        // Use storageUtils instead of direct secureStorage
+        storageUtils.clearAuthData(); // Clear any existing data first
+        
+        // Set the new token and user data in secureStorage
+        secureStorage.setItem("token", response);
+        secureStorage.setItem("userData", decodedToken);
+        
+        // Check if there's a redirect path saved
+        const redirectPath = secureStorage.getItem("redirectAfterLogin");
+        if (redirectPath) {
+          // Clear the redirect path
+          secureStorage.removeItem("redirectAfterLogin");
+          // Navigate to the saved path
+          navigate(redirectPath);
+          toast.success("Welcome back! Your session has been restored.");
+        } else {
+          // Default navigation
+          navigate("/");
+          toast.success("Signed in successfully!");
+        }
+      } catch (decodeError) {
+        logger.error("Failed to decode token:", decodeError);
+        toast.error("Invalid authentication token received from server");
       }
     } catch (error: any) {
       logger.error("Sign-in failed", error);

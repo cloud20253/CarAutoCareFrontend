@@ -9,10 +9,13 @@ import AddTermsAndConditions from './components/Terms/AddTermsAndConditions';
 import SignInSide from './pages/SignInSide';
 import SessionExpirationHandler from './components/navigation/SessionExpirationHandler';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import TokenValidityChecker from './components/common/TokenValidityChecker';
 import { 
   getUserFromToken, 
   logout,
-  User
+  User,
+  forceCheckTokenValidity,
+  isTokenValid
 } from './utils/tokenUtils';
 
 // Import Borrow components
@@ -96,13 +99,23 @@ const AuthGuard: React.FC<{
   requiredRoles?: string[];
   children: React.ReactNode;
 }> = ({ user, requiredRoles = [], children }) => {
+  // Check token validity first - this ensures that even if the user state
+  // still shows authenticated but the token is expired, the user is redirected
+  const isValid = isTokenValid();
+  
+  if (!isValid) {
+    // If token is invalid, force token check which will handle redirection
+    forceCheckTokenValidity();
+    return null; // Return null while redirection is happening
+  }
+
   if (!user.isAuthenticated) {
     return <Navigate to="/signIn" />;
   }
 
   // Admin users can access all routes
   if (user.role === 'ADMIN') {
-    return <>{children}</>;
+    return <TokenValidityChecker>{children}</TokenValidityChecker>;
   }
 
   // For non-admin users, check role-based permissions
@@ -110,7 +123,7 @@ const AuthGuard: React.FC<{
     return <Box p={4}>You don't have permission to access this page.</Box>;
   }
 
-  return <>{children}</>;
+  return <TokenValidityChecker>{children}</TokenValidityChecker>;
 };
 
 const Dashboard: React.FC<{ user: User }> = ({ user }) => {
@@ -119,9 +132,11 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      <NavigationMenu components={user.components} userRole={user.role} />
-    </Box>
+    <TokenValidityChecker>
+      <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
+        <NavigationMenu components={user.components} userRole={user.role} />
+      </Box>
+    </TokenValidityChecker>
   );
 };
 
@@ -134,6 +149,9 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
+    // Check token validity before getting user
+    forceCheckTokenValidity();
+    
     // Get user from token
     const currentUser = getUserFromToken();
     setUser(currentUser);

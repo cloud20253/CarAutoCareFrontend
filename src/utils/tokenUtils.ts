@@ -1,6 +1,7 @@
 import { jwtDecode } from 'jwt-decode';
 import logger from './logger';
 import secureStorage from './secureStorage';
+import { toast } from 'react-toastify';
 
 // Token decoder interface
 export interface DecodedToken {
@@ -31,14 +32,53 @@ export const isTokenValid = (): boolean => {
       return false;
     }
     
-    const decoded = jwtDecode<DecodedToken>(token);
-    const expTime = decoded.exp ? Number(decoded.exp) * 1000 : 0;
-    const currentTime = Date.now();
-    
-    return expTime > currentTime;
+    try {
+      const decoded = jwtDecode<DecodedToken>(token);
+      
+      // Ensure exp exists
+      if (!decoded.exp) {
+        logger.warn('Token is missing expiration time');
+        return false;
+      }
+      
+      const expTime = Number(decoded.exp) * 1000;
+      const currentTime = Date.now();
+      
+      // Add buffer time (30 seconds) to prevent edge cases and ensure early validation
+      return expTime > (currentTime + 30000);
+    } catch (decodeError) {
+      // If token can't be decoded, it's invalid
+      logger.error('Failed to decode token:', decodeError);
+      return false;
+    }
   } catch (error) {
     logger.error('Error validating token:', error);
     return false;
+  }
+};
+
+// Force check token validity and redirect if expired
+export const forceCheckTokenValidity = (): void => {
+  // Skip check on login page and signup page
+  const currentPath = window.location.pathname;
+  if (currentPath === '/signIn' || currentPath === '/signup') {
+    return;
+  }
+  
+  if (!isTokenValid()) {
+    // Token is expired or invalid, clear auth data
+    clearAuthData();
+    
+    // Save current location for redirect after login
+    secureStorage.setItem('redirectAfterLogin', currentPath);
+    
+    // Show toast notification
+    toast.error('Your session has expired. Please sign in again.');
+    
+    // Redirect to login page
+    setTimeout(() => {
+      window.location.href = '/signIn';
+    }, 1000);
   }
 };
 
@@ -52,7 +92,14 @@ export const getDecodedToken = (): DecodedToken | null => {
     }
     
     const decoded = jwtDecode<DecodedToken>(token);
-    const expTime = decoded.exp ? Number(decoded.exp) * 1000 : 0;
+    
+    // Ensure exp exists
+    if (!decoded.exp) {
+      logger.warn('Token is missing expiration time');
+      return null;
+    }
+    
+    const expTime = Number(decoded.exp) * 1000;
     const currentTime = Date.now();
     
     if (expTime <= currentTime) {
@@ -88,11 +135,21 @@ export const getUserFromToken = (): User => {
   };
 };
 
-// Handle logout by clearing token and session
-export const logout = (): void => {
+// Clear auth data and redirect to login
+export const clearAuthData = (): void => {
   // Clear storage
   secureStorage.removeItem('token');
   secureStorage.removeItem('userData');
+  
+  // Also clear from localStorage for safety
+  localStorage.removeItem('token');
+  localStorage.removeItem('userData');
+};
+
+// Handle logout by clearing token and session
+export const logout = (): void => {
+  // Clear auth data
+  clearAuthData();
   
   // Redirect to login page
   window.location.href = '/signIn';
@@ -108,7 +165,14 @@ export const getTimeUntilExpiration = (): number | null => {
     }
     
     const decoded = jwtDecode<DecodedToken>(token);
-    const expTime = decoded.exp ? Number(decoded.exp) * 1000 : 0;
+    
+    // Ensure exp exists
+    if (!decoded.exp) {
+      logger.warn('Token is missing expiration time');
+      return null;
+    }
+    
+    const expTime = Number(decoded.exp) * 1000;
     const currentTime = Date.now();
     
     return expTime > currentTime ? expTime - currentTime : null;

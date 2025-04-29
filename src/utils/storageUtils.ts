@@ -2,7 +2,7 @@
  * Storage Utility Functions
  * 
  * This file provides utilities to help with the transition from localStorage
- * to secureStorage while maintaining backward compatibility.
+ * to sessionStorage (via secureStorage) while maintaining backward compatibility.
  */
 
 import secureStorage from './secureStorage';
@@ -14,7 +14,7 @@ import logger from './logger';
  */
 export const getUserData = (): any => {
   try {
-    // First try to get from secureStorage
+    // First try to get from secureStorage (now sessionStorage)
     const secureData = secureStorage.getItem('userData');
     if (secureData) {
       return secureData;
@@ -30,14 +30,12 @@ export const getUserData = (): any => {
         // Migrate to secureStorage for next time
         secureStorage.setItem('userData', parsedData);
         
-        // Schedule removal from localStorage after a short delay
-        setTimeout(() => {
-          try {
-            localStorage.removeItem('userData');
-          } catch (e) {
-            // Ignore errors
-          }
-        }, 1000);
+        // Schedule removal from localStorage immediately
+        try {
+          localStorage.removeItem('userData');
+        } catch (e) {
+          // Ignore errors
+        }
         
         return parsedData;
       } catch (e) {
@@ -70,14 +68,12 @@ export const getAuthToken = (): string | null => {
       // Migrate to secureStorage for next time
       secureStorage.setItem('token', localToken);
       
-      // Schedule removal from localStorage after a short delay
-      setTimeout(() => {
-        try {
-          localStorage.removeItem('token');
-        } catch (e) {
-          // Ignore errors
-        }
-      }, 1000);
+      // Remove from localStorage immediately
+      try {
+        localStorage.removeItem('token');
+      } catch (e) {
+        // Ignore errors
+      }
       
       return localToken;
     }
@@ -101,7 +97,15 @@ export const getItem = (key: string): string | null => {
     }
     
     // Fall back to localStorage
-    return localStorage.getItem(key);
+    const localValue = localStorage.getItem(key);
+    if (localValue) {
+      // Migrate to secureStorage
+      secureStorage.setItem(key, localValue);
+      localStorage.removeItem(key);
+      return localValue;
+    }
+    
+    return null;
   } catch (e) {
     logger.error(`Error getting item ${key}:`, e);
     return null;
@@ -113,9 +117,13 @@ export const getItem = (key: string): string | null => {
  */
 export const setItem = (key: string, value: string): void => {
   try {
-    // Store in both for now during transition
+    // Store only in secureStorage (sessionStorage)
     secureStorage.setItem(key, value);
-    localStorage.setItem(key, value);
+    
+    // Remove from localStorage if it exists
+    if (localStorage.getItem(key)) {
+      localStorage.removeItem(key);
+    }
   } catch (e) {
     logger.error(`Error setting item ${key}:`, e);
   }
