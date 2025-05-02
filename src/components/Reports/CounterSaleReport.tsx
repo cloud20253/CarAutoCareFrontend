@@ -103,7 +103,7 @@ const CounterSaleReport: React.FC = () => {
     if (fromDate && toDate) {
       setLoading(true);
       try {
-        const response = await fetch(`http://localhost:8080/api/invoices/dateRange?from=${fromDate}&to=${toDate}`);
+        const response = await fetch(`https://carauto01-production-8b0b.up.railway.app/api/invoices/dateRange?from=${fromDate}&to=${toDate}`);
         const data: Invoice[] = await response.json();
         console.log("Fetched invoice data:", data);
   

@@ -13,6 +13,7 @@ import {
     DialogActions,
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
+import apiClient from 'Services/apiService';
 
 interface PartLine {
     id: number;
@@ -61,8 +62,8 @@ const QuotationEdit: React.FC = () => {
     useEffect(() => {
         const fetchQuotation = async () => {
             try {
-                const response = await fetch(`http://localhost:8080/api/quotations/${id}`);
-                const data: Quotation = await response.json();
+                const response = await apiClient.get(`/api/quotations/${id}`);
+                const data: Quotation = response.data;
                 setQuotation(data);
                 setFormData(data); // Initialize form data with fetched quotation
             } catch (error) {
@@ -96,15 +97,9 @@ const QuotationEdit: React.FC = () => {
             };
 
             try {
-                const response = await fetch(`http://localhost:8080/api/quotations/${id}`, {
-                    method: 'PATCH', // Change to PATCH
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(updates), // Send only the updates
-                });
+                const response = await apiClient.patch(`/api/quotations/${id}`, updates);
 
-                if (response.ok) {
+                if (response.status >= 200 && response.status < 300) {
                     setDialogTitle('Success');
                     setDialogMessage('Quotation updated successfully!');
                 } else {

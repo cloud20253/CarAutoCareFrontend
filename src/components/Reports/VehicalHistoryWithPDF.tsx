@@ -99,7 +99,7 @@ const VehicalHistoryWithPDF: React.FC = () => {
         const regNo = response.data[0].regNo;
         
         try {
-          const vehicleDetailsUrl = `http://localhost:8080/vehicle-reg/details/${encodeURIComponent(regNo)}`;
+          const vehicleDetailsUrl = `https://carauto01-production-8b0b.up.railway.app/vehicle-reg/details/${encodeURIComponent(regNo)}`;
           console.log(`Fetching vehicle details from: ${vehicleDetailsUrl}`);
           
           const vehicleDetailsResponse = await apiClient.get(vehicleDetailsUrl, config);

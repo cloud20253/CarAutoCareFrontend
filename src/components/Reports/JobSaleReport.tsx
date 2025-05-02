@@ -79,7 +79,7 @@ const JobSaleReport: React.FC = () => {
     if (fromDate && toDate) {
       setLoading(true); 
       try {
-        const response = await fetch(`http://localhost:8080/api/vehicle-invoices/search/date-range?startDate=${fromDate}&endDate=${toDate}`);
+        const response = await fetch(`https://carauto01-production-8b0b.up.railway.app/api/vehicle-invoices/search/date-range?startDate=${fromDate}&endDate=${toDate}`);
         const data = await response.json();
         console.log("Fetched invoice data:", data);
         setRows(data);

@@ -6,6 +6,8 @@ import html2canvas from 'html2canvas';
 // import { InvoiceFormData } from './InvoiceFormData';
 import  { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import apiClient from 'Services/apiService';
+
 interface BillRow {
   id?: number;
   sNo: number;
@@ -125,8 +127,8 @@ const [quotation, setQuotation] = useState<Quotation | null>(null); // Initializ
   useEffect(() => {
     const fetchQuotation = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/api/quotations/${id}`);
-        const data = await response.json();
+        const response = await apiClient.get(`/api/quotations/${id}`);
+        const data = response.data;
         setQuotation(data);
       } catch (error) {
         console.error('Error fetching quotation:', error);

@@ -126,7 +126,7 @@ const JobCard: React.FC = () => {
 
   const fetchVehicleData = useCallback(async () => {
     try {
-      await apiClient.get(`http://localhost:8080/vehicle-reg/getById?vehicleRegId=${vehicleId}`);
+      await apiClient.get(`https://carauto01-production-8b0b.up.railway.app/vehicle-reg/getById?vehicleRegId=${vehicleId}`);
     } catch (error) {
       console.error("Error fetching vehicle data:", error);
       setMessage("Error fetching vehicle data.");
